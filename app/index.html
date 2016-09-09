@@ -1,0 +1,32 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>budget arpg</title>
+
+  <!-- Tile icon for Win8 (144x144) -->
+  <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+
+  <link rel="import" href="elements/elements.html">
+
+  <style is="custom-style" include="iron-flex iron-positioning"></style>
+</head>
+
+<body unresolved class="fullbleed vertical layout">
+  <!-- build:remove -->
+  <span id="browser-sync-binding"></span>
+  <!-- endbuild -->
+
+  <script data-main="scripts/entry.js" src="scripts/require.js"></script>
+  <script>
+    require(["entry"], (r)=> console.log(r))
+  </script>
+</body>
+
+</html>
