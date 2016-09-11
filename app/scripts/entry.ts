@@ -1,9 +1,12 @@
 import {Startup} from './helloWorld';
 import {State, Event, GeneralEffect} from './ARPGState';
-import {Character} from './Character';
+import {Character, LoadOut} from './Character';
 import {Damage, DamageTag, Elements} from './Damage';
 import {DamageModGroup} from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
+import * as SeedRandom from 'seedrandom';
+
+let start = performance.now();
 
 export class Orange {
     public flavor: string;
@@ -25,7 +28,7 @@ console.log('for fucks sake this works!');
 (<any>window).namespace = globalState;
 /* tslint:enable */
 
-let d = new Damage(new Set([DamageTag.Melee]), 40, 10);
+let d = new Damage(new Set([DamageTag.Melee]), 40, 10, 0, 10);
 
 let group = new DamageModGroup([]);
 group.add(new DamageMods.Armor(15));
@@ -34,6 +37,7 @@ group.add(new DamageMods.Armor(50));
 group.add(new DamageMods.Armor(25));
 group.add(new DamageMods.Resistance(0.4, Elements.Fire));
 group.add(new DamageMods.Resistance(0.1, Elements.Fire));
+group.add(new DamageMods.Resistance(0.75, Elements.Cold));
 
 let newD = group.apply(d);
 console.log(newD);
@@ -44,6 +48,12 @@ if (newD.fire !== 5) {
     throw Error('fire is not 5 wtf');
 }
 
+SeedRandom('testing!', { global: true });
+console.log(Math.random());
+
 console.log(new Startup());
 
-console.log(new Character());
+console.log(new Character(new LoadOut([]), 'basic attack', 'bad stats'));
+
+let end = performance.now();
+console.log(`took ${(end - start).toFixed(2)}ms`);

@@ -1,12 +1,7 @@
 // import * as StateMachine from 'state-machine';
-import {IDamageMod} from './DamageMods';
+import {IDamageMod, DamageModGroup} from './DamageMods';
+import {entityCode} from './random';
 
-export class Character {
-    public identity: string;
-    public gear: string;
-    public skill: string;
-    public baseStats: string;
-}
 
 export const enum GearSlot {
     Chest = 0,
@@ -21,6 +16,48 @@ export class Gear {
         public mods: Array<IDamageMod>) { }
 }
 
+export class LoadOut {
+    constructor(public gear: Array<Gear>) {
+        // Ensure each piece of gear is sitting in a different slot
+        let usedSlots = new Set<GearSlot>();
+        let overlaps = gear.some(g => {
+            if (usedSlots.has(g.slot)) return true;
+            usedSlots.add(g.slot);
+            return false;
+        });
+
+        if (overlaps) throw Error('multiple gear items in same slot');
+    }
+
+    /**
+     * Create a DamageModGroup from this LoadOut
+     *
+     * This is typically used to seed the initial DamageModGroup for a hit.
+     */
+    public getMods(): DamageModGroup {
+        let mods = this.gear.reduce((prev, g): Array<IDamageMod> => {
+            prev.push(...g.mods);
+            return prev;
+        }, []);
+        return new DamageModGroup(mods);
+    }
+}
+
+export class Character {
+    public identity: string;
+    constructor(public loadout: LoadOut,
+        public skill: string,
+        public baseStats: string) {
+
+        this.identity = entityCode();
+    }
+}
+
+export class CharacterState {
+    constructor() {
+        throw Error('badness not impleented');
+    }
+}
 // export class Orange implements StateMachine {
 //     public flavor: string;
 //     public current: string;
