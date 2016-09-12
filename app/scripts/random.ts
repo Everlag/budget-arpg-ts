@@ -5,7 +5,7 @@ export function intfromInterval(min: number, max: number): number {
 
 /** Return a new hexadecimal entity code */
 export function entityCode(): string {
-    let code = new Array<string>;
+    let code = new Array<string>();
     for (let i = 0; i <= 1; i++) {
         code.push(intfromInterval(0, 255).toString(16));
     }

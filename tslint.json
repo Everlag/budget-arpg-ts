@@ -6,6 +6,7 @@
     "curly": false,
     "object-literal-sort-keys": false,
     "quotemark": [true, "single", "avoid-escape"],
+    "no-unused-variable": [true, {"ignore-pattern": "^on"}],
     "trailing-comma": [
       true,
       {
