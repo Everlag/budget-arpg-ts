@@ -92,8 +92,14 @@ export interface IDamageMod {
     position: DamageModOrder;
     /** Apply the DamageMod to provided Damage */
     apply(d: Damage): Damage;
+    /** 
+     * Create a new DamageMod with equivalent functionality
+     *
+     * This allows a DamageModGroup to be cloned.
+     */
+    clone(): IDamageMod;
     /** Sum two IDamgeMod instances of the same name with canSum true */
-    sum(other: IDamageMod): IDamageMod;
+    sum?(other: IDamageMod): IDamageMod;
     /**
      * Determine if two DamageMods with equal names can be summed.
      *
@@ -216,5 +222,10 @@ export class DamageModGroup {
         });
 
         return d;
+    }
+
+    /** Return a copy of this DamageModGroup which is mutable */
+    public clone(): DamageModGroup {
+        return new DamageModGroup(this.mods.map(m => m.clone()));
     }
 }

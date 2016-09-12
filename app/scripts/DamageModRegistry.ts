@@ -1,5 +1,6 @@
 import {IDamageMod, DamageModOrder} from './DamageMods';
 import {Damage, Elements} from './Damage';
+import {intfromInterval} from './Random';
 
 /** The application of armor to mitigate physical damage */
 export class Armor implements IDamageMod {
@@ -17,8 +18,12 @@ export class Armor implements IDamageMod {
         return d;
     }
 
-    public sum(other: Armor): IDamageMod {
+    public sum(other: Armor): Armor {
         return new Armor(this.armor + other.armor);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign({}, this);
     }
 }
 
@@ -42,7 +47,7 @@ export class Resistance implements IDamageMod {
         return d;
     }
 
-    public sum(other: Resistance): IDamageMod {
+    public sum(other: Resistance): Resistance {
         if (!this.summable(other)) {
             throw Error('this mod is not summable with other');
         }
@@ -54,5 +59,58 @@ export class Resistance implements IDamageMod {
 
     public summable(other: Resistance): Boolean {
         return this.element === other.element;
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign({}, this);
+    }
+}
+
+/** Zero the Damage to nothing */
+export class Zero implements IDamageMod {
+    public name = 'ZeroDamageMod';
+    public canSum = false;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostInitial;
+
+    public apply(d: Damage): Damage {
+        // I know, it looks bad :|
+        d.phys = 0;
+        d.setElement(Elements.Fire, 0);
+        d.setElement(Elements.Light, 0);
+        d.setElement(Elements.Cold, 0);
+
+        return d;
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign({}, this);
+    }
+}
+
+/** Local, flat physical damage  */
+export class LocalPhysical implements IDamageMod {
+    public name = 'LocalPhysicalDamageMod';
+    public canSum = true;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.Local;
+
+    constructor(public min: number, public max: number) { }
+
+    public apply(d: Damage): Damage {
+        // Roll in range
+        let flatPhys = intfromInterval(this.min, this.max);
+        d.phys += flatPhys;
+        return d;
+    }
+
+    public sum(other: LocalPhysical): LocalPhysical {
+        return new LocalPhysical(this.min + other.min, this.max + other.max);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign({}, this);
     }
 }
