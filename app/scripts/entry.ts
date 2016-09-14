@@ -2,7 +2,7 @@ import {Startup} from './helloWorld';
 import {State, Event, GeneralEffect} from './ARPGState';
 import {Character, LoadOut} from './Character';
 import {Damage, DamageTag, Elements} from './Damage';
-import {DamageModGroup} from './DamageMods';
+import {DamageModGroup, DamageModDirection} from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 
@@ -31,13 +31,16 @@ console.log('for fucks sake this works!');
 let d = new Damage(new Set([DamageTag.Melee]), 40, 10, 0, 10);
 
 let group = new DamageModGroup([]);
-group.add(new DamageMods.Armor(15));
-group.add(new DamageMods.Armor(10));
-group.add(new DamageMods.Armor(50));
-group.add(new DamageMods.Armor(25));
-group.add(new DamageMods.Resistance(0.4, Elements.Fire));
-group.add(new DamageMods.Resistance(0.1, Elements.Fire));
-group.add(new DamageMods.Resistance(0.75, Elements.Cold));
+group.add(new DamageMods.Armor(15), DamageModDirection.Taking);
+group.add(new DamageMods.Armor(10), DamageModDirection.Taking);
+group.add(new DamageMods.Armor(50), DamageModDirection.Taking);
+group.add(new DamageMods.Armor(25), DamageModDirection.Taking);
+group.add(new DamageMods.Resistance(0.4, Elements.Fire),
+    DamageModDirection.Taking);
+group.add(new DamageMods.Resistance(0.1, Elements.Fire),
+    DamageModDirection.Taking);
+group.add(new DamageMods.Resistance(0.75, Elements.Cold),
+    DamageModDirection.Taking);
 
 let newD = group.apply(d);
 console.log(newD);

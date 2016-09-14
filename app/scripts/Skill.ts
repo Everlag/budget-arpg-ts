@@ -91,3 +91,9 @@ class TossedBladeEffect implements ISkillEffect {
 // I LIKE THIS.
 // 
 // THIS DOES NOT WORK.
+
+// YO: Damage should apply to a Character, a Character
+// shouldn't manually apply a Damage. Damage should have a chance
+// to ignite/freeze/shock and can apply those on characters when necessary.
+// 
+// ie, '10% chance to ignite' is a DamageMod and effects that on the Damage.

@@ -75,6 +75,21 @@ export const enum DamageModOrder {
     Mitigation,
 }
 
+/** 
+ * Possible direction a DamageMod requires in order to be applied.
+ *
+ * As mitigations are included as DamageMods, this prevents a Character
+ * from mitigating the damage they deal.
+ */
+export const enum DamageModDirection {
+    /** Apply this mod only when taking receiving damage */
+    Taking = 0,
+    /** Apply this mod only when dealing damage */
+    Dealing,
+    /** Always apply this mod */
+    Always
+}
+
 /** Any Damage Modifier that effects the calculation of damage */
 export interface IDamageMod {
     /** Name of a DamageMod */
@@ -90,6 +105,13 @@ export interface IDamageMod {
     reqTags: Set<DamageTag>;
     /** The point this DamageMod is applied relative to other DamageMods */
     position: DamageModOrder;
+    /**
+     * The direction this DamageMod requires to be applied
+     *
+     * DamageModGroup is required to silently drop mods of the incorrect
+     * direction when adding them.
+     */
+    direction: DamageModDirection;
     /** Apply the DamageMod to provided Damage */
     apply(d: Damage): Damage;
     /** 
@@ -190,8 +212,17 @@ export class DamageModGroup {
 
     constructor(public mods: Array<IDamageMod>) { }
 
-    public add(mod: IDamageMod) {
-        this.mods.push(mod);
+    /** 
+     * Add a DamageMod to the group under the context of a specific direction
+     *
+     * This silently drops mods of the incorrect direction.
+     */
+    public add(mod: IDamageMod, direction: DamageModDirection) {
+        // Push the mod only if the direction is satisfied
+        if (mod.direction === direction ||
+            mod.direction === DamageModDirection.Always) {
+            this.mods.push(mod);
+        }
     }
 
     /**

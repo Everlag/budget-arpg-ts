@@ -1,4 +1,4 @@
-import {IDamageMod, DamageModOrder} from './DamageMods';
+import {IDamageMod, DamageModOrder, DamageModDirection} from './DamageMods';
 import {Damage, Elements} from './Damage';
 import {intfromInterval} from './Random';
 
@@ -6,6 +6,8 @@ import {intfromInterval} from './Random';
 export class Armor implements IDamageMod {
     public name = 'ArmorDamageMod';
     public canSum = true;
+
+    public direction = DamageModDirection.Taking;
 
     public reqTags = new Set();
     public position = DamageModOrder.Mitigation;
@@ -31,6 +33,8 @@ export class Armor implements IDamageMod {
 export class Resistance implements IDamageMod {
     public name = 'ResistsDamageMod';
     public canSum = true;
+
+    public direction = DamageModDirection.Taking;
 
     public reqTags = new Set();
     public position = DamageModOrder.Mitigation;
@@ -71,6 +75,8 @@ export class Zero implements IDamageMod {
     public name = 'ZeroDamageMod';
     public canSum = false;
 
+    public direction = DamageModDirection.Always;
+
     public reqTags = new Set();
     public position = DamageModOrder.PostInitial;
 
@@ -93,6 +99,8 @@ export class Zero implements IDamageMod {
 export class LocalPhysical implements IDamageMod {
     public name = 'LocalPhysicalDamageMod';
     public canSum = true;
+
+    public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
     public position = DamageModOrder.Local;
