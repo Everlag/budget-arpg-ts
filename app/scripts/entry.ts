@@ -57,20 +57,26 @@ let basicLoadout = new LoadOut([
     new Gear(GearSlot.Gloves, [
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.LocalPhysical(2, 7),
-        new DamageMods.Armor(20),
+        new DamageMods.Armor(10),
+        new DamageMods.Armor(10),
     ]),
 ]);
 
 let basex = new Character(basicLoadout, new BasicAttack(), 'worseness');
 let basey = new Character(basicLoadout, new BasicAttack(), 'worseness');
-let x = new CharacterState(basex);
-let y = new CharacterState(basey);
+let x = new CharacterState(basex, globalState);
+let y = new CharacterState(basey, globalState);
 console.log(x);
 x.engage(y);
 y.engage(x);
 
 x.applySkill(y, globalState);
 console.log(y.context);
+
+/* tslint:disable */
+(<any>window).x = x;
+(<any>window).y = y;
+/* tslint:enable */
 
 // x.disengage();
 console.log(x);

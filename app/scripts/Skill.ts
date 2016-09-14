@@ -82,7 +82,7 @@ export interface ISkillEffect {
 
 class BasicAttackEffect implements ISkillEffect {
     public name = 'Basic Attack Effect';
-    public tags: Array<DamageTag> = [];
+    public tags = [DamageTag.Attack, DamageTag.Melee];
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
@@ -112,7 +112,7 @@ export class BasicAttack implements ISkill {
  */
 class TossedBladeEffect implements ISkillEffect {
     public name = 'Tossed Blade Effect';
-    public tags: Array<DamageTag> = [];
+    public tags = [DamageTag.Attack, DamageTag.Ranged];
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
@@ -148,26 +148,7 @@ export class TossedBlade implements ISkill {
     }
 }
 
-// Is it possible to not have to create an event inside a Skill?
-// 
-// An event requires the complete execution to be present, could we
-// potentially return an immediate DamageModGroup,
-// a post-DamageModGroup, and a delay for that post to be executed at?
-
 // PROBLEM: range needs to be resolved when the event resolves, not
 // when the skill is executed... Each skill has a type of range...
 // SOLUTION: RangeDamageMod will be constructed with two CharacterStates and
 // distance is calculated at apply time. I like this.
-
-// EH: since we can have multiple effects per skill, perhaps a SkillEffect
-// should be an (optional) scheduled time and a DamageModGroup?
-// 
-// I LIKE THIS.
-// 
-// THIS DOES NOT WORK.
-
-// YO: Damage should apply to a Character, a Character
-// shouldn't manually apply a Damage. Damage should have a chance
-// to ignite/freeze/shock and can apply those on characters when necessary.
-// 
-// ie, '10% chance to ignite' is a DamageMod and effects that on the Damage.

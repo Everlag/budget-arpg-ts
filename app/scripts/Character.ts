@@ -41,6 +41,15 @@ export class LoadOut {
             return prev;
         }, []);
     }
+
+    /** Get the gear in the provided slot or null if none exist */
+    public getSlot(slot: GearSlot): Gear {
+        let filtered = this.gear.filter(g => g.slot === slot);
+        if (filtered.length === 1) {
+            return filtered[0];
+        }
+        return null;
+    }
 }
 
 export class Character {
@@ -102,6 +111,9 @@ export class CharacterState implements StateMachine {
     // so that they can be called in a type safe manner.
     public engage: (target: CharacterState) => {};
     public disengage: () => {};
+    public decide: () => {};
+    public startskill: () => {};
+    public endskill: () => {};
     public die: () => {};
 
     // Context shared across states
@@ -114,7 +126,7 @@ export class CharacterState implements StateMachine {
     // exist when entering. They need only perform a type assertion.
     private scratch: StateContext;
 
-    constructor(private character: Character) {
+    constructor(private character: Character, public state: State) {
         this.context = new GlobalContext(character);
     }
 
@@ -141,27 +153,35 @@ export class CharacterState implements StateMachine {
         console.log('onenterengaged', this.current);
     }
 
-    /** ... */
-    private onbeforeengage() {
-        console.log('onbeforeengage', this.current);
-    }
-
     /** Perform actions using pre-prepared state. */
     private onengage(e: string, from: CharacterStates, to: CharacterStates,
         target: CharacterState) {
 
+        // Set target 
         this.context.target = target;
-    }
 
-    /** Clear state that was prepared and mutated while in engaged */
-    private onleaveengaged() {
-        console.log('onleaveengaged', this.current);
+        // Decide how to proceed
+        this.decide();
     }
 
     private ondecide() {
+        // Check if target dead yet
+        if (this.target.isDead) {
+            this.disengage();
+        }
+
+        // Use the skill on the target
+        // TODO: schedule skill...
+
         console.log('ondecide', this.current);
     }
 
+    /**
+     * This CharacterState goes into the unrecoverable state of 'dead'
+     *
+     * NOTE: it is expected that 'oneleaveSTATE' handlers will take care
+     * of canceling any events which need to be canceled and similar.
+     */
     private ondie() {
         console.log('ondie', this.current);
     }
@@ -181,6 +201,7 @@ export type CharacterStates =
     'idle'
     | 'engaged'
     | 'deciding'
+    | 'skillwait'
     | 'dead'
 
 StateMachine.create({
@@ -191,48 +212,11 @@ StateMachine.create({
 
         { name: 'decide', from: 'engaged', to: 'deciding' },
 
+        { name: 'startskill', from: 'deciding', to: 'skillwait' },
+        { name: 'endskill', from: 'skillwait', to: 'engaged' },
+
         { name: 'disengage', from: 'engaged', to: 'idle' },
 
         { name: 'die', from: '*', to: 'dead' },
     ],
 });
-// export class Orange implements StateMachine {
-//     public flavor: string;
-//     public current: string;
-//     constructor(flavor: string) {
-//         this.flavor = flavor;
-//     }
-// }
-
-// interface IApples extends StateMachine {
-//     warn?: StateMachineEvent;
-//     panic?: StateMachineEvent;
-//     calm?: StateMachineEvent;
-//     clear?: StateMachineEvent;
-// }
-
-// let fsm: IApples = StateMachine.create({
-//     initial: 'green',
-//     events: [
-//         { name: 'warn', from: 'green', to: 'yellow' },
-//         { name: 'panic', from: 'yellow', to: 'red' },
-//         { name: 'calm', from: 'red', to: 'yellow' },
-//         { name: 'clear', from: 'yellow', to: 'green' },
-//     ],
-//     callbacks: {
-//         onpanic: function(event?, from?, to?, msg?) { console.log('apples'); },
-//         onclear: function(event?, from?, to?, msg?) { console.log('cleared'); },
-//         ongreen: function(event?, from?, to?) { document.body.className = 'green'; },
-//         onyellow: function(event?, from?, to?) { document.body.className = 'yellow'; },
-//         onred: function(event?, from?, to?) { document.body.className = 'red'; },
-//     },
-// });
-
-// fsm.warn();
-// fsm.panic();
-
-// console.log('we were executed!');
-
-// export = fsm;
-
-console.log('Character.ts was executed completely!');

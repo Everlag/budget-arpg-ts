@@ -8,8 +8,8 @@ export const enum Elements {
 
 export const enum DamageTag {
     // Top level tags that must be attached to Damage
-    Attack, DOT, Melee, Projectile,
-    AOE, Fire, Light, Cold,
+    Attack, Spell, DOT,
+    Melee, Ranged,
 }
 
 export class Damage {

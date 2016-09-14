@@ -95,10 +95,14 @@ export class Zero implements IDamageMod {
     }
 }
 
-/** Local, flat physical damage */
+/** 
+ * Local, flat physical damage
+ *
+ * NOTE: this does sum
+ */
 export class LocalPhysical implements IDamageMod {
     public name = 'LocalPhysicalDamageMod';
-    public canSum = false;
+    public canSum = true;
 
     public direction = DamageModDirection.Dealing;
 
@@ -113,6 +117,10 @@ export class LocalPhysical implements IDamageMod {
         // Apply flat physical
         d.phys += flatPhys;
         return d;
+    }
+
+    public sum(other: LocalPhysical): LocalPhysical {
+        return new LocalPhysical(other.min + this.min, other.max + this.max);
     }
 
     public clone(): IDamageMod {
