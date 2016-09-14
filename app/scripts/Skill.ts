@@ -1,7 +1,7 @@
-import {TicksPerSecond} from './ARPGState';
+import {TicksPerSecond, State, Event} from './ARPGState';
 import {CharacterState} from './Character';
-import {DamageTag} from './Damage';
-import {DamageModGroup} from './DamageMods';
+import {DamageTag, Damage} from './Damage';
+import {DamageModGroup, DamageModDirection} from './DamageMods';
 import {Zero} from './DamageModRegistry';
 
 /** 
@@ -11,6 +11,8 @@ import {Zero} from './DamageModRegistry';
  * postmods may be null to indicate no followup is to be scheduled.
  */
 export class SkillResult {
+    private applied: Boolean = false;
+
     constructor(public mods: DamageModGroup,
         public postmods: DamageModGroup, public postDelay: number) {
 
@@ -19,18 +21,57 @@ export class SkillResult {
         }
     }
 
+    /** 
+     * Apply this SkillEffect.
+     *
+     * This can be used only once.
+     */
+    public execute(target: CharacterState, state: State) {
+        // Prevent multiple execution.
+        if (this.applied) throw Error('cannot apply SkillResult > 1 time');
+        this.applied = true;
+
+        // Calculate and apply initial damage
+        let initialDamage = this.mods.apply(new Damage(new Set()));
+        initialDamage.apply(target);
+
+        // Skip followup calculation when we don't have one.
+        if (!this.hasFollowup) return;
+
+        // Schedule an event to complete to resolve the postmods
+        let e = new Event(state.now + this.postDelay,
+            () => {
+                // Don't bother calculating and applying damage for the dead...
+                if (target.isDead) return;
+
+                // Calculate and apply scheduled post-damage
+                let postDamage = this.postmods.apply(new Damage(new Set()));
+                postDamage.apply(target);
+
+                return null;
+            }, null);
+        state.addEvent(e);
+    }
+
     get hasFollowup(): Boolean {
         return this.postmods != null;
     }
 }
 
 /**
+ * A full skill with all effects
+ */
+export interface ISkill {
+    name: String;
+    effects: Array<ISkillEffect>;
+    execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): Array<SkillResult>;
+}
+
+/**
  * A partial part of a skill's execution.
  *
- * This peforms several specific actions
- *     - generating events to be added to the queue
- *     - adding mods to a DamageModGroup
- *     TODO: complete
+ * TODO: handle range here when we introduce it
  */
 export interface ISkillEffect {
     name: String;
@@ -46,7 +87,23 @@ class BasicAttackEffect implements ISkillEffect {
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
 
-        return null;
+        return new SkillResult(mods, null, null);
+    }
+}
+
+export class BasicAttack implements ISkill {
+    public name = 'Basic Attack';
+    public effects = [new BasicAttackEffect()];
+
+    /** Execute each effect of this skill and return the results */
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): Array<SkillResult> {
+
+        let results = this.effects.map(effect => {
+            return effect.execute(target, user, mods.clone());
+        });
+
+        return results;
     }
 }
 
@@ -61,7 +118,8 @@ class TossedBladeEffect implements ISkillEffect {
         mods: DamageModGroup): SkillResult {
 
         // Zero initial damage
-        let initial = new DamageModGroup([new Zero()]);
+        let initial = new DamageModGroup();
+        initial.add(new Zero(), DamageModDirection.Always);
 
         // Schedule future damage 0.3s from now
         let postDelay = TicksPerSecond * 0.3;
@@ -74,6 +132,22 @@ class TossedBladeEffect implements ISkillEffect {
 
 }
 
+export class TossedBlade implements ISkill {
+    public name = 'Tossed Blade';
+    public effects = [new TossedBladeEffect()];
+
+    /** Execute each effect of this skill and return the results */
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): Array<SkillResult> {
+
+        let results = this.effects.map(effect => {
+            return effect.execute(target, user, mods.clone());
+        });
+
+        return results;
+    }
+}
+
 // Is it possible to not have to create an event inside a Skill?
 // 
 // An event requires the complete execution to be present, could we
@@ -82,7 +156,7 @@ class TossedBladeEffect implements ISkillEffect {
 
 // PROBLEM: range needs to be resolved when the event resolves, not
 // when the skill is executed... Each skill has a type of range...
-// SOLUTION: RangeSKILL will be constructed with two CharacterStates and 
+// SOLUTION: RangeDamageMod will be constructed with two CharacterStates and
 // distance is calculated at apply time. I like this.
 
 // EH: since we can have multiple effects per skill, perhaps a SkillEffect

@@ -1,6 +1,7 @@
 import * as StateMachine from 'state-machine';
-import {IDamageMod, DamageModGroup} from './DamageMods';
-import {Event} from './ARPGState';
+import {IDamageMod, DamageModGroup, DamageModDirection} from './DamageMods';
+import {Event, State} from './ARPGState';
+import {ISkill} from './Skill';
 import {entityCode} from './random';
 
 export const enum GearSlot {
@@ -30,26 +31,34 @@ export class LoadOut {
     }
 
     /**
-     * Create a DamageModGroup from this LoadOut
+     * Create an array of DamageMods from this LoadOut
      *
      * This is typically used to seed the initial DamageModGroup for a hit.
      */
-    public getMods(): DamageModGroup {
-        let mods = this.gear.reduce((prev, g): Array<IDamageMod> => {
+    public getMods(): Array<IDamageMod> {
+        return this.gear.reduce((prev, g): Array<IDamageMod> => {
             prev.push(...g.mods);
             return prev;
         }, []);
-        return new DamageModGroup(mods);
     }
 }
 
 export class Character {
     public identity: string;
     constructor(public loadout: LoadOut,
-        public skill: string,
+        public skill: ISkill,
         public baseStats: string) {
 
         this.identity = entityCode();
+    }
+
+    /** 
+     * Return a DamageModGroup representing the entire
+     * set of Damage modifiers that this Character can have.
+     */
+    public getMods(): Array<IDamageMod> {
+        // TODO: include passives and such
+        return this.loadout.getMods();
     }
 
     get health(): number {
@@ -93,6 +102,7 @@ export class CharacterState implements StateMachine {
     // so that they can be called in a type safe manner.
     public engage: (target: CharacterState) => {};
     public disengage: () => {};
+    public die: () => {};
 
     // Context shared across states
     public context: GlobalContext;
@@ -106,6 +116,24 @@ export class CharacterState implements StateMachine {
 
     constructor(private character: Character) {
         this.context = new GlobalContext(character);
+    }
+
+    public applySkill(target: CharacterState, state: State) {
+        // Create a DamageModGroup to hold our actions
+        let mods = new DamageModGroup();
+        // Add our mods as the damage Dealer
+        this.character.getMods().forEach(mod => {
+            mods.add(mod, DamageModDirection.Dealing);
+        });
+        // Add our target's mods as the damage Taker
+        target.character.getMods().forEach(mod => {
+            mods.add(mod, DamageModDirection.Taking);
+        });
+
+        // Pass the DamageModGroup off to the skill for execution
+        // and execute the results.
+        this.character.skill.execute(target, this, mods)
+            .forEach(result => result.execute(target, state));
     }
 
     /** Prepare state for anything happening in the engaged state */
@@ -134,9 +162,18 @@ export class CharacterState implements StateMachine {
         console.log('ondecide', this.current);
     }
 
+    private ondie() {
+        console.log('ondie', this.current);
+    }
+
     // Return the current target this state has
     get target(): CharacterState {
         return this.context.target;
+    }
+
+    // Return the current target this state has
+    get isDead(): Boolean {
+        return this.is('dead');
     }
 }
 
@@ -144,6 +181,7 @@ export type CharacterStates =
     'idle'
     | 'engaged'
     | 'deciding'
+    | 'dead'
 
 StateMachine.create({
     target: CharacterState.prototype,
@@ -154,19 +192,10 @@ StateMachine.create({
         { name: 'decide', from: 'engaged', to: 'deciding' },
 
         { name: 'disengage', from: 'engaged', to: 'idle' },
+
+        { name: 'die', from: '*', to: 'dead' },
     ],
 });
-
-let basex = new Character(new LoadOut([]), 'badness', 'worseness');
-let basey = new Character(new LoadOut([]), 'badness', 'worseness');
-let x = new CharacterState(basex);
-let y = new CharacterState(basey);
-console.log(x);
-x.engage(y);
-y.engage(x);
-// x.disengage();
-console.log(x);
-
 // export class Orange implements StateMachine {
 //     public flavor: string;
 //     public current: string;

@@ -1,6 +1,6 @@
-import {Startup} from './helloWorld';
-import {State, Event, GeneralEffect} from './ARPGState';
-import {Character, LoadOut} from './Character';
+import {State, Event} from './ARPGState';
+import {Character, CharacterState, LoadOut, Gear, GearSlot} from './Character';
+import {BasicAttack} from './Skill';
 import {Damage, DamageTag, Elements} from './Damage';
 import {DamageModGroup, DamageModDirection} from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
@@ -30,7 +30,7 @@ console.log('for fucks sake this works!');
 
 let d = new Damage(new Set([DamageTag.Melee]), 40, 10, 0, 10);
 
-let group = new DamageModGroup([]);
+let group = new DamageModGroup();
 group.add(new DamageMods.Armor(15), DamageModDirection.Taking);
 group.add(new DamageMods.Armor(10), DamageModDirection.Taking);
 group.add(new DamageMods.Armor(50), DamageModDirection.Taking);
@@ -52,11 +52,28 @@ if (newD.fire !== 5) {
 }
 
 SeedRandom('testing!', { global: true });
-console.log(Math.random());
 
-console.log(new Startup());
+let basicLoadout = new LoadOut([
+    new Gear(GearSlot.Gloves, [
+        new DamageMods.LocalPhysical(2, 3),
+        new DamageMods.LocalPhysical(2, 7),
+        new DamageMods.Armor(20),
+    ]),
+]);
 
-console.log(new Character(new LoadOut([]), 'basic attack', 'bad stats'));
+let basex = new Character(basicLoadout, new BasicAttack(), 'worseness');
+let basey = new Character(basicLoadout, new BasicAttack(), 'worseness');
+let x = new CharacterState(basex);
+let y = new CharacterState(basey);
+console.log(x);
+x.engage(y);
+y.engage(x);
+
+x.applySkill(y, globalState);
+console.log(y.context);
+
+// x.disengage();
+console.log(x);
 
 let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms`);

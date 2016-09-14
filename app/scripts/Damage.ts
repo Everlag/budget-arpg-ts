@@ -1,3 +1,4 @@
+import {CharacterState} from './Character';
 
 export const enum Elements {
     Fire = 0,
@@ -63,5 +64,26 @@ export class Damage {
             default:
                 throw Error('fell through Elements switch');
         }
+    }
+
+    /** 
+     * Apply this Damage to a target
+     *
+     * TODO: handle conditions and such.
+     */
+    public apply(target: CharacterState) {
+        // Apply summed damage to health.
+        target.context.health -= this.sum();
+
+        // If the target is dead, mark them as such
+        if (target.context.health < 0) {
+            target.die();
+        }
+
+        // TODO: handle applying conditions...
+    }
+
+    public sum(): number {
+        return this.phys + this.fire + this.light + this.cold;
     }
 }

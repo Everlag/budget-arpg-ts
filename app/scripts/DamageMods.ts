@@ -136,6 +136,7 @@ export interface IDamageMod {
  * This enforces the application order and summation of its underlying mods.
  */
 export class DamageModGroup {
+
     /** Return all summable mods as their sums */
     private static sum(mods: Array<IDamageMod>): Array<IDamageMod> {
         let summed = new Array<IDamageMod>();
@@ -210,7 +211,11 @@ export class DamageModGroup {
         return mods.sort((a, b) => a.position - b.position);
     }
 
-    constructor(public mods: Array<IDamageMod>) { }
+    public mods: Array<IDamageMod>;
+
+    constructor() {
+        this.mods = [];
+    }
 
     /** 
      * Add a DamageMod to the group under the context of a specific direction
@@ -236,6 +241,8 @@ export class DamageModGroup {
         let summed = DamageModGroup.sum(this.mods);
         let ordered = DamageModGroup.order(summed);
 
+        console.log(ordered);
+
         // Apply each mod.
         ordered.forEach(mod => {
             // Ensure there is at least some tag overlap
@@ -255,8 +262,15 @@ export class DamageModGroup {
         return d;
     }
 
-    /** Return a copy of this DamageModGroup which is mutable */
+    /** 
+     * Return a copy of this DamageModGroup which is
+     * mutable without modifying this group.
+     */
     public clone(): DamageModGroup {
-        return new DamageModGroup(this.mods.map(m => m.clone()));
+        let clone = new DamageModGroup();
+        // Directly modify the clone's underlying mods as we've lost
+        // the context to use add
+        clone.mods.push(...this.mods.map(m => m.clone()));
+        return clone;
     }
 }

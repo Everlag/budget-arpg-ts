@@ -25,7 +25,7 @@ export class Armor implements IDamageMod {
     }
 
     public clone(): IDamageMod {
-        return Object.assign({}, this);
+        return Object.assign(new Armor(0), this);
     }
 }
 
@@ -66,7 +66,7 @@ export class Resistance implements IDamageMod {
     }
 
     public clone(): IDamageMod {
-        return Object.assign({}, this);
+        return Object.assign(new Resistance(0, Elements.Fire), this);
     }
 }
 
@@ -91,14 +91,14 @@ export class Zero implements IDamageMod {
     }
 
     public clone(): IDamageMod {
-        return Object.assign({}, this);
+        return Object.assign(new Zero(), this);
     }
 }
 
-/** Local, flat physical damage  */
+/** Local, flat physical damage */
 export class LocalPhysical implements IDamageMod {
     public name = 'LocalPhysicalDamageMod';
-    public canSum = true;
+    public canSum = false;
 
     public direction = DamageModDirection.Dealing;
 
@@ -110,15 +110,12 @@ export class LocalPhysical implements IDamageMod {
     public apply(d: Damage): Damage {
         // Roll in range
         let flatPhys = intfromInterval(this.min, this.max);
+        // Apply flat physical
         d.phys += flatPhys;
         return d;
     }
 
-    public sum(other: LocalPhysical): LocalPhysical {
-        return new LocalPhysical(this.min + other.min, this.max + other.max);
-    }
-
     public clone(): IDamageMod {
-        return Object.assign({}, this);
+        return Object.assign(new LocalPhysical(0, 0), this);
     }
 }
