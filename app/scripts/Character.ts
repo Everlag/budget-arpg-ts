@@ -2,7 +2,7 @@ import * as StateMachine from 'state-machine';
 import {IDamageMod, DamageModGroup, DamageModDirection} from './DamageMods';
 import {Stats, StatModGroup, baseStatsArg, IStatMod} from './StatMods';
 import {Event, State} from './ARPGState';
-import {ISkill} from './Skill';
+import {ISkill, SkillTiming} from './Skill';
 import {entityCode} from './random';
 
 export const enum GearSlot {
@@ -94,7 +94,8 @@ export class Character {
 }
 
 class SkillContext {
-    constructor(public skill: string, public event: Event) { }
+    public skill: ISkill;
+    public event: Event;
 
     public cancel() {
         this.event.cancel();
@@ -105,13 +106,13 @@ class SkillContext {
 export type StateContext = SkillContext;
 
 class GlobalContext {
-    public health: number;
+    public stats: Stats;
+    public skill: ISkill;
     public target: CharacterState;
 
     constructor(base: Character) {
         // Calculate base stats once
-        let baseStats = base.stats;
-        this.health = baseStats.health;
+        ({ stats: this.stats, skill: this.skill } = base);
     }
 }
 
@@ -169,7 +170,7 @@ export class CharacterState implements StateMachine {
 
     /** Prepare state for anything happening in the engaged state */
     private onenterengaged() {
-        console.log('onenterengaged', this.current);
+        console.log('onenterengaged', this.current, this.scratch);
     }
 
     /** Perform actions using pre-prepared state. */
@@ -188,11 +189,57 @@ export class CharacterState implements StateMachine {
         if (this.target.isDead) {
             this.disengage();
         }
-
-        // Use the skill on the target
-        // TODO: schedule skill...
-
         console.log('ondecide', this.current);
+
+        // Start using a skill to hit the target
+        this.startskill();
+        this.endskill();
+    }
+
+    private onenterskillwait() {
+        console.log('onenterskillwait', this.current);
+        this.scratch = new SkillContext();
+    }
+
+    private onstartskill() {
+        console.log('onstartskill', this.current, this.scratch);
+
+        // Schedule skill for completion
+        let waitTime: number;
+        switch (this.context.skill.timingBy) {
+            case SkillTiming.Attack:
+                waitTime = this.context.stats.attackTime;
+                break;
+            case SkillTiming.Attack:
+                waitTime = this.context.stats.castTime;
+                break;
+            default:
+                throw Error('fell through timingBy switch');
+        }
+        console.log(this.state);
+        let e = new Event(this.state.now + waitTime,
+            (state: State): Event => {
+                this.endskill();
+                return null;
+            }, null);
+
+        this.scratch.event = e;
+        this.scratch.skill = this.context.skill;
+    }
+
+    /**
+     * Actually perform the skill
+     *
+     * NOTE: this is a before handler rather than exact on
+     *       as this preserves the scratch.
+     */
+    private onbeforeendskill() {
+        console.log('onbeforeendskill', this.current, this.scratch);
+    }
+
+    private onleaveskillwait() {
+        console.log('oneleaveskillwait', this.current);
+        this.scratch = null;
     }
 
     /**
