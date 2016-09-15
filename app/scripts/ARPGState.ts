@@ -10,7 +10,7 @@ export const MaxEventsPerTick = 1000;
 export class State {
 
     /** Current tick the simulaiton is at */
-    public now: number;
+    public now: number = 0;
 
     private queue: PriorityQueue<Event>;
 
@@ -90,9 +90,8 @@ export class Event {
         public action: GeneralEffect,
         public post: GeneralEffect) {
 
-        if (!this.action) {
-            throw Error('invalid passed action');
-        }
+        if (!this.action) throw Error('invalid passed action');
+        if (isNaN(this.when)) throw Error('invalid passed when: NaN');
     }
 
     /**
