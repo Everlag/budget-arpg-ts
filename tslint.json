@@ -7,6 +7,11 @@
     "object-literal-sort-keys": false,
     "quotemark": [true, "single", "avoid-escape"],
     "no-unused-variable": [true, {"ignore-pattern": "^on"}],
+    "whitespace": [true,
+      "check-branch", "check-decl",
+      "check-operator", "check-module",
+      "check-separator", "check-type"
+    ],
     "trailing-comma": [
       true,
       {
