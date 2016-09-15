@@ -1,5 +1,6 @@
 import * as StateMachine from 'state-machine';
 import {IDamageMod, DamageModGroup, DamageModDirection} from './DamageMods';
+import {Stats, StatModGroup, baseStatsArg, IStatMod} from './StatMods';
 import {Event, State} from './ARPGState';
 import {ISkill} from './Skill';
 import {entityCode} from './random';
@@ -14,7 +15,8 @@ export const enum GearSlot {
 
 export class Gear {
     constructor(public slot: GearSlot,
-        public mods: Array<IDamageMod>) { }
+        public damageMods: Array<IDamageMod>,
+        public statMods: Array<IStatMod>) { }
 }
 
 export class LoadOut {
@@ -37,18 +39,21 @@ export class LoadOut {
      */
     public getMods(): Array<IDamageMod> {
         return this.gear.reduce((prev, g): Array<IDamageMod> => {
-            prev.push(...g.mods);
+            prev.push(...g.damageMods);
             return prev;
-        }, []);
+        }, (<Array<IDamageMod>>[]));
     }
 
-    /** Get the gear in the provided slot or null if none exist */
-    public getSlot(slot: GearSlot): Gear {
-        let filtered = this.gear.filter(g => g.slot === slot);
-        if (filtered.length === 1) {
-            return filtered[0];
-        }
-        return null;
+    /**
+     * Create an array of StatMods from this LoadOut
+     *
+     * This is typically used to seed the initial StatModGroup.
+     */
+    public getStatMods(): Array<IStatMod> {
+        return this.gear.reduce((prev, g): Array<IStatMod> => {
+            prev.push(...g.statMods);
+            return prev;
+        }, (<Array<IStatMod>>[]));
     }
 }
 
@@ -70,9 +75,21 @@ export class Character {
         return this.loadout.getMods();
     }
 
-    get health(): number {
-        // TODO: replace, base on stats and such.
-        return 50;
+    /**
+     * Return computed stats for this Character.
+     */
+    get stats(): Stats {
+        // Fetch baseline from gear
+        let base = this.loadout.getStatMods();
+        // TODO: include passives and such
+        // Factor in the skill's modifier to execution time
+        base.push(this.skill.timeMod);
+
+        // Create a new group
+        let group = new StatModGroup();
+        base.forEach(mod => group.add(mod));
+
+        return group.apply(new Stats(baseStatsArg));
     }
 }
 
@@ -92,7 +109,9 @@ class GlobalContext {
     public target: CharacterState;
 
     constructor(base: Character) {
-        ({ health: this.health } = base);
+        // Calculate base stats once
+        let baseStats = base.stats;
+        this.health = baseStats.health;
     }
 }
 

@@ -3,6 +3,7 @@ import {CharacterState} from './Character';
 import {DamageTag, Damage} from './Damage';
 import {DamageModGroup, DamageModDirection} from './DamageMods';
 import {Zero} from './DamageModRegistry';
+import * as StatMods from './StatMods';
 
 /** 
  * A SkillResult contains the mods for the initial skill use
@@ -58,11 +59,25 @@ export class SkillResult {
     }
 }
 
+/** 
+ * The type of timing applied to the skill
+ *
+ * NOTE: relevant DamageTags still need to be present on each SkillEffect
+ */
+export const enum SkillTiming {
+    Attack = 0,
+    Spell,
+}
+
 /**
  * A full skill with all effects
  */
 export interface ISkill {
     name: String;
+    /** How timing for the skill is performed */
+    timingBy: SkillTiming;
+    /** Singular time modifier allowed for a skill */
+    timeMod: StatMods.IStatMod;
     effects: Array<ISkillEffect>;
     execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): Array<SkillResult>;
@@ -93,6 +108,11 @@ class BasicAttackEffect implements ISkillEffect {
 
 export class BasicAttack implements ISkill {
     public name = 'Basic Attack';
+
+    public timingBy = SkillTiming.Attack;
+    // Do not modify the base attack speed set by the gear
+    public timeMod = new StatMods.IncreasedAttackSpeed(0);
+
     public effects = [new BasicAttackEffect()];
 
     /** Execute each effect of this skill and return the results */
@@ -134,6 +154,11 @@ class TossedBladeEffect implements ISkillEffect {
 
 export class TossedBlade implements ISkill {
     public name = 'Tossed Blade';
+
+    public timingBy = SkillTiming.Attack;
+    // 10% increased inherent attack speed for fun
+    public timeMod = new StatMods.IncreasedAttackSpeed(0.1);
+
     public effects = [new TossedBladeEffect()];
 
     /** Execute each effect of this skill and return the results */

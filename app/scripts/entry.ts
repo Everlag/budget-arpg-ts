@@ -1,10 +1,11 @@
 import {State, Event} from './ARPGState';
 import {Character, CharacterState, LoadOut, Gear, GearSlot} from './Character';
-import {BasicAttack} from './Skill';
 import {Damage, DamageTag, Elements} from './Damage';
 import {DamageModGroup, DamageModDirection} from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
+import * as StatMods from './StatMods';
+import * as Skills from './Skill';
 
 let start = performance.now();
 
@@ -59,11 +60,14 @@ let basicLoadout = new LoadOut([
         new DamageMods.LocalPhysical(2, 7),
         new DamageMods.Armor(10),
         new DamageMods.Armor(10),
-    ]),
+    ],
+        [
+            new StatMods.FlatAddedHealth(10),
+        ]),
 ]);
 
-let basex = new Character(basicLoadout, new BasicAttack(), 'worseness');
-let basey = new Character(basicLoadout, new BasicAttack(), 'worseness');
+let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
+let basey = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
 let x = new CharacterState(basex, globalState);
 let y = new CharacterState(basey, globalState);
 console.log(x);

@@ -3,27 +3,39 @@ import {TicksPerSecond} from './ARPGState';
 /** Argument type for Stats constructor */
 export type StatsArg = {
     Health: number;
-    AttackSpeed: number;
-    CastSpeed: number;
+    /** 
+     * Tick time required to attack
+     *
+     * Default is one second with
+     * an attack Skill applying a flat added mod.
+     */
+    AttackTime: number;
+    /**
+     * Tick time required to cast a spell
+     *
+     * Default is zero with
+     * a Spell Skill applying a flat added mod.
+     */
+    CastTime: number;
 };
 
 /** Sane default baseline stats */
 export const baseStatsArg: StatsArg = {
     Health: 50,
-    AttackSpeed: 1 / TicksPerSecond,
-    CastSpeed: 1 / TicksPerSecond,
+    AttackTime: TicksPerSecond / 1,
+    CastTime: 0,
 };
 
 export class Stats {
     public health: number;
-    public attackSpeed: number;
-    public castSpeed: number;
+    public attackTime: number;
+    public castTime: number;
 
     constructor(base: StatsArg) {
         ({
             Health: this.health,
-            AttackSpeed: this.attackSpeed,
-            CastSpeed: this.castSpeed,
+            AttackTime: this.attackTime,
+            CastTime: this.castTime,
         } = base);
     }
 
@@ -33,7 +45,7 @@ export class Stats {
 }
 
 export const enum StatModOrder {
-    Local = 0,
+    Base = 0,
     Add,
     Mult
 }
@@ -71,6 +83,26 @@ export class FlatAddedHealth implements IStatMod {
     }
 }
 
+/** Flat attack time */
+export class BaseAttackTime implements IStatMod {
+    public name = 'BaseAttackSpeedMod';
+    public canSum = true;
+
+    public position = StatModOrder.Add;
+
+    constructor(public time: number) { }
+
+    public apply(s: Stats): Stats {
+        s.attackTime += this.time;
+        return s;
+    }
+
+    public sum(other: BaseAttackTime): BaseAttackTime {
+        // Disallow multiple BaseAttackTimes by catching it here.
+        throw Error('BaseAttackTime should have a single source');
+    }
+}
+
 /** Percentage increased attack speed */
 export class IncreasedAttackSpeed implements IStatMod {
     public name = 'IncreasedAttackSpeedMod';
@@ -81,7 +113,9 @@ export class IncreasedAttackSpeed implements IStatMod {
     constructor(public percent: number) { }
 
     public apply(s: Stats): Stats {
-        s.attackSpeed *= 1 + this.percent;
+        // Attack time should be reduced by this,
+        // thus the shenanigans.
+        s.attackTime *= 1 / (1 + this.percent);
         return s;
     }
 
