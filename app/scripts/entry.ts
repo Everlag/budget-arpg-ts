@@ -1,4 +1,4 @@
-import {State, Event} from './ARPGState';
+import {State, TicksPerSecond, Event} from './ARPGState';
 import {Character, CharacterState, LoadOut, Gear, GearSlot} from './Character';
 import {Damage, DamageTag, Elements} from './Damage';
 import {DamageModGroup, DamageModDirection} from './DamageMods';
@@ -26,7 +26,7 @@ globalState.addEvent(nextEvent);
 console.log('for fucks sake this works!');
 
 /* tslint:disable */
-(<any>window).namespace = globalState;
+(<any>window).globalState = globalState;
 /* tslint:enable */
 
 let d = new Damage(new Set([DamageTag.Melee]), 40, 10, 0, 10);
@@ -74,9 +74,6 @@ console.log(x);
 x.engage(y);
 y.engage(x);
 
-x.applySkill(y, globalState);
-console.log(y.context);
-
 /* tslint:disable */
 (<any>window).x = x;
 (<any>window).y = y;
@@ -84,6 +81,15 @@ console.log(y.context);
 
 // x.disengage();
 console.log(x);
+
+// Simulate 1 minute of combat
+for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
+    let completed = globalState.step();
+    if (completed > 0) {
+        console.log(`retired ${completed} events`);
+    }
+}
+console.log(y.context);
 
 let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms`);

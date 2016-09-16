@@ -24,6 +24,9 @@ export class State {
      * Add an event to be executed in the future to the queue
      */
     public addEvent(e: Event) {
+        // Sanity check incoming events
+        if (e === undefined) throw Error('undefined event');
+        if (e.when < this.now) throw Error('event when before now');
         // Refuse to add stale items to the queue
         if (e.when < this.now) {
             throw Error('provided event has when less than now');
@@ -53,9 +56,10 @@ export class State {
             // Remove lowest event from queue
             let e = this.queue.dequeue();
 
-            // Apply event and handle any sheduled followups
+            // Apply event and handle any truthy scheduled followups
             let followups = e.apply(this);
-            followups.forEach((followup) => this.addEvent(followup));
+            followups.filter(followup => Boolean(followup))
+                .forEach((followup) => this.addEvent(followup));
 
             completed++;
             if (completed > MaxEventsPerTick) {
@@ -160,5 +164,9 @@ export class Event {
         // Set the delayed flag and note when we should execute
         this.delayed = true;
         this.newWhen = newWhen;
+    }
+
+    public get wasExecuted() {
+        return this.used;
     }
 }

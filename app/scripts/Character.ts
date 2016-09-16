@@ -188,12 +188,12 @@ export class CharacterState implements StateMachine {
         // Check if target dead yet
         if (this.target.isDead) {
             this.disengage();
+            return;
         }
         console.log('ondecide', this.current);
 
         // Start using a skill to hit the target
         this.startskill();
-        this.endskill();
     }
 
     private onenterskillwait() {
@@ -225,6 +225,8 @@ export class CharacterState implements StateMachine {
 
         this.scratch.event = e;
         this.scratch.skill = this.context.skill;
+
+        this.state.addEvent(e);
     }
 
     /**
@@ -235,10 +237,24 @@ export class CharacterState implements StateMachine {
      */
     private onbeforeendskill() {
         console.log('onbeforeendskill', this.current, this.scratch);
+        this.applySkill(this.target, this.state);
+    }
+
+    /**
+     * Handle follow up for performing a skill.
+     *
+     * NOTE: skill was executed in onbefore handler for endskill.
+     */
+    private onendskill() {
+        this.decide();
     }
 
     private onleaveskillwait() {
         console.log('oneleaveskillwait', this.current);
+        // Cancel any event if not executed
+        let {event} = this.scratch;
+        if (!event.wasExecuted) event.cancel();
+        // Zero scratch
         this.scratch = null;
     }
 
@@ -281,7 +297,7 @@ StateMachine.create({
         { name: 'startskill', from: 'deciding', to: 'skillwait' },
         { name: 'endskill', from: 'skillwait', to: 'engaged' },
 
-        { name: 'disengage', from: 'engaged', to: 'idle' },
+        { name: 'disengage', from: ['deciding', 'engaged'], to: 'idle' },
 
         { name: 'die', from: '*', to: 'dead' },
     ],
