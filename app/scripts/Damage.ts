@@ -1,4 +1,5 @@
 import {CharacterState} from './Character';
+import {rollSuccess} from './random';
 
 export const enum Elements {
     Fire = 0,
@@ -13,6 +14,11 @@ export const enum DamageTag {
 }
 
 export class Damage {
+    /** Chance for Damage application to be a critical strike */
+    public criticalChance = 0.05;
+    /** Multiplier applied to critical strikes */
+    public criticalMultiplier = 1.5;
+
     constructor(public tags: Set<DamageTag>,
         public phys: number = 0,
         public fire: number = 0,
@@ -72,8 +78,17 @@ export class Damage {
      * TODO: handle conditions and such.
      */
     public apply(target: CharacterState) {
+        // Calculate sum
+        let sum = this.sum();
+
+        // Check if crit and 
+        // TODO: set condition chance to 100% for relevant damage types...
+        if (rollSuccess(this.criticalChance)) {
+            sum *= this.criticalMultiplier;
+        }
+
         // Apply summed damage to health.
-        target.context.stats.health -= this.sum();
+        target.context.stats.health -= sum;
 
         // If the target is dead, mark them as such
         if (target.context.stats.health < 0) {

@@ -127,3 +127,31 @@ export class LocalPhysical implements IDamageMod {
         return Object.assign(new LocalPhysical(0, 0), this);
     }
 }
+
+export class IncreasedCritChance implements IDamageMod {
+    public name = 'IncreasedCritChanceDamageMod';
+    public canSum = true;
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.GlobalAdd;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage): Damage {
+        // Roll in range
+        d.criticalChance *= 1 + this.percent;
+        // Cap if chance is higher than maximum
+        d.criticalChance = Math.min(d.criticalChance, 0.80);
+        return d;
+    }
+
+    public sum(other: IncreasedCritChance): IncreasedCritChance {
+        return new IncreasedCritChance(this.percent + other.percent);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new IncreasedCritChance(0), this);
+    }
+}

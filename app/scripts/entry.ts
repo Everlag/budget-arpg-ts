@@ -60,6 +60,7 @@ let basicLoadout = new LoadOut([
         new DamageMods.LocalPhysical(2, 7),
         new DamageMods.Armor(10),
         new DamageMods.Armor(10),
+        new DamageMods.IncreasedCritChance(0.50),
     ],
         [
             new StatMods.FlatAddedHealth(10),
