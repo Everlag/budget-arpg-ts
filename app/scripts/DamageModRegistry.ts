@@ -1,6 +1,6 @@
-import {IDamageMod, DamageModOrder, DamageModDirection} from './DamageMods';
-import {Damage, Elements} from './Damage';
-import {intfromInterval} from './Random';
+import { IDamageMod, DamageModOrder, DamageModDirection } from './DamageMods';
+import { Damage, Elements } from './Damage';
+import { intfromInterval } from './Random';
 
 /** The application of armor to mitigate physical damage */
 export class Armor implements IDamageMod {

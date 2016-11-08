@@ -1,9 +1,9 @@
 import * as StateMachine from 'state-machine';
-import {IDamageMod, DamageModGroup, DamageModDirection} from './DamageMods';
-import {Stats, StatModGroup, baseStatsArg, IStatMod} from './StatMods';
-import {Event, State} from './ARPGState';
-import {ISkill, SkillTiming} from './Skill';
-import {entityCode} from './random';
+import { IDamageMod, DamageModGroup, DamageModDirection } from './DamageMods';
+import { Stats, StatModGroup, baseStatsArg, IStatMod } from './StatMods';
+import { Event, State } from './ARPGState';
+import { ISkill, SkillTiming } from './Skill';
+import { entityCode } from './random';
 
 export const enum GearSlot {
     Chest = 0,
@@ -106,13 +106,25 @@ class SkillContext {
 export type StateContext = SkillContext;
 
 class GlobalContext {
+    /** Current stats */
     public stats: Stats;
+    /** 
+     * Baseline stats to check as necessary
+     * ie, for maximum health
+     */
+    public baseStats: Stats;
     public skill: ISkill;
     public target: CharacterState;
 
     constructor(base: Character) {
         // Calculate base stats once
-        ({ stats: this.stats, skill: this.skill } = base);
+        let baseStats: Stats;
+        ({ stats: baseStats, skill: this.skill } = base);
+        // Assign our base and freeze it to prevent modification
+        this.baseStats = baseStats.clone();
+        Object.freeze(this.baseStats);
+        // Assign our temporary stats
+        this.stats = baseStats.clone();
     }
 }
 
@@ -144,7 +156,7 @@ export class CharacterState implements StateMachine {
     // 
     // This means that event handlers can expect their state to already
     // exist when entering. They need only perform a type assertion.
-    private scratch: StateContext;
+    private scratch: StateContext | null;
 
     constructor(private character: Character, public state: State) {
         this.context = new GlobalContext(character);
@@ -203,6 +215,7 @@ export class CharacterState implements StateMachine {
 
     private onstartskill() {
         console.log('onstartskill', this.current, this.scratch);
+        if (!this.scratch) throw 'onstartskill without scratch';
 
         // Schedule skill for completion
         let waitTime: number;
@@ -218,7 +231,7 @@ export class CharacterState implements StateMachine {
         }
         console.log(this.state);
         let e = new Event(this.state.now + waitTime,
-            (state: State): Event => {
+            (state: State): Event | null => {
                 this.endskill();
                 return null;
             }, null);
@@ -251,6 +264,7 @@ export class CharacterState implements StateMachine {
 
     private onleaveskillwait() {
         console.log('oneleaveskillwait', this.current);
+        if (!this.scratch) throw 'onleaveskillwait without scratch';
         // Cancel any event if not executed
         let {event} = this.scratch;
         if (!event.wasExecuted) event.cancel();

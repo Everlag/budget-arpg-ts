@@ -81,7 +81,7 @@ export class State {
  *
  * It may return null to indicate no followup should be scheduled.
  */
-export type GeneralEffect = (state: State) => Event;
+export type GeneralEffect = (state: State) => Event | null;
 
 export class Event {
     private used: Boolean = false;
@@ -92,7 +92,7 @@ export class Event {
 
     constructor(public when: number,
         public action: GeneralEffect,
-        public post: GeneralEffect) {
+        public post: GeneralEffect | null) {
 
         if (!this.action) throw Error('invalid passed action');
         if (isNaN(this.when)) throw Error('invalid passed when: NaN');
@@ -122,13 +122,13 @@ export class Event {
         }
 
         // Execute actions 
-        let followups: Array<Event> = [];
+        let followups: Array<Event | null> = [];
 
         // Perform initial action and followup, if it exists
         followups.push(this.action(state));
         if (this.post) followups.push(this.post(state));
         // Return only non-null followups
-        return followups.filter((e) => e !== null);
+        return <Array<Event>>followups.filter((e) => e !== null);
     }
 
     /**

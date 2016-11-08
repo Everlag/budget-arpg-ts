@@ -1,8 +1,8 @@
-import {TicksPerSecond, State, Event} from './ARPGState';
-import {CharacterState} from './Character';
-import {DamageTag, Damage} from './Damage';
-import {DamageModGroup, DamageModDirection} from './DamageMods';
-import {Zero} from './DamageModRegistry';
+import { TicksPerSecond, State, Event } from './ARPGState';
+import { CharacterState } from './Character';
+import { DamageTag, Damage } from './Damage';
+import { DamageModGroup, DamageModDirection } from './DamageMods';
+import { Zero } from './DamageModRegistry';
 import * as StatMods from './StatMods';
 
 /** 
@@ -15,7 +15,7 @@ export class SkillResult {
     private applied: Boolean = false;
 
     constructor(public mods: DamageModGroup,
-        public postmods: DamageModGroup, public postDelay: number) {
+        public postmods: DamageModGroup | null, public postDelay: number) {
 
         if (mods === null) {
             throw Error('mods is null, prefer to add(new Zero()) instead');
@@ -43,11 +43,13 @@ export class SkillResult {
         let e = new Event(state.now + this.postDelay,
             () => {
                 // Don't bother calculating and applying damage for the dead...
-                if (target.isDead) return;
+                if (target.isDead) return null;
 
                 // Calculate and apply scheduled post-damage
-                let postDamage = this.postmods.apply(new Damage(new Set()));
-                postDamage.apply(target);
+                if (this.postmods) {
+                    let postDamage = this.postmods.apply(new Damage(new Set()));
+                    postDamage.apply(target);
+                }
 
                 return null;
             }, null);
@@ -102,7 +104,7 @@ class BasicAttackEffect implements ISkillEffect {
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
 
-        return new SkillResult(mods, null, null);
+        return new SkillResult(mods, new DamageModGroup(), 0);
     }
 }
 

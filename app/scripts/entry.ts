@@ -1,7 +1,7 @@
-import {State, TicksPerSecond, Event} from './ARPGState';
-import {Character, CharacterState, LoadOut, Gear, GearSlot} from './Character';
-import {Damage, DamageTag, Elements} from './Damage';
-import {DamageModGroup, DamageModDirection} from './DamageMods';
+import { State, TicksPerSecond, Event } from './ARPGState';
+import { Character, CharacterState, LoadOut, Gear, GearSlot } from './Character';
+import { Damage, DamageTag, Elements } from './Damage';
+import { DamageModGroup, DamageModDirection } from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
@@ -64,6 +64,10 @@ let basicLoadout = new LoadOut([
     ],
         [
             new StatMods.FlatAddedHealth(10),
+        ]),
+    new Gear(GearSlot.Boots, [],
+        [
+            new StatMods.IncreasedMovespeed(0.25),
         ]),
 ]);
 

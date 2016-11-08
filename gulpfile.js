@@ -25,9 +25,8 @@ const transpileTarget = 'entry.js';
 // Fetch project details
 const tsbuildConf = {
   outFile: transpileTarget,
-  sortOutput: true,
 };
-let tsProject = typescript.createProject('tsconfig.json', tsbuildConf);
+let tsProject = typescript.createProject('./tsconfig.json', tsbuildConf);
 
 function isFixed(file) {
   // Has ESLint fixed the file contents?
@@ -91,7 +90,7 @@ gulp.task('tsbuild', () => {
 
   return gulp.src(targets, {base: './'})
     .pipe(sourcemaps.init())
-    .pipe(typescript(tsProject))
+    .pipe(tsProject())
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('./app/scripts/'));
 });

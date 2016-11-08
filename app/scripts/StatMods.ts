@@ -1,8 +1,13 @@
-import {TicksPerSecond} from './ARPGState';
+import { TicksPerSecond } from './ARPGState';
+import { PositionBounds } from './Movement';
 
 /** Argument type for Stats constructor */
 export type StatsArg = {
     Health: number;
+    /**
+     * Number of units moved in a single tick
+     */
+    Movespeed: number;
     /** 
      * Tick time required to attack
      *
@@ -22,18 +27,21 @@ export type StatsArg = {
 /** Sane default baseline stats */
 export const baseStatsArg: StatsArg = {
     Health: 50,
+    Movespeed: (PositionBounds.ScreenSize / 2) / TicksPerSecond,
     AttackTime: TicksPerSecond / 1,
     CastTime: 0,
 };
 
 export class Stats {
     public health: number;
+    public movespeed: number;
     public attackTime: number;
     public castTime: number;
 
     constructor(base: StatsArg) {
         ({
             Health: this.health,
+            Movespeed: this.movespeed,
             AttackTime: this.attackTime,
             CastTime: this.castTime,
         } = base);
@@ -121,6 +129,26 @@ export class IncreasedAttackSpeed implements IStatMod {
 
     public sum(other: IncreasedAttackSpeed): IncreasedAttackSpeed {
         return new IncreasedAttackSpeed(this.percent + other.percent);
+    }
+}
+
+/** Percentage increased movement speed */
+export class IncreasedMovespeed implements IStatMod {
+    public name = 'IncreasedMovespeed';
+    public canSum = true;
+
+    public position = StatModOrder.Add;
+
+    constructor(public percent: number) { }
+
+    public apply(s: Stats): Stats {
+        // Movespeed should be increased by this
+        s.movespeed *= (1 + this.percent);
+        return s;
+    }
+
+    public sum(other: IncreasedMovespeed): IncreasedMovespeed {
+        return new IncreasedMovespeed(this.percent + other.percent);
     }
 }
 

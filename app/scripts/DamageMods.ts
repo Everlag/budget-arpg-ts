@@ -1,4 +1,4 @@
-import {Damage, DamageTag} from './Damage';
+import { Damage, DamageTag } from './Damage';
 
 /**
  * The absolute ordering of DamageMods.
@@ -174,14 +174,20 @@ export class DamageModGroup {
         // has summable present or not.
         if (!bucket[0].summable) {
             // Naive reduce to sum as we don't need to check summable
-            return [bucket.reduce((prev, current) => current.sum(prev))];
+            return [bucket.reduce((prev, current) => {
+                if (current.sum) {
+                    return current.sum(prev)
+                } else {
+                    throw 'attempting so sum unsummage';
+                }
+            })];
         }
 
         // Keep track of which mods have been summed
         let used = new Set<number>();
 
         // Handle summable not allowing mods of the same name to be merged
-        return bucket.map((mod, topIndex) => {
+        return <Array<IDamageMod>>bucket.map((mod, topIndex) => {
             // Skip used mods
             if (used.has(topIndex)) return null;
             // Note that this mod is used. At this point, it will
@@ -190,10 +196,10 @@ export class DamageModGroup {
 
             bucket.forEach((other, index) => {
                 // Skip used mods
-                if (used.has(index)) return;
+                if (used.has(index)) return null;
 
                 // Check if these are compatible mods
-                if (mod.summable(other)) {
+                if (mod.summable && mod.sum && mod.summable(other)) {
                     mod = mod.sum(other);
                     // Note that this has been used
                     used.add(index);

@@ -1,5 +1,5 @@
-import {CharacterState} from './Character';
-import {rollSuccess} from './random';
+import { CharacterState } from './Character';
+import { rollSuccess } from './random';
 
 export const enum Elements {
     Fire = 0,
