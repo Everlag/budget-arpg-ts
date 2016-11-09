@@ -2,10 +2,12 @@ import { State, TicksPerSecond, Event } from './ARPGState';
 import { Character, CharacterState, LoadOut, Gear, GearSlot } from './Character';
 import { Damage, DamageTag, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
+import { Position } from './Movement';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
 import * as Skills from './Skill';
+import * as Behaviors from './BehaviorRegistry';
 
 let start = performance.now();
 
@@ -73,8 +75,10 @@ let basicLoadout = new LoadOut([
 
 let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
 let basey = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
-let x = new CharacterState(basex, globalState);
-let y = new CharacterState(basey, globalState);
+let x = new CharacterState(basex, globalState,
+    new Position(0), new Behaviors.AgressiveNaiveMelee());
+let y = new CharacterState(basey, globalState,
+    new Position(0), new Behaviors.AgressiveNaiveMelee());
 console.log(x);
 x.engage(y);
 y.engage(x);

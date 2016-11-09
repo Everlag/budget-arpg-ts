@@ -3,6 +3,8 @@ import { IDamageMod, DamageModGroup, DamageModDirection } from './DamageMods';
 import { Stats, StatModGroup, baseStatsArg, IStatMod } from './StatMods';
 import { Event, State } from './ARPGState';
 import { ISkill, SkillTiming } from './Skill';
+import { Pack, IBehavior } from './Pack';
+import { Position } from './Movement';
 import { entityCode } from './random';
 
 export const enum GearSlot {
@@ -114,9 +116,12 @@ class GlobalContext {
      */
     public baseStats: Stats;
     public skill: ISkill;
-    public target: CharacterState;
+    public target: Pack;
+    public behavior: IBehavior;
+    public position: Position;
 
-    constructor(base: Character) {
+    constructor(base: Character,
+        initPosition: Position, behavior: IBehavior) {
         // Calculate base stats once
         let baseStats: Stats;
         ({ stats: baseStats, skill: this.skill } = base);
@@ -125,6 +130,10 @@ class GlobalContext {
         Object.freeze(this.baseStats);
         // Assign our temporary stats
         this.stats = baseStats.clone();
+        // Assign our behavior
+        this.behavior = behavior;
+        // And our position
+        this.position = initPosition;
     }
 }
 
@@ -158,8 +167,10 @@ export class CharacterState implements StateMachine {
     // exist when entering. They need only perform a type assertion.
     private scratch: StateContext | null;
 
-    constructor(private character: Character, public state: State) {
-        this.context = new GlobalContext(character);
+    constructor(private character: Character,
+        public state: State, initPosition: Position, behavior: IBehavior) {
+        behavior.setState(this);
+        this.context = new GlobalContext(character, initPosition, behavior);
     }
 
     public applySkill(target: CharacterState, state: State) {
@@ -187,7 +198,7 @@ export class CharacterState implements StateMachine {
 
     /** Perform actions using pre-prepared state. */
     private onengage(e: string, from: CharacterStates, to: CharacterStates,
-        target: CharacterState) {
+        target: Pack) {
 
         // Set target 
         this.context.target = target;
@@ -198,7 +209,7 @@ export class CharacterState implements StateMachine {
 
     private ondecide() {
         // Check if target dead yet
-        if (this.target.isDead) {
+        if (this.target && this.target.isDead) {
             this.disengage();
             return;
         }
@@ -284,11 +295,11 @@ export class CharacterState implements StateMachine {
 
     // Return the current target this state has
     get target(): CharacterState {
-        return this.context.target;
+        return this.context.behavior.getTarget(this.context.target);
     }
 
     // Return the current target this state has
-    get isDead(): Boolean {
+    get isDead(): boolean {
         return this.is('dead');
     }
 }
