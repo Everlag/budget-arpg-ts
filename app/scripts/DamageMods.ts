@@ -176,9 +176,9 @@ export class DamageModGroup {
             // Naive reduce to sum as we don't need to check summable
             return [bucket.reduce((prev, current) => {
                 if (current.sum) {
-                    return current.sum(prev)
+                    return current.sum(prev);
                 } else {
-                    throw 'attempting so sum unsummage';
+                    throw 'attempting so sum unsummable';
                 }
             })];
         }
