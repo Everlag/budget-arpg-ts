@@ -94,8 +94,6 @@ export const enum DamageModDirection {
 export interface IDamageMod {
     /** Name of a DamageMod */
     name: String;
-    /** Whether or not the DamageMod can be reasonably summed */
-    canSum: Boolean;
     /**
      * The set of DamageTag enums that all must
      * be present for the mod to be applied.
@@ -120,14 +118,31 @@ export interface IDamageMod {
      * This allows a DamageModGroup to be cloned.
      */
     clone(): IDamageMod;
+}
+
+/**
+ * Any IDamageMod that can be summed with either all or
+ * a subset of the same mod
+ */
+export interface IDamageModSummable extends IDamageMod {
     /** Sum two IDamgeMod instances of the same name with canSum true */
-    sum?(other: IDamageMod): IDamageMod;
+    sum(other: IDamageModSummable): IDamageModSummable;
     /**
      * Determine if two DamageMods with equal names can be summed.
      *
      * This is optional and is checked as necessary.
      */
     summable?(other: IDamageMod): Boolean;
+}
+
+/**
+ * Narrow the provided mod to either summable or false.
+ */
+function isIDamageModSummable(mod: any): IDamageModSummable | Boolean {
+    if (typeof mod.sum === 'function') {
+        return <IDamageModSummable>mod;
+    }
+    return false;
 }
 
 /**
@@ -142,18 +157,20 @@ export class DamageModGroup {
         let summed = new Array<IDamageMod>();
 
         // Buckets of summable mods with the same names
-        let buckets = new Map<String, Array<IDamageMod>>();
+        let buckets = new Map<String, Array<IDamageModSummable>>();
 
         // Split the mods so they are easier to process.
         mods.forEach(mod => {
+            // Manually narrow the type
+            let summable = isIDamageModSummable(mod);
             // Immediately filter out non-summable mods
-            if (!mod.canSum) {
+            if (!summable) {
                 summed.push(mod);
             } else {
                 // Push summable mods into buckets
                 let bucket = buckets.get(mod.name);
                 if (!bucket) bucket = new Array();
-                bucket.push(mod);
+                bucket.push(<IDamageModSummable>summable);
                 buckets.set(mod.name, bucket);
             }
         });
@@ -169,7 +186,7 @@ export class DamageModGroup {
     }
 
     /** Reduce the bucket to mods which can be merged. */
-    private static mergeBucket(bucket: Array<IDamageMod>): Array<IDamageMod> {
+    private static mergeBucket(bucket: Array<IDamageModSummable>): Array<IDamageMod> {
         // Two possible paths, either the first mod in a bucket
         // has summable present or not.
         if (!bucket[0].summable) {

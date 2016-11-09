@@ -1,11 +1,13 @@
-import { IDamageMod, DamageModOrder, DamageModDirection } from './DamageMods';
+import {
+    IDamageMod, IDamageModSummable,
+    DamageModOrder, DamageModDirection,
+} from './DamageMods';
 import { Damage, Elements } from './Damage';
 import { intfromInterval } from './Random';
 
 /** The application of armor to mitigate physical damage */
-export class Armor implements IDamageMod {
+export class Armor implements IDamageModSummable {
     public name = 'ArmorDamageMod';
-    public canSum = true;
 
     public direction = DamageModDirection.Taking;
 
@@ -30,9 +32,8 @@ export class Armor implements IDamageMod {
 }
 
 /** The application of a resistance to mitigate an element's damage */
-export class Resistance implements IDamageMod {
+export class Resistance implements IDamageModSummable {
     public name = 'ResistsDamageMod';
-    public canSum = true;
 
     public direction = DamageModDirection.Taking;
 
@@ -73,7 +74,6 @@ export class Resistance implements IDamageMod {
 /** Zero the Damage to nothing */
 export class Zero implements IDamageMod {
     public name = 'ZeroDamageMod';
-    public canSum = false;
 
     public direction = DamageModDirection.Always;
 
@@ -100,9 +100,8 @@ export class Zero implements IDamageMod {
  *
  * NOTE: this does sum
  */
-export class LocalPhysical implements IDamageMod {
+export class LocalPhysical implements IDamageModSummable {
     public name = 'LocalPhysicalDamageMod';
-    public canSum = true;
 
     public direction = DamageModDirection.Dealing;
 
@@ -128,9 +127,8 @@ export class LocalPhysical implements IDamageMod {
     }
 }
 
-export class IncreasedCritChance implements IDamageMod {
+export class IncreasedCritChance implements IDamageModSummable {
     public name = 'IncreasedCritChanceDamageMod';
-    public canSum = true;
 
     public direction = DamageModDirection.Dealing;
 
