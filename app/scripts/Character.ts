@@ -95,7 +95,15 @@ export class Character {
     }
 }
 
-class SkillContext {
+/** Interface all CharacterState contexts must satisfy */
+interface IContext {
+    /** Event associated with this context */
+    event: Event;
+    /** Cancel current event */
+    cancel(): void;
+}
+
+class SkillContext implements IContext {
     public skill: ISkill;
     public target: CharacterState;
     public event: Event;
@@ -105,8 +113,27 @@ class SkillContext {
     }
 }
 
+class MoveContext implements IContext {
+    /** Target the move is resolving relative to */
+    public target: CharacterState;
+    /** Event resolving upon the completion of the move */
+    public event: Event;
+    /** Direction moved relative to the target */
+    public direction: MovementDirection;
+
+    /** Multiplier in {-1, 1} applied to movement */
+    public moveCoeff: number;
+    /** When the movement started */
+    public start: number;
+
+    public cancel() {
+        // TODO: interpolate to position reached.
+        this.event.cancel();
+    }
+}
+
 // Possible contexts which a state can have.
-export type StateContext = SkillContext;
+export type StateContext = IContext;
 
 class GlobalContext {
     /** Current stats */
@@ -233,7 +260,9 @@ export class CharacterState implements StateMachine {
 
     private onstartskill() {
         console.log('onstartskill', this.current, this.scratch);
-        if (!this.scratch) throw 'onstartskill without scratch';
+        if (!(this.scratch instanceof SkillContext)) {
+            throw 'onstartskill without scratch';
+        }
 
         // Choose a target
         let target = this.targetCharacter;
@@ -276,7 +305,9 @@ export class CharacterState implements StateMachine {
      *       as this preserves the scratch.
      */
     private onbeforeendskill() {
-        if (!this.scratch) throw 'onstartskill without scratch';
+        if (!(this.scratch instanceof SkillContext)) {
+            throw 'onstartskill without scratch';
+        }
         console.log('onbeforeendskill', this.current, this.scratch);
         this.applySkill(this.scratch.target, this.scratch.skill, this.state);
     }
