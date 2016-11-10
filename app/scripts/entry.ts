@@ -1,7 +1,8 @@
 import { State, TicksPerSecond, Event } from './ARPGState';
-import { Character, CharacterState, LoadOut, Gear, GearSlot } from './Character';
+import { Character, LoadOut, Gear, GearSlot } from './Character';
 import { Damage, DamageTag, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
+import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
@@ -75,10 +76,17 @@ let basicLoadout = new LoadOut([
 
 let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
 let basey = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
-let x = new CharacterState(basex, globalState,
-    new Position(0), new Behaviors.AgressiveNaiveMelee());
-let y = new CharacterState(basey, globalState,
-    new Position(0), new Behaviors.AgressiveNaiveMelee());
+
+let xInit = [
+    new PackInit(basex, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+];
+let yInit = [
+    new PackInit(basey, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+];
+
+let x = new Pack(xInit, globalState);
+let y = new Pack(yInit, globalState);
+
 console.log(x);
 x.engage(y);
 y.engage(x);
@@ -98,7 +106,6 @@ for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
         console.log(`retired ${completed} events`);
     }
 }
-console.log(y.context);
 
 let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms`);

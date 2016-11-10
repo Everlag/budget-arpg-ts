@@ -150,7 +150,7 @@ export class CharacterState implements StateMachine {
     public transitions: StateMachineTransitions;
     // Second, we declare any transitions that are defined below
     // so that they can be called in a type safe manner.
-    public engage: (target: CharacterState) => {};
+    public engage: (target: Pack) => {};
     public disengage: () => {};
     public decide: () => {};
     public startskill: () => {};

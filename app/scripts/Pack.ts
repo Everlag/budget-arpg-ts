@@ -6,7 +6,7 @@ import { Character, CharacterState } from './Character';
  * An argument to Pack that bundles initial Character information
  * along with necessary behavior.
  */
-class PackInit {
+export class PackInit {
     constructor(public character: Character,
         public position: Position, public behavior: IBehavior) { }
 }
@@ -19,6 +19,11 @@ export class Pack {
             this.states.push(new CharacterState(c.character,
                 state, c.position, c.behavior));
         });
+    }
+
+    /** Engage every member of this pack with the opposing Pack */
+    public engage(target: Pack) {
+        this.states.forEach((c) => c.engage(target));
     }
 
     /** Determine if all states report as dead */
