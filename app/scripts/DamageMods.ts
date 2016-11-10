@@ -1,4 +1,5 @@
 import { Damage, DamageTag } from './Damage';
+import { MovementDirection } from './Movement';
 
 /**
  * The absolute ordering of DamageMods.
@@ -118,6 +119,24 @@ export interface IDamageMod {
      * This allows a DamageModGroup to be cloned.
      */
     clone(): IDamageMod;
+}
+
+/** 
+ * A DamageMod that determines the impact of distance
+ *
+ * Note: typical usage is a skill adding a clone of its saved instance
+ *       with the actual distance set.
+ */
+export interface IRangeMod extends IDamageMod {
+    /** Distance the skill is used from the target */
+    distance: number;
+    /**
+     * Determine how to move based entirely on provided distance
+     *
+     * target is the minimum coefficient you wish the mod to apply,
+     * higher coefficient means more damage.
+     */
+    movement(distance: number, target: number): MovementDirection;
 }
 
 /**
