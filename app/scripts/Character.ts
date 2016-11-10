@@ -97,6 +97,7 @@ export class Character {
 
 class SkillContext {
     public skill: ISkill;
+    public target: CharacterState;
     public event: Event;
 
     public cancel() {
@@ -208,8 +209,8 @@ export class CharacterState implements StateMachine {
     }
 
     private ondecide() {
-        // Check if target dead yet
-        if (this.target && this.target.isDead) {
+        // Check if target entirely dead yet
+        if (this.context.target && this.context.target.isDead) {
             this.disengage();
             return;
         }
@@ -227,6 +228,15 @@ export class CharacterState implements StateMachine {
     private onstartskill() {
         console.log('onstartskill', this.current, this.scratch);
         if (!this.scratch) throw 'onstartskill without scratch';
+
+        // Choose a target
+        let target = this.targetCharacter;
+        if (target === null) {
+            // Decide again if we can't get a target
+            this.decide();
+            return;
+        }
+        this.scratch.target = target;
 
         // Schedule skill for completion
         let waitTime: number;
@@ -260,8 +270,9 @@ export class CharacterState implements StateMachine {
      *       as this preserves the scratch.
      */
     private onbeforeendskill() {
+        if (!this.scratch) throw 'onstartskill without scratch';
         console.log('onbeforeendskill', this.current, this.scratch);
-        this.applySkill(this.target, this.state);
+        this.applySkill(this.scratch.target, this.state);
     }
 
     /**
@@ -293,8 +304,10 @@ export class CharacterState implements StateMachine {
         console.log('ondie', this.current);
     }
 
-    // Return the current target this state has
-    get target(): CharacterState {
+    /**
+     * Return a chosen target to attack
+     */
+    get targetCharacter(): CharacterState | null {
         return this.context.behavior.getTarget(this.context.target);
     }
 

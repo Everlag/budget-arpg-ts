@@ -30,6 +30,11 @@ export class Pack {
     public get isDead(): boolean {
         return this.states.every((c) => c.isDead);
     }
+
+    /** Return all non-dead states */
+    public get Living(): Array<CharacterState> {
+        return this.states.filter(c => !c.isDead);
+    }
 }
 
 /** Any behavior affecting the positioning of a Character in combat */
@@ -37,7 +42,7 @@ export interface IBehavior {
     /** Set the character state this behavior will have */
     setState(c: CharacterState): void;
     /** Target choice, null indicates no valid choice to be made */
-    getTarget(p: Pack): CharacterState;
+    getTarget(p: Pack): CharacterState | null;
     /** Direction to move relative to the provided CharacterState */
     getDirection(c: CharacterState): MovementDirection;
 }

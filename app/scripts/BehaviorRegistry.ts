@@ -11,11 +11,14 @@ export class AgressiveNaiveMelee implements IBehavior {
         this.state = c;
     }
 
-    public getTarget(p: Pack): CharacterState {
+    public getTarget(p: Pack): CharacterState | null {
         if (!this.state) throw 'State of IBehavior not set';
 
+        let living = p.Living;
+        if (living.length === 0) return null;
+
         // Find the closest target, a single reduce does the job
-        return p.states.reduce((prev, current) => {
+        return p.Living.reduce((prev, current) => {
 
             let currentDist = this.state.context.position
                 .distanceTo(current.context.position);

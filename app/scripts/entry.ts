@@ -66,7 +66,7 @@ let basicLoadout = new LoadOut([
         new DamageMods.IncreasedCritChance(0.50),
     ],
         [
-            new StatMods.FlatAddedHealth(10),
+            new StatMods.FlatAddedHealth(120),
         ]),
     new Gear(GearSlot.Boots, [],
         [
@@ -74,14 +74,33 @@ let basicLoadout = new LoadOut([
         ]),
 ]);
 
+let trashLoadout = new LoadOut([
+    new Gear(GearSlot.Gloves, [
+        new DamageMods.LocalPhysical(1, 2),
+        new DamageMods.LocalPhysical(2, 3),
+        new DamageMods.Armor(4),
+    ],
+        [
+            new StatMods.FlatAddedHealth(4),
+        ]),
+    new Gear(GearSlot.Boots, [],
+        [
+            new StatMods.IncreasedMovespeed(0.5),
+        ]),
+]);
+
 let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
-let basey = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
+
+let baseTrash = new Character(trashLoadout,
+    new Skills.BasicAttack(), 'worseness');
 
 let xInit = [
     new PackInit(basex, new Position(0), new Behaviors.AgressiveNaiveMelee()),
 ];
 let yInit = [
-    new PackInit(basey, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
 ];
 
 let x = new Pack(xInit, globalState);
