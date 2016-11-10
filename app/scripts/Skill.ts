@@ -102,8 +102,8 @@ export interface ISkillEffect {
 }
 
 class BasicAttackEffect implements ISkillEffect {
-    public static rangeBy = new DamageMods.DiscreteRange(0,
-        PositionBounds.ScreenSize / 10);
+    public static rangeBy = new DamageMods.
+        DiscreteRange(PositionBounds.ScreenSize / 10);
 
     public name = 'Basic Attack Effect';
     public tags = [DamageTag.Attack, DamageTag.Melee];
@@ -145,8 +145,7 @@ export class BasicAttack implements ISkill {
  */
 class TossedBladeEffect implements ISkillEffect {
     public static rangeBy = new DamageMods
-        .LinearFalloff(0,
-        PositionBounds.ScreenSize / 10,
+        .LinearFalloff(PositionBounds.ScreenSize / 10,
         PositionBounds.ScreenSize / 5);
 
     public name = 'Tossed Blade Effect';

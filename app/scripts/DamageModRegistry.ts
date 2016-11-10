@@ -10,16 +10,22 @@ import { intfromInterval } from './Random';
 export class DiscreteRange implements IRangeMod {
     public name = 'DiscreteRangeDamageMod';
 
-    public direction = DamageModDirection.Taking;
+    public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
     public position = DamageModOrder.Range;
 
-    constructor(public distance: number, public range: number) { };
+    public distance: number | null = null;
+
+    constructor(public range: number) { };
 
     public apply(d: Damage): Damage {
+        if (this.distance === null) throw Error('null distance');
+
+        console.log(`distance to target is ${this.distance}`);
         // Zero if distance outside range
         if (this.distance > this.range) {
+            console.log('DiscreteRange calculated, mult = 0!');
             d.phys = 0;
             d.setElement(Elements.Fire, 0);
             d.setElement(Elements.Light, 0);
@@ -33,8 +39,8 @@ export class DiscreteRange implements IRangeMod {
         return MovementDirection.Closer;
     }
 
-    public clone(): IDamageMod {
-        return Object.assign(new DiscreteRange(0, 0), this);
+    public clone(): IRangeMod {
+        return Object.assign(new DiscreteRange(0), this);
     }
 }
 
@@ -48,13 +54,14 @@ export class DiscreteRange implements IRangeMod {
 export class LinearFalloff implements IRangeMod {
     public name = 'LinearFalloffDamageMod';
 
-    public direction = DamageModDirection.Taking;
+    public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
     public position = DamageModOrder.Range;
 
-    constructor(public distance: number,
-        public minRange: number, public maxRange: number) {
+    public distance: number | null = null;
+
+    constructor(public minRange: number, public maxRange: number) {
 
         if (minRange > maxRange || minRange === maxRange) {
             throw 'invalid minRange, maxRange in LinearFalloffDamageMod';
@@ -62,6 +69,9 @@ export class LinearFalloff implements IRangeMod {
     };
 
     public apply(d: Damage): Damage {
+        if (this.distance === null) throw Error('null distance');
+
+        console.log('LinearFalloff calculated!');
         // Zero if distance outside possible ranges
         if (this.distance < this.minRange || this.distance > this.maxRange) {
             d.phys = 0;
@@ -109,8 +119,8 @@ export class LinearFalloff implements IRangeMod {
         return MovementDirection.Hold;
     }
 
-    public clone(): IDamageMod {
-        return Object.assign(new DiscreteRange(0, 0), this);
+    public clone(): IRangeMod {
+        return Object.assign(new LinearFalloff(0, 0), this);
     }
 }
 

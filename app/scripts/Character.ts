@@ -174,7 +174,7 @@ export class CharacterState implements StateMachine {
         this.context = new GlobalContext(character, initPosition, behavior);
     }
 
-    public applySkill(target: CharacterState, state: State) {
+    public applySkill(target: CharacterState, skill: ISkill, state: State) {
         // Create a DamageModGroup to hold our actions
         let mods = new DamageModGroup();
         // Add our mods as the damage Dealer
@@ -186,9 +186,15 @@ export class CharacterState implements StateMachine {
             mods.add(mod, DamageModDirection.Taking);
         });
 
+        // Add a copy of the skill's RangeMod with appropriate distance set
+        let rangeBy = skill.rangeBy.clone();
+        rangeBy.distance = target.context.position
+            .distanceTo(this.context.position);
+        mods.add(rangeBy, DamageModDirection.Dealing);
+
         // Pass the DamageModGroup off to the skill for execution
         // and execute the results.
-        this.character.skill.execute(target, this, mods)
+        skill.execute(target, this, mods)
             .forEach(result => result.execute(target, state));
     }
 
@@ -272,7 +278,7 @@ export class CharacterState implements StateMachine {
     private onbeforeendskill() {
         if (!this.scratch) throw 'onstartskill without scratch';
         console.log('onbeforeendskill', this.current, this.scratch);
-        this.applySkill(this.scratch.target, this.state);
+        this.applySkill(this.scratch.target, this.scratch.skill, this.state);
     }
 
     /**

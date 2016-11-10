@@ -98,9 +98,12 @@ let xInit = [
     new PackInit(basex, new Position(0), new Behaviors.AgressiveNaiveMelee()),
 ];
 let yInit = [
-    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
-    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
-    new PackInit(baseTrash, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash,
+        new Position(100), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash,
+        new Position(100), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(baseTrash,
+        new Position(100), new Behaviors.AgressiveNaiveMelee()),
 ];
 
 let x = new Pack(xInit, globalState);

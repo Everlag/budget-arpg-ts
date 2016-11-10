@@ -128,8 +128,13 @@ export interface IDamageMod {
  *       with the actual distance set.
  */
 export interface IRangeMod extends IDamageMod {
-    /** Distance the skill is used from the target */
-    distance: number;
+    /** 
+     * Distance the skill is used from the target
+     *
+     * This is allowed to be null given that distance is typically
+     * not set until a mod is cloned and added to a DamageModGroup.
+     */
+    distance: number | null;
     /**
      * Determine how to move based entirely on provided distance
      *
@@ -137,6 +142,8 @@ export interface IRangeMod extends IDamageMod {
      * higher coefficient means more damage.
      */
     movement(distance: number, target: number): MovementDirection;
+    /** Create a new IRangeMod with equivalenyt functionality */
+    clone(): IRangeMod;
 }
 
 /**
