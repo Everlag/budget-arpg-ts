@@ -215,8 +215,7 @@ export class CharacterState implements StateMachine {
 
         // Add a copy of the skill's RangeMod with appropriate distance set
         let rangeBy = skill.rangeBy.clone();
-        rangeBy.distance = target.context.position
-            .distanceTo(this.context.position);
+        rangeBy.distance = target.Position.distanceTo(this.Position);
         mods.add(rangeBy, DamageModDirection.Dealing);
 
         // Pass the DamageModGroup off to the skill for execution
@@ -346,6 +345,29 @@ export class CharacterState implements StateMachine {
      */
     get targetCharacter(): CharacterState | null {
         return this.context.behavior.getTarget(this.context.target);
+    }
+
+    /**
+     * Return the current position of the Character
+     *
+     * When moving, this handles interpolating current position
+     * based on movement speed.
+     */
+    get Position(): Position {
+        // Handle easy case of not moving
+        if (!this.is('moving')) return this.context.position;
+
+        // We need to interpolate based on current position
+        if (!(this.scratch instanceof MoveContext)) {
+            throw Error('interpolating Position without scratch');
+        }
+        let { moveCoeff, start } = this.scratch;
+        let {movespeed} = this.context.stats;
+        let {now} = this.state;
+        // Calculate distance travelled
+        let travelled = moveCoeff * movespeed * (now - start);
+        // Apply as an offset to the starting position.
+        return new Position(this.context.position.loc + travelled);
     }
 
     // Return the current target this state has

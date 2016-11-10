@@ -20,11 +20,9 @@ export class AgressiveNaiveMelee implements IBehavior {
         // Find the closest target, a single reduce does the job
         return p.Living.reduce((prev, current) => {
 
-            let currentDist = this.state.context.position
-                .distanceTo(current.context.position);
+            let currentDist = this.state.Position.distanceTo(current.Position);
 
-            let prevDistance = this.state.context.position
-                .distanceTo(prev.context.position);
+            let prevDistance = this.state.Position.distanceTo(prev.Position);
 
             if (currentDist < prevDistance) {
                 return current;
