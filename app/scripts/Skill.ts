@@ -1,8 +1,9 @@
 import { TicksPerSecond, State, Event } from './ARPGState';
 import { CharacterState } from './Character';
 import { DamageTag, Damage } from './Damage';
-import { DamageModGroup, DamageModDirection } from './DamageMods';
-import { Zero } from './DamageModRegistry';
+import { DamageModGroup, IRangeMod, DamageModDirection } from './DamageMods';
+import { PositionBounds } from './Movement';
+import * as DamageMods from './DamageModRegistry';
 import * as StatMods from './StatMods';
 
 /** 
@@ -78,6 +79,8 @@ export interface ISkill {
     name: String;
     /** How timing for the skill is performed */
     timingBy: SkillTiming;
+    /** How range for the skill is handled, this informs character movement */
+    rangeBy: IRangeMod;
     /** Singular time modifier allowed for a skill */
     timeMod: StatMods.IStatMod;
     effects: Array<ISkillEffect>;
@@ -93,13 +96,19 @@ export interface ISkill {
 export interface ISkillEffect {
     name: String;
     tags: Array<DamageTag>;
+    rangeBy: IRangeMod;
     execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult;
 }
 
 class BasicAttackEffect implements ISkillEffect {
+    public static rangeBy = new DamageMods.DiscreteRange(0,
+        PositionBounds.ScreenSize / 10);
+
     public name = 'Basic Attack Effect';
     public tags = [DamageTag.Attack, DamageTag.Melee];
+
+    public rangeBy = BasicAttackEffect.rangeBy;
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
@@ -112,6 +121,8 @@ export class BasicAttack implements ISkill {
     public name = 'Basic Attack';
 
     public timingBy = SkillTiming.Attack;
+
+    public rangeBy = BasicAttackEffect.rangeBy;
     // Do not modify the base attack speed set by the gear
     public timeMod = new StatMods.IncreasedAttackSpeed(0);
 
@@ -133,15 +144,22 @@ export class BasicAttack implements ISkill {
  * No initial damage(zeroed) but postmods set to represent travel time.
  */
 class TossedBladeEffect implements ISkillEffect {
+    public static rangeBy = new DamageMods
+        .LinearFalloff(0,
+        PositionBounds.ScreenSize / 10,
+        PositionBounds.ScreenSize / 5);
+
     public name = 'Tossed Blade Effect';
     public tags = [DamageTag.Attack, DamageTag.Ranged];
+
+    public rangeBy = TossedBladeEffect.rangeBy;
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
 
         // Zero initial damage
         let initial = new DamageModGroup();
-        initial.add(new Zero(), DamageModDirection.Always);
+        initial.add(new DamageMods.Zero(), DamageModDirection.Always);
 
         // Schedule future damage 0.3s from now
         let postDelay = TicksPerSecond * 0.3;
@@ -158,6 +176,7 @@ export class TossedBlade implements ISkill {
     public name = 'Tossed Blade';
 
     public timingBy = SkillTiming.Attack;
+    public rangeBy = TossedBladeEffect.rangeBy;
     // 10% increased inherent attack speed for fun
     public timeMod = new StatMods.IncreasedAttackSpeed(0.1);
 
