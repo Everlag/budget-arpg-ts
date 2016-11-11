@@ -278,7 +278,7 @@ export class CharacterState implements StateMachine {
             case SkillTiming.Attack:
                 waitTime = this.context.stats.attackTime;
                 break;
-            case SkillTiming.Attack:
+            case SkillTiming.Spell:
                 waitTime = this.context.stats.castTime;
                 break;
             default:
