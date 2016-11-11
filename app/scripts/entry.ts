@@ -92,7 +92,7 @@ let trashLoadout = new LoadOut([
 let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
-    new Skills.BasicAttack(), 'worseness');
+    new Skills.TossedBlade(), 'worseness');
 
 let xInit = [
     new PackInit(basex, new Position(0), new Behaviors.AgressiveNaiveMelee()),
@@ -125,6 +125,7 @@ console.log(x);
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     if (completed > 0) {
+        console.log('apples', x.states.map(c => c.Position.loc));
         console.log(`retired ${completed} events`);
     }
 }

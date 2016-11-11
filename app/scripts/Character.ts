@@ -1,10 +1,10 @@
 import * as StateMachine from 'state-machine';
 import { IDamageMod, DamageModGroup, DamageModDirection } from './DamageMods';
 import { Stats, StatModGroup, baseStatsArg, IStatMod } from './StatMods';
-import { Event, State } from './ARPGState';
+import { Event, State, MoveTime } from './ARPGState';
 import { ISkill, SkillTiming } from './Skill';
-import { Pack, IBehavior } from './Pack';
-import { Position } from './Movement';
+import { Pack, Action, IBehavior } from './Pack';
+import { Position, MovementDirection } from './Movement';
 import { entityCode } from './random';
 
 export const enum GearSlot {
@@ -183,6 +183,8 @@ export class CharacterState implements StateMachine {
     public decide: () => {};
     public startskill: () => {};
     public endskill: () => {};
+    public startmove: () => {};
+    public endmove: () => {};
     public die: () => {};
 
     // Context shared across states
@@ -248,8 +250,22 @@ export class CharacterState implements StateMachine {
         }
         console.log('ondecide', this.current);
 
-        // Start using a skill to hit the target
-        this.startskill();
+        let {behavior} = this.context;
+        switch (behavior.getAction(this.context.target)) {
+            case Action.NOP:
+                // This should never be the case after the check
+                // for the target pack.
+                throw Error('behavior desires NOP in decide');
+            case Action.Skill:
+                this.startskill();
+                break;
+            case Action.Move:
+                this.startmove();
+                break;
+            default:
+                throw Error('fell through behavior switch');
+
+        }
     }
 
     private onenterskillwait() {
@@ -330,6 +346,80 @@ export class CharacterState implements StateMachine {
         this.scratch = null;
     }
 
+    private onentermoving() {
+        console.log('onentermoving', this.current);
+        this.scratch = new MoveContext();
+    }
+
+    private onstartmove() {
+        console.log('onstartmove', this.current, this.scratch);
+        if (!(this.scratch instanceof MoveContext)) {
+            throw 'onstartmove without scratch';
+        }
+
+        // Query behavior for best target and direction to
+        // travel in order to reach that target.
+        let { behavior } = this.context;
+        let target = behavior.getTarget(this.context.target);
+        if (!target) throw Error('null target in onstartmove');
+        let direction = behavior.getDirection(target);
+
+        // Determine Coefficient we move with on the
+        // line that is our reality
+        let moveCoeff = this.Position.coeffRelative(target.Position,
+            this.context.stats.movespeed, direction);
+        this.scratch.direction = direction;
+        this.scratch.moveCoeff = moveCoeff;
+
+        // Schedule an event to complete the move
+        let e = new Event(this.state.now + MoveTime,
+            (state: State): Event | null => {
+                this.endmove();
+                return null;
+            }, null);
+
+        this.scratch.start = this.state.now;
+        this.scratch.event = e;
+
+        console.log(this.scratch);
+
+        this.state.addEvent(e);
+    }
+
+    /**
+     * Actually apply the movement
+     *
+     * NOTE: this is a before handler rather than exact on
+     *       as this preserves the scratch.
+     */
+    private onbeforeendmove() {
+        if (!(this.scratch instanceof MoveContext)) {
+            throw 'onbeforeendmove without scratch';
+        }
+        console.log('onbeforeendmove', this.current, this.scratch);
+        // Set new position to resolved position
+        this.context.position = this.Position;
+    }
+
+    /**
+     * Handle follow up for applying a move permanently.
+     *
+     * NOTE: move was applied in onbefore handler for endmove.
+     */
+    private onendmove() {
+        this.decide();
+    }
+
+    private onleavemoving() {
+        console.log('onleavemoving', this.current);
+        if (!this.scratch) throw 'onleavemoving without scratch';
+        // Cancel any event if not executed
+        let {event} = this.scratch;
+        if (!event.wasExecuted) event.cancel();
+        // Zero scratch
+        this.scratch = null;
+    }
+
     /**
      * This CharacterState goes into the unrecoverable state of 'dead'
      *
@@ -361,13 +451,20 @@ export class CharacterState implements StateMachine {
         if (!(this.scratch instanceof MoveContext)) {
             throw Error('interpolating Position without scratch');
         }
+
         let { moveCoeff, start } = this.scratch;
-        let {movespeed} = this.context.stats;
-        let {now} = this.state;
+        let { movespeed } = this.context.stats;
+        let { now } = this.state;
+        // There is the possibility that this is called when constructing
+        // the initial MoveContext, so we handle that.
+        if (moveCoeff == null || start == null) return this.context.position;
         // Calculate distance travelled
         let travelled = moveCoeff * movespeed * (now - start);
         // Apply as an offset to the starting position.
-        return new Position(this.context.position.loc + travelled);
+        if (isNaN(travelled)) throw Error('interpolated position NaN');
+        // Return a new position while ensuring that it cannot exit
+        // the allowed bounds.
+        return new Position(this.context.position.loc + travelled).clamp();
     }
 
     // Return the current target this state has
@@ -381,6 +478,7 @@ export type CharacterStates =
     | 'engaged'
     | 'deciding'
     | 'skillwait'
+    | 'moving'
     | 'dead'
 
 StateMachine.create({
@@ -393,6 +491,9 @@ StateMachine.create({
 
         { name: 'startskill', from: 'deciding', to: 'skillwait' },
         { name: 'endskill', from: 'skillwait', to: 'engaged' },
+
+        { name: 'startmove', from: 'deciding', to: 'moving' },
+        { name: 'endmove', from: 'moving', to: 'engaged' },
 
         { name: 'disengage', from: ['deciding', 'engaged'], to: 'idle' },
 

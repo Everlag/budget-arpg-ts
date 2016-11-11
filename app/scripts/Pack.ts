@@ -37,10 +37,22 @@ export class Pack {
     }
 }
 
+/** Possible actions a Behavior can determine to do */
+export const enum Action {
+    NOP = 0,
+    Skill,
+    Move,
+}
+
 /** Any behavior affecting the positioning of a Character in combat */
 export interface IBehavior {
     /** Set the character state this behavior will have */
     setState(c: CharacterState): void;
+    /** 
+     * Determine action to take given current state
+     * and a target set in the following Pack
+     */
+    getAction(p: Pack): Action;
     /** Target choice, null indicates no valid choice to be made */
     getTarget(p: Pack): CharacterState | null;
     /** Direction to move relative to the provided CharacterState */

@@ -2,6 +2,9 @@ import * as PriorityQueue from 'js-priority-queue';
 
 export const TicksPerSecond: number = 100;
 
+/** A movement lasts a fifth of a second */
+export const MoveTime: number = TicksPerSecond / 5;
+
 /*
     Maximum number of events we allow the State to retire every second.
  */

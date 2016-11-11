@@ -138,6 +138,9 @@ export interface IRangeMod extends IDamageMod {
     /**
      * Determine how to move based entirely on provided distance
      *
+     * This MUST abide by the rule that Hold means the skill should be used
+     * while Closer or Farther mean that movement is absolutely necessary.
+     *
      * target is the minimum coefficient you wish the mod to apply,
      * higher coefficient means more damage.
      */

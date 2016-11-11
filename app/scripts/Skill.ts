@@ -145,7 +145,7 @@ export class BasicAttack implements ISkill {
  */
 class TossedBladeEffect implements ISkillEffect {
     public static rangeBy = new DamageMods
-        .LinearFalloff(PositionBounds.ScreenSize / 10,
+        .LinearFalloff(PositionBounds.ScreenSize / 20,
         PositionBounds.ScreenSize / 5);
 
     public name = 'Tossed Blade Effect';
