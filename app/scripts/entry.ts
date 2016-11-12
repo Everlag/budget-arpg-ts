@@ -95,7 +95,7 @@ let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
 
 let xInit = [
-    new PackInit(basex, new Position(0), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(basex, new Position(-50), new Behaviors.AgressiveNaiveMelee()),
 ];
 let yInit = [
     new PackInit(baseTrash,

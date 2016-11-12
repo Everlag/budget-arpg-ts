@@ -44,6 +44,29 @@ export const enum Action {
     Move,
 }
 
+/** 
+ * Desired movement as a result of a IRangeMod
+ *
+ * distance is amount of distance to move in a direction
+ */
+export class MoveDistance {
+    constructor(public direction: MovementDirection,
+        public distance: number) { }
+
+    /** Convert to time needed to move with a given speed */
+    public toMoveTime(movespeed: number) {
+        return new MoveTime(this.direction, this.distance / movespeed);
+    }
+}
+
+/** 
+ * Desired movement as a result of a behavior
+ */
+export class MoveTime {
+    constructor(public direction: MovementDirection,
+        public duration: number) { }
+}
+
 /** Any behavior affecting the positioning of a Character in combat */
 export interface IBehavior {
     /** Set the character state this behavior will have */
@@ -55,6 +78,6 @@ export interface IBehavior {
     getAction(p: Pack): Action;
     /** Target choice, null indicates no valid choice to be made */
     getTarget(p: Pack): CharacterState | null;
-    /** Direction to move relative to the provided CharacterState */
-    getDirection(c: CharacterState): MovementDirection;
+    /** Complete information on how to move towards provided CharacterState */
+    getMoveOrder(c: CharacterState): MoveTime;
 }

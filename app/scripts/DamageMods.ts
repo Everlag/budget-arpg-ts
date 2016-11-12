@@ -1,5 +1,5 @@
 import { Damage, DamageTag } from './Damage';
-import { MovementDirection } from './Movement';
+import { MoveDistance } from './Pack';
 
 /**
  * The absolute ordering of DamageMods.
@@ -144,7 +144,7 @@ export interface IRangeMod extends IDamageMod {
      * target is the minimum coefficient you wish the mod to apply,
      * higher coefficient means more damage.
      */
-    movement(distance: number, target: number): MovementDirection;
+    movement(distance: number, target: number): MoveDistance;
     /** Create a new IRangeMod with equivalenyt functionality */
     clone(): IRangeMod;
 }

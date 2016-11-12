@@ -4,6 +4,7 @@ import {
 } from './DamageMods';
 import { Damage, Elements } from './Damage';
 import { MovementDirection } from './Movement';
+import { MoveDistance } from './Pack';
 import { intfromInterval } from './Random';
 
 /** Binary Range handling, is either within range or not */
@@ -34,9 +35,13 @@ export class DiscreteRange implements IRangeMod {
         return d;
     }
 
-    public movement(distance: number, target: number): MovementDirection {
-        if (distance < this.range) return MovementDirection.Hold;
-        return MovementDirection.Closer;
+    public movement(distance: number, target: number): MoveDistance {
+        // Out of range implies we have to move closer
+        if (distance > this.range) {
+            return new MoveDistance(MovementDirection.Closer,
+                distance - this.range);
+        }
+        return new MoveDistance(MovementDirection.Hold, 0);
     }
 
     public clone(): IRangeMod {
@@ -52,6 +57,49 @@ export class DiscreteRange implements IRangeMod {
  * and decreases linearly till the bounds
  */
 export class LinearFalloff implements IRangeMod {
+
+    /** Determine the coefficient associated with the range and distance */
+    private static Coefficient(minRange: number, maxRange: number,
+        distance: number): number {
+
+        // Calculate midway point in range, the 'sweetspot'
+        let sweetSpot = (minRange + maxRange) / 2;
+        let delta = Math.abs(distance - sweetSpot);
+
+        // Determine total range of values distance can sit in
+        let window = (maxRange - minRange) / 2;
+
+        // Finally, the coefficient we'll apply
+        let coeff = 1 - (delta / window);
+        return coeff;
+    }
+
+    /** 
+     * Determine difference in distance required to achieve the target
+     * coefficient.
+     *
+     * This could be significantly more efficient.
+     */
+    private static DeltaDistance(minRange: number, maxRange: number,
+        distance: number, target: number): number {
+
+        // Check if we're already within range, and short circuit
+        let coeff = LinearFalloff
+            .Coefficient(minRange, maxRange, distance);
+        if (coeff >= target) return 0;
+
+        // Calculate midway point in range, the 'sweetspot'
+        let sweetSpot = (minRange + maxRange) / 2;
+        // Determine total range of values distance can sit in
+        let window = (maxRange - minRange) / 2;
+
+        // Calculate desired distance to be for that coefficient
+        let desiredDistance = sweetSpot + window * (1 - coeff);
+
+        // Finally, what kind of change needs to be made
+        return desiredDistance - distance;
+    }
+
     public name = 'LinearFalloffDamageMod';
 
     public direction = DamageModDirection.Dealing;
@@ -62,8 +110,8 @@ export class LinearFalloff implements IRangeMod {
     public distance: number | null = null;
 
     constructor(public minRange: number, public maxRange: number) {
-
         if (minRange > maxRange || minRange === maxRange) {
+            console.log(`${minRange}, ${maxRange}`);
             throw 'invalid minRange, maxRange in LinearFalloffDamageMod';
         }
     };
@@ -81,15 +129,9 @@ export class LinearFalloff implements IRangeMod {
             return d;
         }
 
-        // Calculate midway point in range, the 'sweetspot'
-        let sweetSpot = (this.minRange + this.maxRange) / 2;
-        let delta = Math.abs(this.distance - sweetSpot);
-
-        // Determine total range of values distance can sit in
-        let window = (this.maxRange - this.minRange) / 2;
-
-        // Finally, the coefficient we'll apply
-        let coeff = 1 - (delta / window);
+        // Find the coefficient we'll apply
+        let coeff = LinearFalloff.Coefficient(this.minRange, this.maxRange,
+            this.distance);
 
         // And apply it
         d.phys = d.phys * coeff;
@@ -100,27 +142,28 @@ export class LinearFalloff implements IRangeMod {
         return d;
     }
 
-    public movement(distance: number, target: number): MovementDirection {
-        // Handle easy edge cases
-        if (this.distance < this.minRange) return MovementDirection.Farther;
-        if (this.distance > this.maxRange) return MovementDirection.Closer;
+    public movement(distance: number, target: number): MoveDistance {
 
-        // Calculate midway point in range, the 'sweetspot'
-        let sweetSpot = (this.minRange + this.maxRange) / 2;
-        let delta = Math.abs(this.distance - sweetSpot);
+        let deltaDistance = LinearFalloff
+            .DeltaDistance(this.minRange, this.maxRange,
+            distance, target);
 
-        // Determine total range of values distance can sit in
-        let window = (this.maxRange - this.minRange) / 2;
-
-        // Finally, the coefficient we'll apply
-        let coeff = 1 - (delta / window);
-
-        if (coeff < target) return MovementDirection.Closer;
-        return MovementDirection.Hold;
+        switch (true) {
+            case (deltaDistance === 0):
+                return new MoveDistance(MovementDirection.Hold, 0);
+            case (deltaDistance < 0):
+                return new MoveDistance(MovementDirection.Farther,
+                    Math.abs(deltaDistance));
+            case (deltaDistance > 0):
+                return new MoveDistance(MovementDirection.Closer,
+                    Math.abs(deltaDistance));
+            default:
+                throw Error('fell through deltaDistance switch');
+        }
     }
 
     public clone(): IRangeMod {
-        return Object.assign(new LinearFalloff(0, 0), this);
+        return Object.assign(new LinearFalloff(0, 1), this);
     }
 }
 

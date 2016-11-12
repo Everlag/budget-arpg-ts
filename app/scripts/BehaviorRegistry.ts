@@ -1,6 +1,6 @@
 import { CharacterState } from './Character';
 import { MovementDirection } from './Movement';
-import { Pack, Action, IBehavior } from './Pack';
+import { Pack, Action, MoveTime, IBehavior } from './Pack';
 
 /**
  * Choose the nearest possible target,
@@ -25,8 +25,11 @@ export class AgressiveNaiveMelee implements IBehavior {
         let distance = target.Position.distanceTo(this.state.Position);
         // Ask the skill what it wants
         let {rangeBy} = this.state.context.skill;
-        let direction = rangeBy.movement(distance, 0.01);
-        if (direction === MovementDirection.Hold) return Action.Skill;
+        let distanceToOptimal = rangeBy.movement(distance, 0.01);
+        // Use a skill if we're allowed to hold, otherwise we need to move.
+        if (distanceToOptimal.direction === MovementDirection.Hold) {
+            return Action.Skill;
+        }
         return Action.Move;
     }
 
@@ -50,9 +53,16 @@ export class AgressiveNaiveMelee implements IBehavior {
         });
     }
 
-    public getDirection(c: CharacterState): MovementDirection {
+    public getMoveOrder(c: CharacterState): MoveTime {
         if (!this.state) throw 'State of IBehavior not set';
-        return MovementDirection.Closer;
+        // Ask the skill how far we need to move
+        let {rangeBy} = this.state.context.skill;
+        let distance = c.Position.distanceTo(this.state.Position);
+        let distanceToOptimal = rangeBy.movement(distance, 0.01);
+
+        // Translate from a distance to an amount of time
+        let { movespeed } = this.state.context.stats;
+        return distanceToOptimal.toMoveTime(movespeed);
     }
 
 }

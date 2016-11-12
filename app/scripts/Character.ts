@@ -362,7 +362,7 @@ export class CharacterState implements StateMachine {
         let { behavior } = this.context;
         let target = behavior.getTarget(this.context.target);
         if (!target) throw Error('null target in onstartmove');
-        let direction = behavior.getDirection(target);
+        let { direction, duration } = behavior.getMoveOrder(target);
 
         // Determine Coefficient we move with on the
         // line that is our reality
@@ -372,7 +372,7 @@ export class CharacterState implements StateMachine {
         this.scratch.moveCoeff = moveCoeff;
 
         // Schedule an event to complete the move
-        let e = new Event(this.state.now + MoveTime,
+        let e = new Event(this.state.now + duration,
             (state: State): Event | null => {
                 this.endmove();
                 return null;
