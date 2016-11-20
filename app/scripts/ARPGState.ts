@@ -99,6 +99,8 @@ export class Event {
 
         if (!this.action) throw Error('invalid passed action');
         if (isNaN(this.when)) throw Error('invalid passed when: NaN');
+        // Round events to the nearest integer when not clean.
+        this.when = Math.ceil(when);
     }
 
     /**
