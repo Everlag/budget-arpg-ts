@@ -91,7 +91,7 @@ let trashLoadout = new LoadOut([
         ]),
 ]);
 
-let basex = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
+let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
@@ -123,20 +123,16 @@ y.engage(x);
 // x.disengage();
 console.log(x);
 
-// Keep track of when we last retired an event
-let lastEventRetiredTick = 0;
 // Simulate 1 minute of combat
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     if (completed > 0) {
-        console.log(`span between eventful ticks was ${i - lastEventRetiredTick}`);
-        lastEventRetiredTick = i;
         console.log(`retired ${completed} events`);
     }
 }
 
 let end = performance.now();
-console.log(`took ${(end - start).toFixed(2)}ms`);
+console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks`);
 
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.stats.health;

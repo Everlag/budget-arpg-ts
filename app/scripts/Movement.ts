@@ -1,5 +1,3 @@
-import { MoveTime } from './ARPGState';
-
 /** Meta data governing engagement positions */
 export const PositionBounds = {
     // Limits to valid combat positions
@@ -28,7 +26,7 @@ export class Position {
 
     /** Compute distance to a given Position */
     public distanceTo(other: Position): number {
-        return Math.max(this.loc, other.loc) - Math.min(other.loc, this.loc);
+        return Math.abs(this.loc - other.loc);
     }
 
     /** 
@@ -52,28 +50,33 @@ export class Position {
      * when attempting to move away. In that case, it will move closer
      * to allow moving past to move away in a future move.
      */
-    public coeffRelative(other: Position, movespeed: number,
+    public coeffRelative(other: Position,
+        movespeed: number, duration: number,
         direction: MovementDirection): number {
 
-        let distance = this.distanceTo(other);
-
         // Determine where we end up hit if we either coefficient
-        let positive = new Position(distance + movespeed * MoveTime).clamp();
-        let negative = new Position(distance - movespeed * MoveTime).clamp();
+        let positive = new Position(this.loc + movespeed * duration);
+        let negative = new Position(this.loc - movespeed * duration);
 
-        // Determine total distance resulting from positive or negative
-        let positiveDistance = positive.distanceTo(other);
-        let negativeDistance = negative.distanceTo(other);
+        let posDistance: number;
+        let negDistance: number;
 
         switch (direction) {
             case MovementDirection.Closer:
-                if (positiveDistance < negativeDistance) {
+                // Determine total distance resulting from positive or negative
+                posDistance = other.distanceTo(positive);
+                negDistance = other.distanceTo(negative);
+                if (posDistance < negDistance) {
                     return 1;
                 }
                 return -1;
 
             case MovementDirection.Farther:
-                if (positiveDistance > negativeDistance) {
+                // We need to work with clamped distances for farther,
+                // otherwise we'll just exit out bounds infinitely.
+                posDistance = other.distanceTo(positive.clamp());
+                negDistance = other.distanceTo(negative.clamp());
+                if (posDistance > negDistance) {
                     return 1;
                 }
                 return -1;

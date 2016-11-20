@@ -24,7 +24,7 @@ export class DiscreteRange implements IRangeMod {
         if (this.distance === null) throw Error('null distance');
 
         // Zero if distance outside range
-        if (this.distance > this.range) {
+        if (Math.abs(this.distance) > this.range) {
             console.log('DiscreteRange calculated, mult = 0!');
             d.phys = 0;
             d.setElement(Elements.Fire, 0);
@@ -36,7 +36,7 @@ export class DiscreteRange implements IRangeMod {
 
     public movement(distance: number, target: number): MoveDistance {
         // Out of range implies we have to move closer
-        if (distance > this.range) {
+        if (Math.abs(distance) > this.range) {
             return new MoveDistance(MovementDirection.Closer,
                 distance - this.range);
         }

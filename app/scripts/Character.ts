@@ -447,7 +447,7 @@ export class CharacterState implements StateMachine {
         return this.context.behavior.getTarget(this.context.target);
     }
 
-    private get EntityCode(): any {
+    get EntityCode(): any {
         return `ST${this.character.identity}`;
     }
 
