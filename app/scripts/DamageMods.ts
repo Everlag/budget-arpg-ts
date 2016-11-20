@@ -75,6 +75,12 @@ export const enum DamageModOrder {
      * ie, armor for physical damage or resists for elemental
      */
     Mitigation,
+    /**
+     * Mitigations that apply after the initial mitigation
+     *
+     * ie, resolve which should have armor and resists happen first
+     */
+    PostMitigation,
 }
 
 /** 

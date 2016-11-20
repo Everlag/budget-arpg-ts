@@ -2,10 +2,11 @@ import {
     IDamageMod, IRangeMod, IDamageModSummable,
     DamageModOrder, DamageModDirection,
 } from './DamageMods';
-import { Damage, Elements } from './Damage';
+import { Damage, Elements, ElementArray } from './Damage';
 import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
 import { intfromInterval } from './Random';
+import { CharacterState } from './Character';
 
 /** Binary Range handling, is either within range or not */
 export class DiscreteRange implements IRangeMod {
@@ -111,6 +112,66 @@ export class Resistance implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new Resistance(0, Elements.Fire), this);
+    }
+}
+
+/** 
+ * The divserion of a percentage of taken damage into mana
+ *
+ * This applies equally across all elements and physcial damage.
+ * When not enough manner is available to eat the full percentage,
+ * whatever percentage can be mitigated will be mitigated
+ */
+export class Resolve implements IDamageModSummable {
+    public name = 'ResolveDamageMod';
+
+    public direction = DamageModDirection.Taking;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostMitigation;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage,
+        target: CharacterState): Damage {
+        // Amount of mana needed to mitigate all damage we can
+        let totalDamage = d.sum() * this.percent;
+
+        // Actual amount of mana used to mitigate
+        let usedMana = Math.min(target.context.stats.mana, totalDamage);
+
+        // Short-circuit if there's no mana to use
+        if (usedMana === 0) return d;
+
+        // Determine what percent we can mitigate with
+        let effectivePercent = (usedMana / totalDamage) * this.percent;
+
+        // Mitigate over the elements
+        ElementArray().forEach((element) => {
+            let magnitude = d.getElement(element);
+            // Mitigate damage
+            let applied = (1 - effectivePercent) * magnitude;
+            // Update Damage with new element value
+            d.setElement(element, applied);
+        });
+
+        // Mitigate physical damage
+        d.phys = d.phys * (1 - effectivePercent);
+
+        // Remove used mana from the target of the  damage
+        target.context.stats.mana -= usedMana;
+
+        return d;
+    }
+
+    public sum(other: Resolve): Resolve {
+        // Ensure we can't mitigate more than 100% of the damage with this
+        // because that's just wasteful.
+        return new Resolve(Math.min(this.percent + other.percent, 1));
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new Resolve(0), this);
     }
 }
 

@@ -75,7 +75,9 @@ let basicLoadout = new LoadOut([
         [
             new StatMods.IncreasedMovespeed(0.25),
         ]),
-    new Gear(GearSlot.Helmet, [],
+    new Gear(GearSlot.Helmet, [
+        new DamageMods.Resolve(0.15),
+    ],
         [
             new StatMods.FlatAddedMana(20),
         ]),
