@@ -3,7 +3,10 @@ import { State } from './ARPGState';
 /**
  * Continuous calculation of a value by a fixed rate
  *
- * The rate may be changed at will.
+ * The rate may be changed arbitrarily.
+ *
+ * The cap can either be a ceiling of what the value can take
+ * or null
  */
 export class ConstantCalc {
 
@@ -15,6 +18,7 @@ export class ConstantCalc {
     private _rate: number; // tslint:disable-line:variable-name
 
     constructor(value: number, rate: number,
+        public cap: number | null,
         public state: State, public name: string) {
         this._value = value;
         this._rate = rate;
@@ -33,6 +37,8 @@ export class ConstantCalc {
         // Set the new value
         let delta = this.rate * passed;
         this._value = this._value + delta;
+        // Apply cap if it exists
+        if (this.cap != null) this._value = Math.min(this._value, this.cap);
 
         // Set the new lastUpdate
         this.lastUpdate = this.state.now;

@@ -6,6 +6,7 @@ import { ISkill, SkillTiming } from './Skill';
 import { Pack, Action, IBehavior } from './Pack';
 import { TicksPerSecond } from './ARPGState';
 import { Position, MovementDirection } from './Movement';
+import { ConstantCalc } from './ConstantCalc';
 import { entityCode } from './random';
 
 export const enum GearSlot {
@@ -149,7 +150,9 @@ class GlobalContext {
     public behavior: IBehavior;
     public position: Position;
 
-    constructor(base: Character,
+    private manaCalc: ConstantCalc;
+
+    constructor(base: Character, state: State,
         initPosition: Position, behavior: IBehavior) {
         // Calculate base stats once
         let baseStats: Stats;
@@ -163,6 +166,21 @@ class GlobalContext {
         this.behavior = behavior;
         // And our position
         this.position = initPosition;
+
+        // And our emulated continuous mana calculation
+        // with a rate of 2% per second and a cap of maximum mana.
+        this.manaCalc = new ConstantCalc(this.stats.mana,
+            this.stats.mana * (0.02 / TicksPerSecond),
+            this.stats.mana,
+            state, 'manaCalculation');
+    }
+
+    get mana(): number {
+        return this.manaCalc.value;
+    }
+
+    set mana(value: number) {
+        this.manaCalc.value = value;
     }
 }
 
@@ -201,7 +219,8 @@ export class CharacterState implements StateMachine {
     constructor(private character: Character,
         public state: State, initPosition: Position, behavior: IBehavior) {
         behavior.setState(this);
-        this.context = new GlobalContext(character, initPosition, behavior);
+        this.context = new GlobalContext(character, state,
+            initPosition, behavior);
     }
 
     public applySkill(target: CharacterState, skill: ISkill, state: State) {

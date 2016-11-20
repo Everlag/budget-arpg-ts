@@ -138,7 +138,7 @@ export class Resolve implements IDamageModSummable {
         let totalDamage = d.sum() * this.percent;
 
         // Actual amount of mana used to mitigate
-        let usedMana = Math.min(target.context.stats.mana, totalDamage);
+        let usedMana = Math.min(target.context.mana, totalDamage);
 
         // Short-circuit if there's no mana to use
         if (usedMana === 0) return d;
@@ -159,7 +159,7 @@ export class Resolve implements IDamageModSummable {
         d.phys = d.phys * (1 - effectivePercent);
 
         // Remove used mana from the target of the  damage
-        target.context.stats.mana -= usedMana;
+        target.context.mana -= usedMana;
 
         return d;
     }
