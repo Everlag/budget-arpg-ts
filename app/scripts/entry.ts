@@ -75,6 +75,10 @@ let basicLoadout = new LoadOut([
         [
             new StatMods.IncreasedMovespeed(0.25),
         ]),
+    new Gear(GearSlot.Helmet, [],
+        [
+            new StatMods.FlatAddedMana(20),
+        ]),
 ]);
 
 let trashLoadout = new LoadOut([

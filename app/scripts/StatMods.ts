@@ -4,6 +4,7 @@ import { PositionBounds } from './Movement';
 /** Argument type for Stats constructor */
 export type StatsArg = {
     Health: number;
+    Mana: number;
     /**
      * Number of units moved in a single tick
      */
@@ -27,6 +28,7 @@ export type StatsArg = {
 /** Sane default baseline stats */
 export const baseStatsArg: StatsArg = {
     Health: 50,
+    Mana: 40,
     Movespeed: (PositionBounds.ScreenSize / 2) / TicksPerSecond,
     AttackTime: TicksPerSecond / 1,
     CastTime: 0,
@@ -34,6 +36,7 @@ export const baseStatsArg: StatsArg = {
 
 export class Stats {
     public health: number;
+    public mana: number;
     public movespeed: number;
     public attackTime: number;
     public castTime: number;
@@ -41,6 +44,7 @@ export class Stats {
     constructor(base: StatsArg) {
         ({
             Health: this.health,
+            Mana: this.mana,
             Movespeed: this.movespeed,
             AttackTime: this.attackTime,
             CastTime: this.castTime,
@@ -88,6 +92,25 @@ export class FlatAddedHealth implements IStatMod {
 
     public sum(other: FlatAddedHealth): FlatAddedHealth {
         return new FlatAddedHealth(this.flat + other.flat);
+    }
+}
+
+/** Explicit additions to the mana pool before scaling */
+export class FlatAddedMana implements IStatMod {
+    public name = 'FlatAddedManaMod';
+    public canSum = true;
+
+    public position = StatModOrder.Add;
+
+    constructor(public flat: number) { }
+
+    public apply(s: Stats): Stats {
+        s.mana += this.flat;
+        return s;
+    }
+
+    public sum(other: FlatAddedMana): FlatAddedMana {
+        return new FlatAddedMana(this.flat + other.flat);
     }
 }
 
