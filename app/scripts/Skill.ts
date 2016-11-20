@@ -1,5 +1,5 @@
 import { TicksPerSecond, State, Event } from './ARPGState';
-import { CharacterState } from './Character';
+import { CharacterState } from './CharacterState';
 import { DamageTag, Damage } from './Damage';
 import { DamageModGroup, IRangeMod, DamageModDirection } from './DamageMods';
 import { PositionBounds } from './Movement';

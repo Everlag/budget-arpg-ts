@@ -6,7 +6,7 @@ import { Damage, Elements, ElementArray } from './Damage';
 import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
 import { intfromInterval } from './Random';
-import { CharacterState } from './Character';
+import { CharacterState } from './CharacterState';
 
 /** Binary Range handling, is either within range or not */
 export class DiscreteRange implements IRangeMod {

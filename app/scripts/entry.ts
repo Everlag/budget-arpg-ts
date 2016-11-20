@@ -1,7 +1,8 @@
 import { State, TicksPerSecond, Event } from './ARPGState';
 import {
-    Character, CharacterState, LoadOut, Gear, GearSlot,
+    Character, LoadOut, Gear, GearSlot,
 } from './Character';
+import { CharacterState } from './CharacterState';
 import { Damage, DamageTag, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Pack, PackInit } from './Pack';

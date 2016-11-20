@@ -1,4 +1,4 @@
-import { CharacterState } from './Character';
+import { CharacterState } from './CharacterState';
 import { MovementDirection } from './Movement';
 import { Pack, Action, MoveTime, IBehavior } from './Pack';
 

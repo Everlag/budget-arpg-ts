@@ -1,4 +1,4 @@
-import { CharacterState } from './Character';
+import { CharacterState } from './CharacterState';
 import { rollSuccess } from './random';
 
 export const enum Elements {

@@ -1,6 +1,6 @@
 import { Damage, DamageTag } from './Damage';
 import { MoveDistance } from './Pack';
-import { CharacterState } from './Character';
+import { CharacterState } from './CharacterState';
 
 /**
  * The absolute ordering of DamageMods.

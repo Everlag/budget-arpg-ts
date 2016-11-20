@@ -1,6 +1,7 @@
 import { State } from './ARPGState';
 import { MovementDirection, Position } from './Movement';
-import { Character, CharacterState } from './Character';
+import { Character } from './Character';
+import { CharacterState } from './CharacterState';
 
 /**
  * An argument to Pack that bundles initial Character information
