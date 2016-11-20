@@ -7,6 +7,11 @@ export const enum Elements {
     Cold,
 }
 
+/** Get the members of Elements as an array */
+export function ElementArray(): Array<Elements> {
+    return [Elements.Fire, Elements.Cold, Elements.Light];
+}
+
 export const enum DamageTag {
     // Top level tags that must be attached to Damage
     Attack, Spell, DOT,
