@@ -1,9 +1,10 @@
 import * as StateMachine from 'state-machine';
 import { IDamageMod, DamageModGroup, DamageModDirection } from './DamageMods';
 import { Stats, StatModGroup, baseStatsArg, IStatMod } from './StatMods';
-import { Event, State, MoveTime } from './ARPGState';
+import { Event, State } from './ARPGState';
 import { ISkill, SkillTiming } from './Skill';
 import { Pack, Action, IBehavior } from './Pack';
+import { TicksPerSecond } from './ARPGState';
 import { Position, MovementDirection } from './Movement';
 import { entityCode } from './random';
 
@@ -363,6 +364,12 @@ export class CharacterState implements StateMachine {
         let target = behavior.getTarget(this.context.target);
         if (!target) throw Error('null target in onstartmove');
         let { direction, duration } = behavior.getMoveOrder(target);
+        // Move in 300ms increments but allow fine granularity
+        // once we're below that bulk.
+        // 
+        // This, roughly simulates corrections to new state while moving.
+        if (duration > TicksPerSecond / 3) duration = TicksPerSecond / 3;
+        console.log(`moving ${direction}, for ${duration}`);
 
         // Determine Coefficient we move with on the
         // line that is our reality
@@ -378,6 +385,7 @@ export class CharacterState implements StateMachine {
                 return null;
             }, null);
 
+        this.scratch.target = target;
         this.scratch.start = this.state.now;
         this.scratch.event = e;
 
@@ -397,8 +405,11 @@ export class CharacterState implements StateMachine {
             throw 'onbeforeendmove without scratch';
         }
         console.log('onbeforeendmove', this.current, this.scratch);
+        let prev = this.context.position;
         // Set new position to resolved position
-        this.context.position = this.Position;
+        this.context.position = this.interpolatePosition();
+        let delta = prev.distanceTo(this.context.position);
+        console.log('finished moved, total move is', delta);
     }
 
     /**
@@ -447,6 +458,20 @@ export class CharacterState implements StateMachine {
         // Handle easy case of not moving
         if (!this.is('moving')) return this.context.position;
 
+        // We need to interpolate based on current position
+        if (!(this.scratch instanceof MoveContext)) {
+            throw Error('interpolating Position without scratch');
+        }
+
+        return this.interpolatePosition();
+    }
+
+    /** 
+     * Interpolate the position based on scratch state
+     *
+     * Required state is 'moving'
+     */
+    private interpolatePosition(): Position {
         // We need to interpolate based on current position
         if (!(this.scratch instanceof MoveContext)) {
             throw Error('interpolating Position without scratch');

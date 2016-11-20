@@ -1,5 +1,7 @@
 import { State, TicksPerSecond, Event } from './ARPGState';
-import { Character, LoadOut, Gear, GearSlot } from './Character';
+import {
+    Character, CharacterState, LoadOut, Gear, GearSlot,
+} from './Character';
 import { Damage, DamageTag, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Pack, PackInit } from './Pack';
@@ -89,13 +91,13 @@ let trashLoadout = new LoadOut([
         ]),
 ]);
 
-let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
+let basex = new Character(basicLoadout, new Skills.TossedBlade(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
 
 let xInit = [
-    new PackInit(basex, new Position(-50), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(basex, new Position(-100), new Behaviors.AgressiveNaiveMelee()),
 ];
 let yInit = [
     new PackInit(baseTrash,
@@ -122,7 +124,7 @@ y.engage(x);
 console.log(x);
 
 // Simulate 1 minute of combat
-for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
+for (let i = 0; i < TicksPerSecond * 6 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     if (completed > 0) {
         console.log('apples', x.states.map(c => c.Position.loc));
@@ -132,3 +134,7 @@ for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
 
 let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms`);
+
+console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
+let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.stats.health;
+console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));

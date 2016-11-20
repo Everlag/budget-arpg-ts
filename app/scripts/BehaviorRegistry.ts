@@ -4,7 +4,7 @@ import { Pack, Action, MoveTime, IBehavior } from './Pack';
 
 /**
  * Choose the nearest possible target,
- * require at least 1% of Damage.
+ * require at least 50% of Damage to hit.
  *
  * This works best with skills that are all-or-nothing affairs
  * with how their damage suffers over distances.
@@ -25,7 +25,7 @@ export class AgressiveNaiveMelee implements IBehavior {
         let distance = target.Position.distanceTo(this.state.Position);
         // Ask the skill what it wants
         let {rangeBy} = this.state.context.skill;
-        let distanceToOptimal = rangeBy.movement(distance, 0.01);
+        let distanceToOptimal = rangeBy.movement(distance, 0.5);
         // Use a skill if we're allowed to hold, otherwise we need to move.
         if (distanceToOptimal.direction === MovementDirection.Hold) {
             return Action.Skill;
@@ -58,7 +58,7 @@ export class AgressiveNaiveMelee implements IBehavior {
         // Ask the skill how far we need to move
         let {rangeBy} = this.state.context.skill;
         let distance = c.Position.distanceTo(this.state.Position);
-        let distanceToOptimal = rangeBy.movement(distance, 0.01);
+        let distanceToOptimal = rangeBy.movement(distance, 0.5);
 
         // Translate from a distance to an amount of time
         let { movespeed } = this.state.context.stats;
