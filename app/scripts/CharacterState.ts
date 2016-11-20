@@ -25,6 +25,7 @@ class GlobalContext {
     public position: Position;
 
     private manaCalc: ConstantCalc;
+    private healthCalc: ConstantCalc;
 
     constructor(base: Character, state: State,
         initPosition: Position, behavior: IBehavior) {
@@ -47,6 +48,21 @@ class GlobalContext {
             this.stats.mana * (0.02 / TicksPerSecond),
             this.stats.mana,
             state, 'manaCalculation');
+
+        // And our emulated continuous health calculation
+        // the rate is 1% per second.
+        this.healthCalc = new ConstantCalc(this.stats.health,
+            this.stats.health * (0.01 / TicksPerSecond),
+            this.stats.health,
+            state, 'healthCalculation');
+    }
+
+    get health(): number {
+        return this.healthCalc.value;
+    }
+
+    set health(value: number) {
+        this.healthCalc.value = value;
     }
 
     get mana(): number {

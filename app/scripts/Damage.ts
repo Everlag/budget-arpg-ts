@@ -93,10 +93,10 @@ export class Damage {
         }
 
         // Apply summed damage to health.
-        target.context.stats.health -= sum;
+        target.context.health -= sum;
 
         // If the target is dead, mark them as such
-        if (target.context.stats.health < 0) {
+        if (target.context.health < 0) {
             target.die();
         }
 

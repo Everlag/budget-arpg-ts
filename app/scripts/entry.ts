@@ -143,5 +143,5 @@ let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks`);
 
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
-let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.stats.health;
+let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
 console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
