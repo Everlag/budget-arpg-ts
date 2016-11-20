@@ -293,8 +293,6 @@ export class DamageModGroup {
         let summed = DamageModGroup.sum(this.mods);
         let ordered = DamageModGroup.order(summed);
 
-        console.log(ordered);
-
         // Apply each mod.
         ordered.forEach(mod => {
             // Ensure there is at least some tag overlap

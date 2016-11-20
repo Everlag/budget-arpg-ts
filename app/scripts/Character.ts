@@ -229,7 +229,8 @@ export class CharacterState implements StateMachine {
 
     /** Prepare state for anything happening in the engaged state */
     private onenterengaged() {
-        console.log('onenterengaged', this.current, this.scratch);
+        console.log(`${this.EntityCode} onenterengaged`,
+            this.current, this.scratch);
     }
 
     /** Perform actions using pre-prepared state. */
@@ -249,7 +250,7 @@ export class CharacterState implements StateMachine {
             this.disengage();
             return;
         }
-        console.log('ondecide', this.current);
+        console.log(`${this.EntityCode} ondecide`, this.current);
 
         let {behavior} = this.context;
         switch (behavior.getAction(this.context.target)) {
@@ -270,12 +271,12 @@ export class CharacterState implements StateMachine {
     }
 
     private onenterskillwait() {
-        console.log('onenterskillwait', this.current);
+        console.log(`${this.EntityCode} onenterskillwait`, this.current);
         this.scratch = new SkillContext();
     }
 
     private onstartskill() {
-        console.log('onstartskill', this.current, this.scratch);
+        console.log(`${this.EntityCode} onstartskill`, this.current, this.scratch);
         if (!(this.scratch instanceof SkillContext)) {
             throw 'onstartskill without scratch';
         }
@@ -301,7 +302,6 @@ export class CharacterState implements StateMachine {
             default:
                 throw Error('fell through timingBy switch');
         }
-        console.log(this.state);
         let e = new Event(this.state.now + waitTime,
             (state: State): Event | null => {
                 this.endskill();
@@ -324,7 +324,7 @@ export class CharacterState implements StateMachine {
         if (!(this.scratch instanceof SkillContext)) {
             throw 'onstartskill without scratch';
         }
-        console.log('onbeforeendskill', this.current, this.scratch);
+        console.log(`${this.EntityCode} onbeforeendskill`, this.current, this.scratch);
         this.applySkill(this.scratch.target, this.scratch.skill, this.state);
     }
 
@@ -338,7 +338,7 @@ export class CharacterState implements StateMachine {
     }
 
     private onleaveskillwait() {
-        console.log('oneleaveskillwait', this.current);
+        console.log(`${this.EntityCode} oneleaveskillwait`, this.current);
         if (!this.scratch) throw 'onleaveskillwait without scratch';
         // Cancel any event if not executed
         let {event} = this.scratch;
@@ -348,12 +348,13 @@ export class CharacterState implements StateMachine {
     }
 
     private onentermoving() {
-        console.log('onentermoving', this.current);
+        console.log(`${this.EntityCode} onentermoving`, this.current);
         this.scratch = new MoveContext();
     }
 
     private onstartmove() {
-        console.log('onstartmove', this.current, this.scratch);
+        console.log(`${this.EntityCode} onstartmove`,
+            this.current, this.scratch);
         if (!(this.scratch instanceof MoveContext)) {
             throw 'onstartmove without scratch';
         }
@@ -369,12 +370,12 @@ export class CharacterState implements StateMachine {
         // 
         // This, roughly simulates corrections to new state while moving.
         if (duration > TicksPerSecond / 3) duration = TicksPerSecond / 3;
-        console.log(`moving ${direction}, for ${duration}`);
 
         // Determine Coefficient we move with on the
         // line that is our reality
         let moveCoeff = this.Position.coeffRelative(target.Position,
-            this.context.stats.movespeed, direction);
+            this.context.stats.movespeed, duration, direction);
+        console.log(`${this.EntityCode} moving ${moveCoeff} abs, for ${duration}`);
         this.scratch.direction = direction;
         this.scratch.moveCoeff = moveCoeff;
 
@@ -389,8 +390,6 @@ export class CharacterState implements StateMachine {
         this.scratch.start = this.state.now;
         this.scratch.event = e;
 
-        console.log(this.scratch);
-
         this.state.addEvent(e);
     }
 
@@ -404,12 +403,12 @@ export class CharacterState implements StateMachine {
         if (!(this.scratch instanceof MoveContext)) {
             throw 'onbeforeendmove without scratch';
         }
-        console.log('onbeforeendmove', this.current, this.scratch);
+        console.log(`${this.EntityCode} onbeforeendmove`, this.current, this.scratch);
         let prev = this.context.position;
         // Set new position to resolved position
         this.context.position = this.interpolatePosition();
         let delta = prev.distanceTo(this.context.position);
-        console.log('finished moved, total move is', delta);
+        console.log(`${this.EntityCode} moved distance is`, delta);
     }
 
     /**
@@ -422,7 +421,7 @@ export class CharacterState implements StateMachine {
     }
 
     private onleavemoving() {
-        console.log('onleavemoving', this.current);
+        console.log(`${this.EntityCode} onleavemoving`, this.current);
         if (!this.scratch) throw 'onleavemoving without scratch';
         // Cancel any event if not executed
         let {event} = this.scratch;
@@ -438,7 +437,7 @@ export class CharacterState implements StateMachine {
      * of canceling any events which need to be canceled and similar.
      */
     private ondie() {
-        console.log('ondie', this.current);
+        console.log(`${this.EntityCode} ondie`, this.current);
     }
 
     /**
@@ -446,6 +445,10 @@ export class CharacterState implements StateMachine {
      */
     get targetCharacter(): CharacterState | null {
         return this.context.behavior.getTarget(this.context.target);
+    }
+
+    private get EntityCode(): any {
+        return `ST${this.character.identity}`;
     }
 
     /**

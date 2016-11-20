@@ -123,11 +123,14 @@ y.engage(x);
 // x.disengage();
 console.log(x);
 
+// Keep track of when we last retired an event
+let lastEventRetiredTick = 0;
 // Simulate 1 minute of combat
-for (let i = 0; i < TicksPerSecond * 6 && !(x.isDead || y.isDead); i++) {
+for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     if (completed > 0) {
-        console.log('apples', x.states.map(c => c.Position.loc));
+        console.log(`span between eventful ticks was ${i - lastEventRetiredTick}`);
+        lastEventRetiredTick = i;
         console.log(`retired ${completed} events`);
     }
 }

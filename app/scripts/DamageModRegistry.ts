@@ -23,7 +23,6 @@ export class DiscreteRange implements IRangeMod {
     public apply(d: Damage): Damage {
         if (this.distance === null) throw Error('null distance');
 
-        console.log(`distance to target is ${this.distance}`);
         // Zero if distance outside range
         if (this.distance > this.range) {
             console.log('DiscreteRange calculated, mult = 0!');

@@ -227,8 +227,6 @@ export class StatModGroup {
         let summed = StatModGroup.sum(this.mods);
         let ordered = StatModGroup.order(summed);
 
-        console.log(ordered);
-
         // Apply each mod.
         ordered.forEach(mod => s = mod.apply(s));
 
