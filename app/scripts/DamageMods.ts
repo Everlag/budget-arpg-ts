@@ -1,5 +1,6 @@
 import { Damage, DamageTag } from './Damage';
 import { MoveDistance } from './Pack';
+import { CharacterState } from './Character';
 
 /**
  * The absolute ordering of DamageMods.
@@ -112,7 +113,7 @@ export interface IDamageMod {
      */
     direction: DamageModDirection;
     /** Apply the DamageMod to provided Damage */
-    apply(d: Damage): Damage;
+    apply(d: Damage, target: CharacterState, source: CharacterState): Damage;
     /** 
      * Create a new DamageMod with equivalent functionality
      *
@@ -288,7 +289,8 @@ export class DamageModGroup {
      * NOTE: there is no guarantee the initial Damage instance
      * will remain unmodified.
      */
-    public apply(d: Damage): Damage {
+    public apply(d: Damage,
+        target: CharacterState, source: CharacterState): Damage {
         // Process mods in the group so they are executed properly 
         let summed = DamageModGroup.sum(this.mods);
         let ordered = DamageModGroup.order(summed);
@@ -306,7 +308,7 @@ export class DamageModGroup {
             // If no tag overlap, then continue
             if (!tagOverlap) return;
 
-            d = mod.apply(d);
+            d = mod.apply(d, target, source);
         });
 
         return d;

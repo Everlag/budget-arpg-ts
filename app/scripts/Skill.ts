@@ -28,13 +28,15 @@ export class SkillResult {
      *
      * This can be used only once.
      */
-    public execute(target: CharacterState, state: State) {
+    public execute(target: CharacterState, source: CharacterState,
+        state: State) {
         // Prevent multiple execution.
         if (this.applied) throw Error('cannot apply SkillResult > 1 time');
         this.applied = true;
 
         // Calculate and apply initial damage
-        let initialDamage = this.mods.apply(new Damage(new Set()));
+        let initialDamage = this.mods
+            .apply(new Damage(new Set()), target, source);
         initialDamage.apply(target);
 
         // Skip followup calculation when we don't have one.
@@ -48,7 +50,8 @@ export class SkillResult {
 
                 // Calculate and apply scheduled post-damage
                 if (this.postmods) {
-                    let postDamage = this.postmods.apply(new Damage(new Set()));
+                    let postDamage = this.postmods
+                        .apply(new Damage(new Set()), target, source);
                     postDamage.apply(target);
                 }
 

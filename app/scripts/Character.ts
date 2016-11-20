@@ -224,7 +224,7 @@ export class CharacterState implements StateMachine {
         // Pass the DamageModGroup off to the skill for execution
         // and execute the results.
         skill.execute(target, this, mods)
-            .forEach(result => result.execute(target, state));
+            .forEach(result => result.execute(target, this, state));
     }
 
     /** Prepare state for anything happening in the engaged state */

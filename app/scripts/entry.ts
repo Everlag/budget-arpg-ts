@@ -48,7 +48,8 @@ group.add(new DamageMods.Resistance(0.1, Elements.Fire),
 group.add(new DamageMods.Resistance(0.75, Elements.Cold),
     DamageModDirection.Taking);
 
-let newD = group.apply(d);
+// We can't use any mods that work on a specific character, but that's fine
+let newD = group.apply(d, <CharacterState>{}, <CharacterState>{});
 console.log(newD);
 if (newD.phys !== 32) {
     throw Error('phys is not 32 wtf');
