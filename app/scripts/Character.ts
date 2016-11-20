@@ -184,7 +184,15 @@ class GlobalContext {
     }
 }
 
-export class CharacterState implements StateMachine {
+/**
+ * CharacterMachine implements the boilerplate necessary
+ * for StateMachine as well as handling the setting and nulling
+ * of scratch for a given state.
+ *
+ * This class explicitly carries no state except from what
+ * the StateMachine requires. 
+ */
+export class CharacterMachine implements StateMachine {
     // This preamble has two parts.
     // First, we ensure that the StateMachine interface is implemented
     public current: CharacterStates;
@@ -206,18 +214,101 @@ export class CharacterState implements StateMachine {
     public endmove: () => {};
     public die: () => {};
 
-    // Context shared across states
-    public context: GlobalContext;
-
     // Per-state context.
     // This is set and cleared when entering or leaving a given state.
     // 
     // This means that event handlers can expect their state to already
     // exist when entering. They need only perform a type assertion.
-    private scratch: StateContext | null;
+    protected scratch: StateContext | null;
+
+    /** Prepare state for anything happening in the engaged state */
+    private onenterengaged() {
+        console.log(`${this.EntityCode} onenterengaged`,
+            this.current, this.scratch);
+    }
+
+    private onenterskillwait() {
+        console.log(`${this.EntityCode} onenterskillwait`, this.current);
+        this.scratch = new SkillContext();
+    }
+
+    private onleaveskillwait() {
+        console.log(`${this.EntityCode} oneleaveskillwait`, this.current);
+        if (!this.scratch) throw 'onleaveskillwait without scratch';
+        // Cancel any event if not executed
+        let {event} = this.scratch;
+        if (!event.wasExecuted) event.cancel();
+        // Zero scratch
+        this.scratch = null;
+    }
+
+    /**
+     * Handle follow up for performing a skill.
+     *
+     * NOTE: skill was executed in onbefore handler for endskill.
+     */
+    private onendskill() {
+        this.decide();
+    }
+
+    private onentermoving() {
+        console.log(`${this.EntityCode} onentermoving`, this.current);
+        this.scratch = new MoveContext();
+    }
+
+    /**
+     * Handle follow up for applying a move permanently.
+     *
+     * NOTE: move was applied in onbefore handler for endmove.
+     */
+    private onendmove() {
+        this.decide();
+    }
+
+    private onleavemoving() {
+        console.log(`${this.EntityCode} onleavemoving`, this.current);
+        if (!this.scratch) throw 'onleavemoving without scratch';
+        // Cancel any event if not executed
+        let {event} = this.scratch;
+        if (!event.wasExecuted) event.cancel();
+        // Zero scratch
+        this.scratch = null;
+    }
+
+    /**
+     * This CharacterState goes into the unrecoverable state of 'dead'
+     *
+     * NOTE: it is expected that 'oneleaveSTATE' handlers will take care
+     * of canceling any events which need to be canceled and similar.
+     */
+    private ondie() {
+        console.log(`${this.EntityCode} ondie`, this.current);
+    }
+
+    // Boilerplate EntityCode, inheritors must override
+    get EntityCode(): string {
+        throw Error('EntityCode called on CharacterMachine');
+    }
+}
+
+/**
+ * CharacterState implements all actions the character takes
+ * in response to changing state.
+ *
+ * We extend CharacterMachine to allow removal of the StateMachine
+ * boilerplate.
+ *
+ * Per-state scratch can only be mutated, it can not be replaced.
+ */
+export class CharacterState extends CharacterMachine {
+
+    // Context shared across states
+    public context: GlobalContext;
 
     constructor(private character: Character,
         public state: State, initPosition: Position, behavior: IBehavior) {
+        super();
+
         behavior.setState(this);
         this.context = new GlobalContext(character, state,
             initPosition, behavior);
@@ -244,12 +335,6 @@ export class CharacterState implements StateMachine {
         // and execute the results.
         skill.execute(target, this, mods)
             .forEach(result => result.execute(target, this, state));
-    }
-
-    /** Prepare state for anything happening in the engaged state */
-    private onenterengaged() {
-        console.log(`${this.EntityCode} onenterengaged`,
-            this.current, this.scratch);
     }
 
     /** Perform actions using pre-prepared state. */
@@ -287,11 +372,6 @@ export class CharacterState implements StateMachine {
                 throw Error('fell through behavior switch');
 
         }
-    }
-
-    private onenterskillwait() {
-        console.log(`${this.EntityCode} onenterskillwait`, this.current);
-        this.scratch = new SkillContext();
     }
 
     private onstartskill() {
@@ -345,30 +425,6 @@ export class CharacterState implements StateMachine {
         }
         console.log(`${this.EntityCode} onbeforeendskill`, this.current, this.scratch);
         this.applySkill(this.scratch.target, this.scratch.skill, this.state);
-    }
-
-    /**
-     * Handle follow up for performing a skill.
-     *
-     * NOTE: skill was executed in onbefore handler for endskill.
-     */
-    private onendskill() {
-        this.decide();
-    }
-
-    private onleaveskillwait() {
-        console.log(`${this.EntityCode} oneleaveskillwait`, this.current);
-        if (!this.scratch) throw 'onleaveskillwait without scratch';
-        // Cancel any event if not executed
-        let {event} = this.scratch;
-        if (!event.wasExecuted) event.cancel();
-        // Zero scratch
-        this.scratch = null;
-    }
-
-    private onentermoving() {
-        console.log(`${this.EntityCode} onentermoving`, this.current);
-        this.scratch = new MoveContext();
     }
 
     private onstartmove() {
@@ -431,42 +487,13 @@ export class CharacterState implements StateMachine {
     }
 
     /**
-     * Handle follow up for applying a move permanently.
-     *
-     * NOTE: move was applied in onbefore handler for endmove.
-     */
-    private onendmove() {
-        this.decide();
-    }
-
-    private onleavemoving() {
-        console.log(`${this.EntityCode} onleavemoving`, this.current);
-        if (!this.scratch) throw 'onleavemoving without scratch';
-        // Cancel any event if not executed
-        let {event} = this.scratch;
-        if (!event.wasExecuted) event.cancel();
-        // Zero scratch
-        this.scratch = null;
-    }
-
-    /**
-     * This CharacterState goes into the unrecoverable state of 'dead'
-     *
-     * NOTE: it is expected that 'oneleaveSTATE' handlers will take care
-     * of canceling any events which need to be canceled and similar.
-     */
-    private ondie() {
-        console.log(`${this.EntityCode} ondie`, this.current);
-    }
-
-    /**
      * Return a chosen target to attack
      */
     get targetCharacter(): CharacterState | null {
         return this.context.behavior.getTarget(this.context.target);
     }
 
-    get EntityCode(): any {
+    get EntityCode(): string {
         return `ST${this.character.identity}`;
     }
 
