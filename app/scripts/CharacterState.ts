@@ -46,14 +46,16 @@ class GlobalContext {
         // with a rate of 2% per second and a cap of maximum mana.
         this.manaCalc = new ConstantCalc(this.stats.mana,
             this.stats.mana * (0.02 / TicksPerSecond),
-            this.stats.mana,
+            0, this.stats.mana,
             state, 'manaCalculation');
 
         // And our emulated continuous health calculation
         // the rate is 1% per second.
+        // 
+        // This also introduces the augments from the StatusEffects
         this.healthCalc = new ConstantCalc(this.stats.health,
             this.stats.health * (0.01 / TicksPerSecond),
-            this.stats.health,
+            0, this.stats.health,
             state, 'healthCalculation');
     }
 

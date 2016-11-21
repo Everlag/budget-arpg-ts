@@ -18,7 +18,8 @@ export class ConstantCalc {
     private _rate: number; // tslint:disable-line:variable-name
 
     constructor(value: number, rate: number,
-        public cap: number | null,
+        public min: number | null,
+        public max: number | null,
         public state: State, public name: string) {
         this._value = value;
         this._rate = rate;
@@ -28,7 +29,7 @@ export class ConstantCalc {
     // Interpolate and set _value for current state.now
     // 
     // Based on lastUpdate and _rate,
-    protected updateValue(): number {
+    private updateValue(): number {
         // Determine how much time has passed since last update
         let passed = this.state.now - this.lastUpdate;
         // Short-circuit if no time has passed
@@ -38,7 +39,8 @@ export class ConstantCalc {
         let delta = this.rate * passed;
         this._value = this._value + delta;
         // Apply cap if it exists
-        if (this.cap != null) this._value = Math.min(this._value, this.cap);
+        if (this.max != null) this._value = Math.min(this._value, this.max);
+        if (this.min != null) this._value = Math.max(this._value, this.min);
 
         // Set the new lastUpdate
         this.lastUpdate = this.state.now;
@@ -64,72 +66,6 @@ export class ConstantCalc {
         this.updateValue();
         // Set the new rate
         this._rate = rate;
-    }
-
-}
-
-export interface IAugment {
-    /**
-     * Get the delta for the value given now.
-     */
-    query(now: number): number;
-}
-
-/**
- * Continuous calculation of a value by a fixed rate
- *
- * This operates equivalently to ConstantCalc except it
- * is extended to update
- *
- * An augment satisfies the IAugment interface and is queried
- * when the value is updated
- */
-export class AugConstantCalc extends ConstantCalc {
-
-    constructor(value: number, rate: number,
-        public cap: number | null,
-        public state: State, public name: string,
-        private augments: Array<IAugment>) {
-
-        super(value, rate, cap, state, name);
-    }
-
-    // Include augments in the calculation of an update
-    protected updateValueAug(): number {
-        // Have the super handle their portion of the update
-        // 
-        // This is explicit
-        super.updateValue();
-
-        // Sum the delta of all augments
-        let delta = this.augments.reduce((prev, aug) => {
-            return prev + aug.query(this.state.now);
-        }, 0);
-
-        // Apply the delta
-        super.value += delta;
-
-        return super.value;
-    }
-
-    get value(): number {
-        return this.updateValueAug();
-    }
-
-    set value(value: number) {
-        super.value = value;
-    }
-
-    get rate(): number {
-        return super.rate;
-    }
-
-    set rate(rate: number) {
-        // Perform any interpolation required for the old rate
-        // that was being used up to this point
-        this.updateValueAug();
-        // Set the new rate        
-        super.rate = rate;
     }
 
 }
