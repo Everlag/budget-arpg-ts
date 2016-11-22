@@ -51,16 +51,16 @@ export class ConstantCalc {
 
     // Handle _value potentially exceeding the extrema
     private handleExtrema() {
-        if (this.max != null && this._value > this.max) {
+        if (this.max != null && this._value >= this.max) {
             if (this.callbacks && this.callbacks.max) {
-                if (this.callbacks.max()) this.rate = 0;
+                if (this.callbacks.max()) this._rate = 0;
             }
             this._value = this.max;
         }
-        if (this.min != null && this._value < this.min) {
+        if (this.min != null && this._value <= this.min) {
             if (this.callbacks && this.callbacks.min) {
                 // Call the callback
-                if (this.callbacks.min()) this.rate = 0;
+                if (this.callbacks.min()) this._rate = 0;
             }
             this._value = this.min;
         }
@@ -78,7 +78,7 @@ export class ConstantCalc {
         // Set the new value
         let delta = this.rate * passed;
         this._value = this._value + delta;
-        // Take care of extrema
+        // Take care of extrema on the way out
         this.handleExtrema();
 
         // Set the new lastUpdate
@@ -93,6 +93,8 @@ export class ConstantCalc {
 
     set value(value: number) {
         this._value = value;
+        // Cleanup the update and handle max/min
+        this.updateValue();
     }
 
     get rate(): number {

@@ -24,10 +24,15 @@ class GlobalContext {
     public behavior: IBehavior;
     public position: Position;
 
+    // We store a copy of the CharacterState using this solely
+    // for the purpose of being able to die.
+    // private selfState: CharacterState;
+
     private manaCalc: ConstantCalc;
     private healthCalc: ConstantCalc;
 
-    constructor(base: Character, state: State,
+    constructor(base: Character,
+        state: State, public selfState: CharacterState,
         initPosition: Position, behavior: IBehavior) {
         // Calculate base stats once
         let baseStats: Stats;
@@ -41,6 +46,8 @@ class GlobalContext {
         this.behavior = behavior;
         // And our position
         this.position = initPosition;
+        // And a reference to our selfState
+        this.selfState = selfState;
 
         // And our emulated continuous mana calculation
         // with a rate of 2% per second and a cap of maximum mana.
@@ -56,8 +63,14 @@ class GlobalContext {
         // health, aka reaching 0 health kill you
         this.healthCalc = new ConstantCalc(this.stats.health,
             this.stats.health * (0.01 / TicksPerSecond),
-            0, this.stats.health, { min: null, max: null },
+            0, this.stats.health, { min: () => this.dieCB(), max: null },
             state, 'healthCalculation');
+    }
+
+    private dieCB(): boolean {
+        if (this.selfState.isDead) return true;
+        this.selfState.die();
+        return true;
     }
 
     get health(): number {
@@ -96,8 +109,8 @@ export class CharacterState extends CharacterMachine {
         super();
 
         behavior.setState(this);
-        this.context = new GlobalContext(character, state,
-            initPosition, behavior, this.die);
+        this.context = new GlobalContext(character, state, this,
+            initPosition, behavior);
     }
 
     public applySkill(target: CharacterState, skill: ISkill, state: State) {
@@ -135,6 +148,10 @@ export class CharacterState extends CharacterMachine {
     }
 
     private ondecide() {
+        // Check if we have any health left, the act of checking
+        // should kill us if we have none left :)
+        if (this.context.health <= 0) return;
+
         // Check if target entirely dead yet
         if (this.context.target && this.context.target.isDead) {
             this.disengage();
@@ -325,5 +342,27 @@ export class CharacterState extends CharacterMachine {
         // Return a new position while ensuring that it cannot exit
         // the allowed bounds.
         return new Position(this.context.position.loc + travelled).clamp();
+    }
+
+    /**
+     * Check if this character has died
+     */
+    get isDead(): boolean {
+        // NOTE: checking the state BEFORE health is important
+        // as the health will call a getter than ultimately calls
+        // a callback calling isDead. So yeah, don't change the
+        // ordering or many things break in horrible ways.
+        if (this.is('dead')) {
+            // If we're dead, we have to be sure our health is zero
+            // because sometimes bugs find a way.
+            this.context.health = 0;
+            return true;
+        }
+
+        if (this.context.health <= 0) {
+            this.die();
+            return true;
+        }
+        return false;
     }
 }

@@ -150,11 +150,6 @@ export class CharacterMachine implements StateMachine {
     get EntityCode(): string {
         throw Error('EntityCode called on CharacterMachine');
     }
-
-    // Return the current target this state has
-    get isDead(): boolean {
-        return this.is('dead');
-    }
 }
 
 export type CharacterStates =
