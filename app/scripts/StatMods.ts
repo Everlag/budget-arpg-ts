@@ -4,7 +4,9 @@ import { PositionBounds } from './Movement';
 /** Argument type for Stats constructor */
 export type StatsArg = {
     Health: number;
+    HealthRegen: number;
     Mana: number;
+    ManaRegen: number;
     /**
      * Number of units moved in a single tick
      */
@@ -25,10 +27,15 @@ export type StatsArg = {
     CastTime: number;
 };
 
+const baseHealth = 50;
+const baseMana = 40;
+
 /** Sane default baseline stats */
 export const baseStatsArg: StatsArg = {
-    Health: 50,
+    Health: baseHealth,
+    HealthRegen: baseHealth * 0.01,
     Mana: 40,
+    ManaRegen: baseMana * 0.02,
     Movespeed: (PositionBounds.ScreenSize / 2) / TicksPerSecond,
     AttackTime: TicksPerSecond / 1,
     CastTime: 0,
@@ -36,7 +43,9 @@ export const baseStatsArg: StatsArg = {
 
 export class Stats {
     public health: number;
+    public healthRegen: number;
     public mana: number;
+    public manaRegen: number;
     public movespeed: number;
     public attackTime: number;
     public castTime: number;
@@ -44,7 +53,9 @@ export class Stats {
     constructor(base: StatsArg) {
         ({
             Health: this.health,
+            HealthRegen: this.healthRegen,
             Mana: this.mana,
+            ManaRegen: this.manaRegen,
             Movespeed: this.movespeed,
             AttackTime: this.attackTime,
             CastTime: this.castTime,

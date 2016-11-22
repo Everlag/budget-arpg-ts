@@ -92,9 +92,9 @@ export class ConstantCalc {
     }
 
     set value(value: number) {
-        this._value = value;
         // Cleanup the update and handle max/min
         this.updateValue();
+        this._value = value;
     }
 
     get rate(): number {
