@@ -1,5 +1,17 @@
 import { State } from './ARPGState';
 
+/** 
+ * A set of callbacks ConstantCalc calls when
+ * it's value reaches specified extrema.
+ *
+ * If the callback returns a truthy value, ConstantCalc has its rate
+ * set to zero.
+ */
+export interface IConstantCalcExtremaCallbacks {
+    min: null | (() => boolean);
+    max: null | (() => boolean);
+}
+
 /**
  * Continuous calculation of a value by a fixed rate
  *
@@ -20,10 +32,38 @@ export class ConstantCalc {
     constructor(value: number, rate: number,
         public min: number | null,
         public max: number | null,
+        private callbacks: IConstantCalcExtremaCallbacks | null,
         public state: State, public name: string) {
         this._value = value;
         this._rate = rate;
         this.lastUpdate = state.now;
+
+        // Sanity check the callbacks
+        if (this.callbacks) {
+            if (this.callbacks.min != null && this.min === null) {
+                throw Error('min callback set when min is null');
+            }
+            if (this.callbacks.max != null && this.max === null) {
+                throw Error('max callback set when max is null');
+            }
+        }
+    }
+
+    // Handle _value potentially exceeding the extrema
+    private handleExtrema() {
+        if (this.max != null && this._value > this.max) {
+            if (this.callbacks && this.callbacks.max) {
+                if (this.callbacks.max()) this.rate = 0;
+            }
+            this._value = this.max;
+        }
+        if (this.min != null && this._value < this.min) {
+            if (this.callbacks && this.callbacks.min) {
+                // Call the callback
+                if (this.callbacks.min()) this.rate = 0;
+            }
+            this._value = this.min;
+        }
     }
 
     // Interpolate and set _value for current state.now
@@ -38,9 +78,8 @@ export class ConstantCalc {
         // Set the new value
         let delta = this.rate * passed;
         this._value = this._value + delta;
-        // Apply cap if it exists
-        if (this.max != null) this._value = Math.min(this._value, this.max);
-        if (this.min != null) this._value = Math.max(this._value, this.min);
+        // Take care of extrema
+        this.handleExtrema();
 
         // Set the new lastUpdate
         this.lastUpdate = this.state.now;

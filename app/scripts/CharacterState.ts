@@ -46,16 +46,17 @@ class GlobalContext {
         // with a rate of 2% per second and a cap of maximum mana.
         this.manaCalc = new ConstantCalc(this.stats.mana,
             this.stats.mana * (0.02 / TicksPerSecond),
-            0, this.stats.mana,
+            0, this.stats.mana, null,
             state, 'manaCalculation');
 
         // And our emulated continuous health calculation
         // the rate is 1% per second.
         // 
-        // This also introduces the augments from the StatusEffects
+        // This also handles dying when we reach the minimum extrema of
+        // health, aka reaching 0 health kill you
         this.healthCalc = new ConstantCalc(this.stats.health,
             this.stats.health * (0.01 / TicksPerSecond),
-            0, this.stats.health,
+            0, this.stats.health, { min: null, max: null },
             state, 'healthCalculation');
     }
 
@@ -96,7 +97,7 @@ export class CharacterState extends CharacterMachine {
 
         behavior.setState(this);
         this.context = new GlobalContext(character, state,
-            initPosition, behavior);
+            initPosition, behavior, this.die);
     }
 
     public applySkill(target: CharacterState, skill: ISkill, state: State) {
