@@ -53,7 +53,7 @@ class GlobalContext {
         // And our emulated continuous mana calculation
         // with a rate of 2% per second and a cap of maximum mana.
         this.manaCalc = new ConstantCalc(this.stats.mana,
-            this.stats.mana * (0.02 / TicksPerSecond),
+            this.stats.manaRegen,
             0, this.stats.mana, null,
             state, 'manaCalculation');
 
@@ -63,9 +63,24 @@ class GlobalContext {
         // This also handles dying when we reach the minimum extrema of
         // health, aka reaching 0 health kill you
         this.healthCalc = new ConstantCalc(this.stats.health,
-            this.stats.health * (0.01 / TicksPerSecond),
+            this.stats.healthRegen,
             0, this.stats.health, { min: () => this.dieCB(), max: null },
             state, 'healthCalculation');
+    }
+
+    /**
+     * Force a refresh of facets of stats into
+     *
+     * This needs to be called when the following change:
+     *     - healthRegen
+     *     - manaRegen
+     * In order for the changes to have an effect.
+     *
+     * We could use Proxy but that's more than we need for now.
+     */
+    public reflectStatChange() {
+        this.healthCalc.rate = this.stats.healthRegen;
+        this.manaCalc.rate = this.stats.manaRegen;
     }
 
     private dieCB(): boolean {

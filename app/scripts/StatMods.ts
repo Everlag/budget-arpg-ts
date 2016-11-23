@@ -33,9 +33,9 @@ const baseMana = 40;
 /** Sane default baseline stats */
 export const baseStatsArg: StatsArg = {
     Health: baseHealth,
-    HealthRegen: baseHealth * 0.01,
+    HealthRegen: baseHealth * (0.01) / TicksPerSecond,
     Mana: 40,
-    ManaRegen: baseMana * 0.02,
+    ManaRegen: baseMana * (0.02) / TicksPerSecond,
     Movespeed: (PositionBounds.ScreenSize / 2) / TicksPerSecond,
     AttackTime: TicksPerSecond / 1,
     CastTime: 0,

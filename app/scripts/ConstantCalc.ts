@@ -29,6 +29,9 @@ export class ConstantCalc {
     // Rate of value increase per-tick
     private _rate: number; // tslint:disable-line:variable-name
 
+    // Updates can be recursive, we bail out if we find ourselves deep.
+    private updateDepth: number = 0;
+
     constructor(value: number, rate: number,
         public min: number | null,
         public max: number | null,
@@ -70,13 +73,18 @@ export class ConstantCalc {
     // 
     // Based on lastUpdate and _rate,
     private updateValue(): number {
+        // Keep track of recursive calls
+        this.updateDepth++;
         // Determine how much time has passed since last update
         let passed = this.state.now - this.lastUpdate;
         // Short-circuit if no time has passed
-        if (passed === 0) return this._value;
+        if (passed === 0 || this.updateDepth > 1) {
+            this.updateDepth--;
+            return this._value;
+        }
 
         // Set the new value
-        let delta = this.rate * passed;
+        let delta = this._rate * passed;
         this._value = this._value + delta;
         // Take care of extrema on the way out
         this.handleExtrema();
@@ -84,6 +92,7 @@ export class ConstantCalc {
         // Set the new lastUpdate
         this.lastUpdate = this.state.now;
 
+        this.updateDepth--;
         return this._value;
     }
 

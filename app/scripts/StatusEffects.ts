@@ -41,16 +41,25 @@ export class StatusEffects {
         // Apply the new status mod
         let {context} = this.selfState;
         context.stats = this.applyStats(context.stats);
+        // Force the stats to take effect
+        context.reflectStatChange();
     }
 
     /** Remove a StatusMod from the instance */
     public remove(mod: IStatusMod) {
         // Remove the mod from our list
+        console.log('removing Burning!', this.mods.length);
         this.mods = this.mods.filter(m => m !== mod);
+        console.log('removed Burning!', this.mods.length);
+
+        // Ensure we aren't dead...
+        if (this.selfState.isDead) return;
 
         // Recalculate the stats
         let {context} = this.selfState;
         context.stats = this.applyStats(context.stats);
+        // Force the stats to take effect
+        context.reflectStatChange();
     }
 
     /** Apply Burning to a Character off of a hit if it has fire damage */
@@ -78,6 +87,8 @@ export class StatusEffects {
 
         // Finally, add the mod
         this.add(burn);
+
+        console.log(`burn applied, healthRegen=${this.selfState.context.stats.healthRegen}`);
     }
 
     /** Apply the StatMods */
@@ -138,6 +149,7 @@ export class BurningInverse implements IStatMod {
     public sum(other: BurningInverse): BurningInverse {
         // There can only be one as there's only one possible, effective
         // Burning instance at a time.
+        console.log('other is:', other);
         throw Error('burning inverse attempted to sum');
     }
 }
@@ -149,8 +161,8 @@ export class Burning implements IStatusStatMod {
 
     public position = StatModOrder.StatusEffects;
 
-    /** Status mod defaults to being in effect */
-    public effective = true;
+    /** Status mod defaults to not being in effect */
+    public effective = false;
 
     constructor(public rate: number) { }
 

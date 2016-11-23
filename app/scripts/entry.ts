@@ -135,6 +135,8 @@ console.log(x);
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     if (completed > 0) {
+        // console.log('yRegen=', (<any>y.states)[0].context.healthCalc._rate)
+        // console.log('xRegen=', (<any>x.states)[0].context.healthCalc._rate)
         console.log(`retired ${completed} events`);
     }
 }
