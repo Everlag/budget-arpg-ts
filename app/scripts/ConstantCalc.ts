@@ -82,6 +82,9 @@ export class ConstantCalc {
             this.updateDepth--;
             return this._value;
         }
+        // Sanity check our update depth because good god things
+        // can get out of hand quickly if we forget a --
+        if (this.updateDepth < 0) throw Error('ConstantCalc invalid updateDepth');
 
         // Set the new value
         let delta = this._rate * passed;
