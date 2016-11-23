@@ -70,7 +70,8 @@ export class Stats {
 export const enum StatModOrder {
     Base = 0,
     Add,
-    Mult
+    Mult,
+    StatusEffects,
 }
 
 /** Any Stats Modifier that effects the calculation of stats */
@@ -83,8 +84,27 @@ export interface IStatMod {
     position: StatModOrder;
     /** Apply the DamageMod to provided Damage */
     apply(s: Stats): Stats;
-    /** Sum two IDamgeMod instances of the same name with canSum true */
+    /** 
+     * Sum two IStatMod instances of the same name with canSum true
+     *
+     * This can also be used for filtering
+     *     ie, allowing only the largest of a mod
+     */
     sum(other: IStatMod): IStatMod;
+}
+
+/**
+ * An IStatMod representing the effects of a status
+ *
+ * These are allowed to hold some state following the
+ * application process. Hence, they SHOULD return themselves
+ * instead of a new instance for sum.
+ */
+export interface IStatusStatMod extends IStatMod {
+    /**  */
+    effective: Boolean;
+    /** Get an IStatMod removing the effects of this StatMod */
+    inverse(): IStatMod;
 }
 
 /** Explicit additions to the health pool before scaling */

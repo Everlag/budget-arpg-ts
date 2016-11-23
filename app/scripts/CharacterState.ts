@@ -10,6 +10,7 @@ import { Pack, Action, IBehavior } from './Pack';
 import { ISkill, SkillTiming } from './Skill';
 import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
+import { StatusEffects } from './StatusEffects';
 
 class GlobalContext {
     /** Current stats */
@@ -103,6 +104,7 @@ export class CharacterState extends CharacterMachine {
 
     // Context shared across states
     public context: GlobalContext;
+    public statuses: StatusEffects;
 
     constructor(private character: Character,
         public state: State, initPosition: Position, behavior: IBehavior) {
@@ -111,6 +113,8 @@ export class CharacterState extends CharacterMachine {
         behavior.setState(this);
         this.context = new GlobalContext(character, state, this,
             initPosition, behavior);
+
+        this.statuses = new StatusEffects(this);
     }
 
     public applySkill(target: CharacterState, skill: ISkill, state: State) {

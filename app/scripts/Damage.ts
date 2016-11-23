@@ -24,6 +24,9 @@ export class Damage {
     /** Multiplier applied to critical strikes */
     public criticalMultiplier = 1.5;
 
+    /** Chance for Damage application to cause persistent burn */
+    public burnChance = 0.0;
+
     constructor(public tags: Set<DamageTag>,
         public phys: number = 0,
         public fire: number = 0,
@@ -87,9 +90,11 @@ export class Damage {
         let sum = this.sum();
 
         // Check if crit and 
-        // TODO: set condition chance to 100% for relevant damage types...
         if (rollSuccess(this.criticalChance)) {
             sum *= this.criticalMultiplier;
+            // Set burn possibility to 100%
+            this.burnChance = 1;
+            console.log('crit!');
         }
 
         // Apply summed damage to health.
@@ -98,7 +103,10 @@ export class Damage {
         // If the target is dead, leave
         if (target.isDead) return;
 
-        // TODO: handle applying conditions...
+        // Handle the possibility of a Burn
+        if (rollSuccess(this.burnChance)) target.statuses.applyBurn(this);
+
+        // TODO: handle applying the rest of the conditions...
     }
 
     public sum(): number {
