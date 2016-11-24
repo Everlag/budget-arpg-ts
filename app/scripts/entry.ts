@@ -123,9 +123,13 @@ console.log(x);
 x.engage(y);
 y.engage(x);
 
+// Keep track of the timings for interesting ticks
+let tickTimes: Array<Number> = [];
+
 /* tslint:disable */
 (<any>window).x = x;
 (<any>window).y = y;
+(<any>window).tickTimes = tickTimes;
 /* tslint:enable */
 
 // x.disengage();
@@ -133,11 +137,14 @@ console.log(x);
 
 // Simulate 1 minute of combat
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
+    let tickStart = performance.now();
     let completed = globalState.step();
+    let tickEnd = performance.now();
     if (completed > 0) {
         // console.log('yRegen=', (<any>y.states)[0].context.healthCalc._rate)
         // console.log('xRegen=', (<any>x.states)[0].context.healthCalc._rate)
         console.log(`retired ${completed} events`);
+        tickTimes.push(tickEnd - tickStart);
     }
 }
 
