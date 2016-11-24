@@ -232,34 +232,47 @@ export class LocalPhysical implements IDamageModSummable {
 }
 
 /** 
- * Local, flat physical damage
+ * Local, flat damage of a specific element
  *
  * NOTE: this does sum
  */
-export class LocalFire implements IDamageModSummable {
-    public name = 'LocalFireDamageMod';
+export class LocalElement implements IDamageModSummable {
+    public name = 'LocalElementDamageMod';
 
     public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
     public position = DamageModOrder.Local;
 
-    constructor(public min: number, public max: number) { }
+    constructor(public min: number, public max: number,
+        public element: Elements) { }
 
     public apply(d: Damage): Damage {
         // Roll in range
-        let flatFire = intfromInterval(this.min, this.max);
-        // Apply flat fire
-        d.fire += flatFire;
+        let flat = intfromInterval(this.min, this.max);
+        let magnitude = d.getElement(this.element);
+        // Calculate and set
+        let applied = magnitude + flat;
+        d.setElement(this.element, applied);
         return d;
     }
 
-    public sum(other: LocalFire): LocalFire {
-        return new LocalFire(other.min + this.min, other.max + this.max);
+    public sum(other: LocalElement): LocalElement {
+        if (!this.summable(other)) {
+            throw Error('this mod is not summable with other');
+        }
+
+        return new LocalElement(this.min + other.min,
+            this.max + other.max,
+            this.element);
+    }
+
+    public summable(other: LocalElement): Boolean {
+        return this.element === other.element;
     }
 
     public clone(): IDamageMod {
-        return Object.assign(new LocalFire(0, 0), this);
+        return Object.assign(new LocalElement(0, 0, Elements.Fire), this);
     }
 }
 
