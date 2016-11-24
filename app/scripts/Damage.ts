@@ -103,7 +103,6 @@ export class Damage {
         // If the target is dead, leave
         if (target.isDead) return;
 
-        this.fire = 100
         // Handle the possibility of a Burn
         if (rollSuccess(this.burnChance)) target.statuses.applyBurn(this);
 

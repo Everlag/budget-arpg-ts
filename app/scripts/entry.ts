@@ -67,6 +67,7 @@ let basicLoadout = new LoadOut([
         new DamageMods.LocalPhysical(2, 7),
         new DamageMods.Armor(10),
         new DamageMods.Armor(10),
+        new DamageMods.Resistance(0.75, Elements.Fire),
         new DamageMods.IncreasedCritChance(0.50),
     ],
         [
@@ -86,7 +87,9 @@ let basicLoadout = new LoadOut([
 
 let trashLoadout = new LoadOut([
     new Gear(GearSlot.Gloves, [
-        new DamageMods.LocalPhysical(1, 2),
+        // new DamageMods.LocalFire(1, 3),
+        new DamageMods.LocalElement(1, 1, Elements.Fire),
+        new DamageMods.LocalElement(0, 2, Elements.Fire),
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.Armor(4),
     ],
