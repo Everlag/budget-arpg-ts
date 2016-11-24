@@ -12,6 +12,20 @@ export function ElementArray(): Array<Elements> {
     return [Elements.Fire, Elements.Cold, Elements.Light];
 }
 
+/** Convert an element to its canonical string name */
+export function ElementToString(element: Elements) {
+    switch (element) {
+        case Elements.Fire:
+            return 'Fire';
+        case Elements.Light:
+            return 'Light';
+        case Elements.Cold:
+            return 'Cold';
+        default:
+            throw Error('fell through Elements switch');
+    }
+}
+
 export const enum DamageTag {
     // Top level tags that must be attached to Damage
     Attack, Spell, DOT,
@@ -26,6 +40,14 @@ export class Damage {
 
     /** Chance for Damage application to cause persistent burn */
     public burnChance = 0.0;
+
+    /** Increased multipliers */
+    public increased = {
+        phys: 1,
+        fire: 1,
+        light: 1,
+        cold: 1,
+    };
 
     constructor(public tags: Set<DamageTag>,
         public phys: number = 0,
@@ -74,6 +96,25 @@ export class Damage {
                 break;
             case Elements.Cold:
                 this.cold = magnitude;
+                break;
+            default:
+                throw Error('fell through Elements switch');
+        }
+    }
+
+    /**
+     * Set the increased multiplier for an element
+     */
+    public setIncreasedElement(element: Elements, magnitude: number) {
+        switch (element) {
+            case Elements.Fire:
+                this.increased.fire += magnitude;
+                break;
+            case Elements.Light:
+                this.increased.light += magnitude;
+                break;
+            case Elements.Cold:
+                this.increased.cold += magnitude;
                 break;
             default:
                 throw Error('fell through Elements switch');

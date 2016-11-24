@@ -1,4 +1,7 @@
-import { Damage, DamageTag } from './Damage';
+import {
+    Damage, DamageTag,
+    Elements, ElementArray, ElementToString,
+} from './Damage';
 import { MoveDistance } from './Pack';
 import { CharacterState } from './CharacterState';
 
@@ -48,9 +51,23 @@ export const enum DamageModOrder {
     /**
      * Additive modifiers from any source
      *
+     * Additive modifers may not directly affect damage, they must
+     * apply to the 'increased' property on the Damage instance.
+     *
      * ie, 'increased' and 'reduced'
      */
     GlobalAdd,
+    /**
+     * Application of additive modifiers
+     *
+     * This addresses a limitation of the IDamageModSummable interface
+     * and is an implementation detail.
+     *
+     * ie, two mods saying '10% increased fire damage' now become
+     *     a total of '20% increased fire damage' rather than
+     *     an effective two '10% more fire damage' 
+     */
+    PostGlobalAdd,
     /**
      * Multiplicative modifiers from any source
      *
@@ -181,6 +198,56 @@ function isIDamageModSummable(mod: any): IDamageModSummable | Boolean {
     return false;
 }
 
+class PostGlobalAddCleanup implements IDamageMod {
+    public name = 'PostGlobalAddCleanupDamageMod';
+
+    public direction = DamageModDirection.Always;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostGlobalAdd;
+
+    public apply(d: Damage): Damage {
+        // This looks super pedantic but ensures we can't add an element
+        // without changing this.
+        let phys: number;
+        // It's important these keys are the canonical representations
+        // of the elements provided by ElementToString
+        let elements = {
+            Fire: 0,
+            Light: 0,
+            Cold: 0,
+        };
+        ({
+            phys,
+            fire: elements.Fire,
+            light: elements.Light,
+            cold: elements.Cold,
+        } = d.increased);
+
+        ElementArray().forEach(element => {
+            // Grab the string key
+            let stringKey = ElementToString(element);
+            // So, that's a scary looking type assertion
+            // but I assure you, all is well.
+            let multiplier = (<{ [key: string]: number }>elements)[stringKey];
+            // Check sanity
+            if (!multiplier) throw Error('element not found in PostGlobalAddCleanup');
+            // If all went well, we have a multiplier to apply
+            let magnitude = d.getElement(element);
+            d.setElement(element, magnitude * multiplier);
+        });
+
+        // As usual, phys sits here, unfancy as per usual.
+        d.phys *= phys;
+
+        return d;
+    }
+
+    public clone(): IDamageMod {
+        throw Error('attempted to clone PostGlobalAddCleanup');
+    }
+}
+
 /**
  * A set of DamageMods which are applied as an atomic operation.
  *
@@ -297,6 +364,10 @@ export class DamageModGroup {
      */
     public apply(d: Damage,
         target: CharacterState, source: CharacterState): Damage {
+
+        // Add the mod that smoothes over the increased multiplier
+        this.add(new PostGlobalAddCleanup(), DamageModDirection.Always);
+
         // Process mods in the group so they are executed properly 
         let summed = DamageModGroup.sum(this.mods);
         let ordered = DamageModGroup.order(summed);
