@@ -231,6 +231,38 @@ export class LocalPhysical implements IDamageModSummable {
     }
 }
 
+/** 
+ * Local, flat physical damage
+ *
+ * NOTE: this does sum
+ */
+export class LocalFire implements IDamageModSummable {
+    public name = 'LocalFireDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.Local;
+
+    constructor(public min: number, public max: number) { }
+
+    public apply(d: Damage): Damage {
+        // Roll in range
+        let flatFire = intfromInterval(this.min, this.max);
+        // Apply flat fire
+        d.fire += flatFire;
+        return d;
+    }
+
+    public sum(other: LocalFire): LocalFire {
+        return new LocalFire(other.min + this.min, other.max + this.max);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new LocalFire(0, 0), this);
+    }
+}
+
 export class IncreasedCritChance implements IDamageModSummable {
     public name = 'IncreasedCritChanceDamageMod';
 
