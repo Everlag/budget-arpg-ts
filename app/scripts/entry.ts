@@ -63,12 +63,14 @@ SeedRandom('testing!', { global: true });
 
 let basicLoadout = new LoadOut([
     new Gear(GearSlot.Gloves, [
+        new DamageMods.LocalElement(1, 3, Elements.Fire),
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.LocalPhysical(2, 7),
         new DamageMods.Armor(10),
         new DamageMods.Armor(10),
         new DamageMods.Resistance(0.75, Elements.Fire),
         new DamageMods.IncreasedCritChance(0.50),
+        new DamageMods.IncreasedMeleeElement(0.75, Elements.Fire),
     ],
         [
             new StatMods.FlatAddedHealth(120),

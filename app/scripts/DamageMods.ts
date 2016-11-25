@@ -386,6 +386,7 @@ export class DamageModGroup {
             // if the mod has required tags
             let tagOverlap = [...mod.reqTags.values()]
                 .reduce((prev, current) => {
+                    console.log('apples', d.tags)
                     let hasShared = d.tags.has(current);
                     return hasShared || prev;
                 }, false) || mod.reqTags.size === 0;

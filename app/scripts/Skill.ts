@@ -29,14 +29,14 @@ export class SkillResult {
      * This can be used only once.
      */
     public execute(target: CharacterState, source: CharacterState,
-        state: State) {
+        state: State, tags: Set<DamageTag>) {
         // Prevent multiple execution.
         if (this.applied) throw Error('cannot apply SkillResult > 1 time');
         this.applied = true;
 
         // Calculate and apply initial damage
         let initialDamage = this.mods
-            .apply(new Damage(new Set()), target, source);
+            .apply(new Damage(tags), target, source);
         initialDamage.apply(target);
 
         // Skip followup calculation when we don't have one.
