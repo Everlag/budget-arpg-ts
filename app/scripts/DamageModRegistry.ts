@@ -2,7 +2,7 @@ import {
     IDamageMod, IRangeMod, IDamageModSummable,
     DamageModOrder, DamageModDirection,
 } from './DamageMods';
-import { Damage, Elements, ElementArray } from './Damage';
+import { Damage, DamageTag, Elements, ElementArray } from './Damage';
 import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
 import { intfromInterval } from './Random';
@@ -297,5 +297,29 @@ export class IncreasedCritChance implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new IncreasedCritChance(0), this);
+    }
+}
+
+export class IncreasedMeleePhysical implements IDamageModSummable {
+    public name = 'IncreasedMeleePhysicalDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set([DamageTag.Melee]);
+    public position = DamageModOrder.GlobalAdd;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage): Damage {
+        d.increased.phys += this.percent;
+        return d;
+    }
+
+    public sum(other: IncreasedMeleePhysical): IncreasedMeleePhysical {
+        return new IncreasedMeleePhysical(this.percent + other.percent);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new IncreasedMeleePhysical(0), this);
     }
 }
