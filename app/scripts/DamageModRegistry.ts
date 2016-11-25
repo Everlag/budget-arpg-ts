@@ -287,10 +287,7 @@ export class IncreasedCritChance implements IDamageModSummable {
     constructor(public percent: number) { }
 
     public apply(d: Damage): Damage {
-        // Roll in range
-        d.criticalChance *= 1 + this.percent;
-        // Cap if chance is higher than maximum
-        d.criticalChance = Math.min(d.criticalChance, 0.80);
+        d.increased.criticalChance += this.percent;
         return d;
     }
 

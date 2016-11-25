@@ -47,6 +47,7 @@ export class Damage {
         fire: 1,
         light: 1,
         cold: 1,
+        criticalChance: 1,
     };
 
     constructor(public tags: Set<DamageTag>,
@@ -127,6 +128,7 @@ export class Damage {
      * TODO: handle conditions and such.
      */
     public apply(target: CharacterState) {
+
         // Calculate sum
         let sum = this.sum();
 

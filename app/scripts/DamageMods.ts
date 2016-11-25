@@ -221,6 +221,7 @@ class PostGlobalAddCleanup implements IDamageMod {
             fire,
             light,
             cold,
+            criticalChance,
         } = d.increased;
         /* tslint:disable */
         elements['Fire'] = fire;
@@ -244,6 +245,8 @@ class PostGlobalAddCleanup implements IDamageMod {
 
         // As usual, phys sits here, unfancy as per usual.
         d.phys *= phys;
+        // Also, handle criticalChance
+        d.criticalChance *= criticalChance;
 
         return d;
     }
