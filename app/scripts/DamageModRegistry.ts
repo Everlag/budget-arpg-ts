@@ -323,3 +323,36 @@ export class IncreasedMeleePhysical implements IDamageModSummable {
         return Object.assign(new IncreasedMeleePhysical(0), this);
     }
 }
+
+export class IncreasedMeleeElement implements IDamageModSummable {
+    public name = 'IncreasedMeleeElementDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set([DamageTag.Melee]);
+    public position = DamageModOrder.GlobalAdd;
+
+    constructor(public percent: number, public element: Elements) { }
+
+    public apply(d: Damage): Damage {
+        d.setIncreasedElement(this.element, this.percent);
+        return d;
+    }
+
+    public sum(other: IncreasedMeleeElement): IncreasedMeleeElement {
+        if (!this.summable(other)) {
+            throw Error('this mod is not summable with other');
+        }
+
+        return new IncreasedMeleeElement(this.percent + other.percent,
+            this.element);
+    }
+
+    public summable(other: IncreasedMeleeElement): Boolean {
+        return this.element === other.element;
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new IncreasedMeleeElement(0, Elements.Fire), this);
+    }
+}
