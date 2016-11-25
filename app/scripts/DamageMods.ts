@@ -1,6 +1,6 @@
 import {
     Damage, DamageTag,
-    Elements, ElementArray, ElementToString,
+    ElementArray, ElementToString,
 } from './Damage';
 import { MoveDistance } from './Pack';
 import { CharacterState } from './CharacterState';
@@ -207,34 +207,39 @@ class PostGlobalAddCleanup implements IDamageMod {
     public position = DamageModOrder.PostGlobalAdd;
 
     public apply(d: Damage): Damage {
-        // This looks super pedantic but ensures we can't add an element
-        // without changing this.
-        let phys: number;
         // It's important these keys are the canonical representations
         // of the elements provided by ElementToString
-        let elements = {
-            Fire: 0,
-            Light: 0,
-            Cold: 0,
+        let elements: { [key: string]: number | null } = {
+            Fire: null,
+            Light: null,
+            Cold: null,
         };
-        ({
+        // This looks super pedantic but ensures we can't add an element
+        // without changing this.
+        let {
             phys,
-            fire: elements.Fire,
-            light: elements.Light,
-            cold: elements.Cold,
-        } = d.increased);
+            fire,
+            light,
+            cold,
+        } = d.increased;
+        /* tslint:disable */
+        elements['Fire'] = fire;
+        elements['Light'] = light;
+        elements['Cold'] = cold;
+        /* tslint:enable */
 
         ElementArray().forEach(element => {
             // Grab the string key
             let stringKey = ElementToString(element);
             // So, that's a scary looking type assertion
             // but I assure you, all is well.
-            let multiplier = (<{ [key: string]: number }>elements)[stringKey];
+            let multiplier = elements[stringKey];
             // Check sanity
             if (!multiplier) throw Error('element not found in PostGlobalAddCleanup');
             // If all went well, we have a multiplier to apply
             let magnitude = d.getElement(element);
-            d.setElement(element, magnitude * multiplier);
+            let applied = magnitude * multiplier;
+            d.setElement(element, applied);
         });
 
         // As usual, phys sits here, unfancy as per usual.
