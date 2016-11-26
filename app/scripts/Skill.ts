@@ -16,7 +16,8 @@ export class SkillResult {
     private applied: Boolean = false;
 
     constructor(public mods: DamageModGroup,
-        public postmods: DamageModGroup | null, public postDelay: number) {
+        public postmods: DamageModGroup | null,
+        public tags: Set<DamageTag>, public postDelay: number) {
 
         if (mods === null) {
             throw Error('mods is null, prefer to add(new Zero()) instead');
@@ -29,14 +30,14 @@ export class SkillResult {
      * This can be used only once.
      */
     public execute(target: CharacterState, source: CharacterState,
-        state: State, tags: Set<DamageTag>) {
+        state: State) {
         // Prevent multiple execution.
         if (this.applied) throw Error('cannot apply SkillResult > 1 time');
         this.applied = true;
 
         // Calculate and apply initial damage
         let initialDamage = this.mods
-            .apply(new Damage(tags), target, source);
+            .apply(new Damage(this.tags), target, source);
         initialDamage.apply(target);
 
         // Skip followup calculation when we don't have one.
@@ -116,7 +117,8 @@ class BasicAttackEffect implements ISkillEffect {
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
 
-        return new SkillResult(mods, new DamageModGroup(), 0);
+        return new SkillResult(mods, new DamageModGroup(),
+            new Set(this.tags), 0);
     }
 }
 
@@ -168,7 +170,8 @@ class TossedBladeEffect implements ISkillEffect {
         let postmods = mods;
 
         // Zero the initial impact
-        return new SkillResult(initial, postmods, postDelay);
+        return new SkillResult(initial, postmods,
+            new Set(this.tags), postDelay);
     }
 
 }
