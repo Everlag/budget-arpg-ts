@@ -1,3 +1,7 @@
+import * as math from 'mathjs';
+import { intfromInterval } from './random';
+import { TicksPerSecond } from './ARPGState';
+
 /** Meta data governing engagement positions */
 export const PositionBounds = {
     // Limits to valid combat positions
@@ -27,6 +31,51 @@ export class Position {
     /** Compute distance to a given Position */
     public distanceTo(other: Position): number {
         return Math.abs(this.loc - other.loc);
+    }
+
+    /**
+     * Compute distance to a given position taking into account
+     * evasion's impact as well as the current tick-time
+     *
+     * Note: evasion's angular effect is applied to the other position
+     *
+     * evasionDistance computes the distance between the two positions
+     * as though they lie on the complex plane rather than the typical
+     * linear path. Evasion adds an angle to the other position
+     * around the origin. The result is a variably larger distance
+     * than would be provided by distanceTo
+     */
+    public evasionDistanceTo(other: Position,
+        evasion: number, now: number): number {
+
+        // This position sits in R, convenient!
+        let thisComplex = math.complex({ r: this.loc, phi: 0 });
+        console.log('thisComplex', thisComplex)
+
+        // Compute the angle for the other position
+        // in 0..pi/2
+        // 
+        // Yes, we're using unfancy Math because reasons.
+        let multFloor = (now / (TicksPerSecond * 0.5)) % 10;
+        console.log(multFloor)
+        let angleMult = intfromInterval(multFloor, 100) / 100;
+        console.log(angleMult)
+        let angle = Math.log(evasion) / Math.log(300);
+        // Enforce that angle is between 0% and 100% effective
+        // for the purposes of increasing the distance
+        angle = Math.min(angle * angleMult, math.pi / 2);
+        console.log(angle)
+        let otherComplex = math.complex({ r: other.loc, phi: angle });
+        console.log(otherComplex)
+
+        // Determine distance between them
+        let distance = math.chain(thisComplex)
+            .subtract(otherComplex)
+            .abs()
+            .done();
+
+        return distance;
+
     }
 
     /** 
@@ -85,4 +134,5 @@ export class Position {
         }
 
     }
+
 }
