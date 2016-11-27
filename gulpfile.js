@@ -44,6 +44,7 @@ gulp.task('eslint', () => {
     ignore: [
       './node_modules/**', './app/bower_components/**',
       `./app/scripts/require.js`,
+      `./app/scripts/math.js`,
       `./app/scripts/${transpileTarget}`,
     ],
   });
