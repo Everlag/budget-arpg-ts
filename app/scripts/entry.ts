@@ -63,14 +63,14 @@ SeedRandom('testing!', { global: true });
 
 let basicLoadout = new LoadOut([
     new Gear(GearSlot.Gloves, [
-        new DamageMods.LocalElement(1, 3, Elements.Fire),
-        new DamageMods.LocalPhysical(2, 3),
+        new DamageMods.LocalElement(2, 3, Elements.Fire),
+        new DamageMods.LocalPhysical(3, 4),
         new DamageMods.LocalPhysical(2, 7),
         new DamageMods.Armor(10),
         new DamageMods.Armor(10),
         new DamageMods.Resistance(0.75, Elements.Fire),
         new DamageMods.IncreasedCritChance(0.50),
-        new DamageMods.IncreasedMeleeElement(0.75, Elements.Fire),
+        new DamageMods.IncreasedMeleeElement(0.90, Elements.Fire),
     ],
         [
             new StatMods.FlatAddedHealth(120),
@@ -90,6 +90,7 @@ let basicLoadout = new LoadOut([
 let trashLoadout = new LoadOut([
     new Gear(GearSlot.Gloves, [
         // new DamageMods.LocalFire(1, 3),
+        new DamageMods.LocalElement(3, 4, Elements.Cold),
         new DamageMods.LocalElement(1, 1, Elements.Fire),
         new DamageMods.LocalElement(0, 2, Elements.Fire),
         new DamageMods.LocalPhysical(2, 3),
@@ -106,10 +107,23 @@ let trashLoadout = new LoadOut([
         ]),
 ]);
 
+let coldTrashLoadout = new LoadOut([
+    new Gear(GearSlot.Gloves, [
+        new DamageMods.LocalElement(4, 7, Elements.Cold),
+        new DamageMods.IncreasedMeleeElement(0.45, Elements.Cold),
+        new DamageMods.Armor(10),
+    ],
+        [
+            new StatMods.FlatAddedHealth(4),
+        ]),
+]);
+
 let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
+let coldBaseTrash = new Character(coldTrashLoadout,
+    new Skills.BasicAttack(), 'worseness');
 
 let xInit = [
     new PackInit(basex, new Position(-100), new Behaviors.AgressiveNaiveMelee()),
@@ -119,7 +133,7 @@ let yInit = [
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
     new PackInit(baseTrash,
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
-    new PackInit(baseTrash,
+    new PackInit(coldBaseTrash,
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
 ];
 
