@@ -12,6 +12,11 @@ export const BurnDuration = 8 * TicksPerSecond;
 /** Burns deal 50% of the initial hit's fire damage over the duration */
 export const BurnRatio = 0.5;
 
+/** Chills last for up to 3 seconds */
+export const MaxChilldDuration = 4 * TicksPerSecond;
+/** Chills slow for a flat 40% */
+export const ChillSlowMultiplier = 1.4;
+
 interface IStatusMod {
     DamageMod: IDamageMod | null;
     StatMod: IStatusStatMod | null;
@@ -47,16 +52,19 @@ export class StatusEffects {
 
     /** Remove a StatusMod from the instance */
     public remove(mod: IStatusMod) {
-        // Remove the mod from our list
-        console.log('removing Burning!', this.mods.length);
-        this.mods = this.mods.filter(m => m !== mod);
-        console.log('removed Burning!', this.mods.length);
-
-        // Ensure we aren't dead...
-        if (this.selfState.isDead) return;
 
         // Recalculate the stats
         let {context} = this.selfState;
+
+        // Invert all currently active mods if this one is active
+        if (mod.StatMod && mod.StatMod.effective) {
+            context.stats = this.applyStatsInverse(context.stats);
+        }
+
+        // Remove the mod from our list
+        this.mods = this.mods.filter(m => m !== mod);
+
+        // Reclalculate stats
         context.stats = this.applyStats(context.stats);
         // Force the stats to take effect
         context.reflectStatChange();
@@ -91,8 +99,38 @@ export class StatusEffects {
         console.log(`burn applied, healthRegen=${this.selfState.context.stats.healthRegen}`);
     }
 
-    /** Apply the StatMods */
-    private applyStats(stats: Stats): Stats {
+    /** Apply Chilled to a Character off of a hit if it has cold damage */
+    public applyChill(hit: Damage) {
+        if (hit.cold === 0) return;
+
+        // Determine the duration as based off of the target's max health
+        let fraction = (hit.cold / this.selfState.context.baseStats.health);
+        let duration = fraction * MaxChilldDuration;
+        // Potential chills for less than 200ms are ignored
+        if (duration < 0.2 * TicksPerSecond) return;
+
+        // Prepare the IStatusMod
+        let chill: IStatusMod = {
+            DamageMod: null,
+            StatMod: new Chilled(ChillSlowMultiplier),
+        };
+
+        // Set an event to remove the burn
+        let end = new Event(this.selfState.state.now + duration,
+            () => {
+                this.remove(chill);
+                return null;
+            }, null);
+        this.selfState.state.addEvent(end);
+
+        // Finally, add the mod
+        this.add(chill);
+
+        console.log(`chill applied, fraction=${fraction} attackTime=${this.selfState.context.stats.attackTime}`);
+    }
+
+    /** Invert all currently active StatMods */
+    private applyStatsInverse(stats: Stats) {
         // Find all non-null stat mods
         let statMods = this.mods
             .map(mod => mod.StatMod)
@@ -114,8 +152,26 @@ export class StatusEffects {
 
         // Create a group and add all our mods and inverses to it
         let group = new StatModGroup();
-        statMods.forEach(s => group.add(s));
         inverseEffectives.forEach(s => group.add(s));
+
+        return group.apply(stats);
+    }
+
+    /** Apply the StatMods */
+    private applyStats(stats: Stats): Stats {
+        // Find all non-null stat mods
+        let statMods = this.mods
+            .map(mod => mod.StatMod)
+            // Remove nulls
+            .filter(s => s != null)
+            .map(s => (<IStatusStatMod>s));
+
+        // Invert the currently effective
+        stats = this.applyStatsInverse(stats);
+
+        // Create a group and add all our mods and inverses to it
+        let group = new StatModGroup();
+        statMods.forEach(s => group.add(s));
 
         return group.apply(stats);
     }
@@ -185,5 +241,65 @@ export class Burning implements IStatusStatMod {
     public inverse(): IStatMod {
         // Luckily, burning is an effect that is trivial to reverse
         return new BurningInverse(this.rate);
+    }
+}
+
+export class ChilledInverse implements IStatMod {
+
+    public name = 'ChilledInverseMod';
+    public canSum = true;
+
+    public position = StatModOrder.StatusEffects;
+
+    constructor(public multiplier: number) { }
+
+    public apply(s: Stats): Stats {
+        s.attackTime *= 1 / this.multiplier;
+        s.castTime *= 1 / this.multiplier;
+        s.movespeed *= this.multiplier;
+        return s;
+    }
+
+    public sum(other: ChilledInverse): ChilledInverse {
+        // There can only be one as there's only one possible, effective
+        // Burning instance at a time.
+        console.log('other is:', other);
+        throw Error('chilled inverse attempted to sum');
+    }
+}
+
+export class Chilled implements IStatusStatMod {
+
+    public name = 'ChilledMod';
+    public canSum = true;
+
+    public position = StatModOrder.StatusEffects;
+
+    /** Status mod defaults to not being in effect */
+    public effective = false;
+
+    constructor(public multiplier: number) { }
+
+    public apply(s: Stats): Stats {
+        this.effective = true;
+        s.attackTime *= this.multiplier;
+        s.castTime *= this.multiplier;
+        s.movespeed *= 1 / this.multiplier;
+        return s;
+    }
+
+    /** Return the higher of the two Chilled instance's rates */
+    public sum(other: Chilled): Chilled {
+        if (this.multiplier > other.multiplier) {
+            other.effective = false;
+            return this;
+        }
+        this.effective = false;
+        return other;
+    }
+
+    public inverse(): IStatMod {
+        // Luckily, burning is an effect that is trivial to reverse
+        return new ChilledInverse(this.multiplier);
     }
 }

@@ -149,6 +149,10 @@ export class Damage {
         // Handle the possibility of a Burn
         if (rollSuccess(this.burnChance)) target.statuses.applyBurn(this);
 
+        // Handle the possibility of a chill if we did
+        // at least some cold damage
+        if (this.cold > 0) target.statuses.applyChill(this);
+
         // TODO: handle applying the rest of the conditions...
     }
 
