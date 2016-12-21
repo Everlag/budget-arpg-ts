@@ -356,3 +356,28 @@ export class IncreasedMeleeElement implements IDamageModSummable {
         return Object.assign(new IncreasedMeleeElement(0, Elements.Fire), this);
     }
 }
+
+export class AllLeechedAsLife implements IDamageModSummable {
+    public name = 'AllLeechedAsLifeDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostMitigation;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage): Damage {
+        Object.keys(d.healthLeech)
+            .forEach(key => d.healthLeech[key] += this.percent);
+        return d;
+    }
+
+    public sum(other: IncreasedMeleeElement): AllLeechedAsLife {
+        return new AllLeechedAsLife(this.percent + other.percent);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new AllLeechedAsLife(0), this);
+    }
+}

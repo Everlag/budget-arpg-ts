@@ -143,11 +143,16 @@ export class StatusEffects {
     /** Apply Leech to a Character off of a hit if it has cold damage */
     public applyLeech(hit: Damage) {
 
+        console.log('leech', hit)
+
         // Determine the amounts leeched and if we should bother
         // actually applying a status
         let lifeLeeched = this.getLeechRate(hit, hit.healthLeech);
         let manaLeeched = this.getLeechRate(hit, hit.manaLeech);
         if (lifeLeeched + manaLeeched === 0) return;
+
+        console.log('leech', lifeLeeched, manaLeeched)
+        console.log('leech', hit)
 
         // Determine how long this leech lasts for in ticks
         // 
@@ -166,7 +171,7 @@ export class StatusEffects {
                 manaLeeched / manaDuration),
         };
 
-        // Set an event to remove the burn
+        // Set an event to remove the effect
         let end = new Event(this.selfState.state.now + duration,
             () => {
                 this.remove(leech);
@@ -176,6 +181,8 @@ export class StatusEffects {
 
         // Finally, add the mod
         this.add(leech);
+        console.log(`leech applied, summedTotal=${lifeLeeched + manaLeeched}, duration=${duration}`);
+        console.log('leech', hit);
     }
 
     /**
@@ -402,6 +409,7 @@ export class Leech implements IStatusStatMod {
         this.effective = true;
         s.healthRegen += this.healthRate;
         s.manaRegen += this.manaRate;
+        console.log('leech applied', this.healthRate)
         return s;
     }
 

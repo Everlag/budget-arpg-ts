@@ -139,6 +139,7 @@ export class Damage {
 
         // Calculate sum
         let sum = this.sum();
+        if (isNaN(sum)) throw Error('Damage sum is NaN');
 
         // Check if crit and 
         if (rollSuccess(this.criticalChance)) {
