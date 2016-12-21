@@ -363,7 +363,7 @@ export class AllLeechedAsLife implements IDamageModSummable {
     public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
-    public position = DamageModOrder.PostMitigation;
+    public position = DamageModOrder.PostCalc;
 
     constructor(public percent: number) { }
 

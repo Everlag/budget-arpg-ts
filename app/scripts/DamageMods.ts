@@ -98,6 +98,12 @@ export const enum DamageModOrder {
      * ie, resolve which should have armor and resists happen first
      */
     PostMitigation,
+    /**
+     * Mods that do not directly modify the immediate Damage
+     *
+     * ie, calculating percent of fire leeched as life 
+     */
+    PostCalc,
 }
 
 /** 
@@ -394,6 +400,8 @@ export class DamageModGroup {
             if (!tagOverlap) return;
 
             d = mod.apply(d, target, source);
+            // Ensure sum is not null as a result of a specific mod.
+            if (isNaN(d.sum())) throw Error(`damage sum NaN post ${mod.name}`);
         });
 
         return d;

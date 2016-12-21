@@ -81,7 +81,7 @@ let basicLoadout = new LoadOut([
         ]),
     new Gear(GearSlot.Helmet, [
         new DamageMods.Resolve(0.15),
-        new DamageMods.AllLeechedAsLife(0.2),
+        new DamageMods.AllLeechedAsLife(0.03),
     ],
         [
             new StatMods.FlatAddedMana(20),
