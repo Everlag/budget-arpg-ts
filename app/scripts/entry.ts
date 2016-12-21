@@ -96,8 +96,9 @@ let trashLoadout = new LoadOut([
         new DamageMods.LocalElement(0, 2, Elements.Fire),
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.Armor(4),
-        // This should have no effect 
+        // These should have no effect 
         new DamageMods.IncreasedMeleePhysical(1.0),
+        new DamageMods.ElementLeechedAsLife(0.9, Elements.Light),
     ],
         [
             new StatMods.FlatAddedHealth(4),

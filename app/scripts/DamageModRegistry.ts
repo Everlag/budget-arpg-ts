@@ -2,7 +2,11 @@ import {
     IDamageMod, IRangeMod, IDamageModSummable,
     DamageModOrder, DamageModDirection,
 } from './DamageMods';
-import { Damage, DamageTag, Elements, ElementArray } from './Damage';
+import {
+    Damage, DamageTag,
+    Elements, ElementArray,
+    getLeechSpecElement, setLeechSpecElement,
+} from './Damage';
 import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
 import { intfromInterval } from './Random';
@@ -379,5 +383,63 @@ export class AllLeechedAsLife implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new AllLeechedAsLife(0), this);
+    }
+}
+
+export class PhysLeechedAsLife implements IDamageModSummable {
+    public name = 'PhysLeechedAsLifeDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostCalc;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage): Damage {
+        d.healthLeech.phys += this.percent;
+        return d;
+    }
+
+    public sum(other: PhysLeechedAsLife): PhysLeechedAsLife {
+        return new PhysLeechedAsLife(this.percent + other.percent);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new PhysLeechedAsLife(0), this);
+    }
+}
+
+export class ElementLeechedAsLife implements IDamageModSummable {
+    public name = 'ElementLeechedAsLifeDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.PostCalc;
+
+    constructor(public percent: number, public element: Elements) { }
+
+    public apply(d: Damage): Damage {
+        let prev = getLeechSpecElement(d.healthLeech, this.element);
+        setLeechSpecElement(prev + this.percent, d.healthLeech, this.element);
+        return d;
+    }
+
+    public sum(other: ElementLeechedAsLife): ElementLeechedAsLife {
+        if (!this.summable(other)) {
+            throw Error('this mod is not summable with other');
+        }
+
+        return new ElementLeechedAsLife(this.percent + other.percent,
+            this.element);
+    }
+
+    public summable(other: ElementLeechedAsLife): Boolean {
+        return this.element === other.element;
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new ElementLeechedAsLife(0, Elements.Fire), this);
     }
 }

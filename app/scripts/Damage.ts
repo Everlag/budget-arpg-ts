@@ -41,6 +41,37 @@ export interface ILeechSpec {
     [key: string]: number;
 }
 
+export function getLeechSpecElement(spec: ILeechSpec,
+    element: Elements): number {
+    switch (element) {
+        case Elements.Fire:
+            return spec.fire;
+        case Elements.Light:
+            return spec.light;
+        case Elements.Cold:
+            return spec.cold;
+        default:
+            throw Error('fell through Elements switch');
+    }
+}
+
+export function setLeechSpecElement(value: number, spec: ILeechSpec,
+    element: Elements) {
+    switch (element) {
+        case Elements.Fire:
+            spec.fire = value;
+            break;
+        case Elements.Light:
+            spec.light = value;
+            break;
+        case Elements.Cold:
+            spec.cold = value;
+            break;
+        default:
+            throw Error('fell through Elements switch');
+    }
+}
+
 export class Damage {
     /** Chance for Damage application to be a critical strike */
     public criticalChance = 0.05;
