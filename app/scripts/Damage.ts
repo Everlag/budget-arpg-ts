@@ -32,6 +32,15 @@ export const enum DamageTag {
     Melee, Ranged,
 }
 
+/**
+ * Specification for percentages of mitigated Damage leeched
+ */
+export interface ILeechSpec {
+    phys: number;
+    fire: number; light: number; cold: number;
+    [key: string]: number;
+}
+
 export class Damage {
     /** Chance for Damage application to be a critical strike */
     public criticalChance = 0.05;
@@ -42,10 +51,10 @@ export class Damage {
     public burnChance = 0.0;
 
     /** Portion of Damage that that can be leeched as life or mana */
-    public healthLeech: { [key: string]: number } = {
+    public healthLeech: ILeechSpec = {
         phys: 0, fire: 0, light: 0, cold: 0,
     };
-    public manaLeech: { [key: string]: number } = {
+    public manaLeech: ILeechSpec = {
         phys: 0, fire: 0, light: 0, cold: 0,
     };
 

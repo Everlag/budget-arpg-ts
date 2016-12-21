@@ -5,7 +5,7 @@ import {
 import { IDamageMod } from './DamageMods';
 import { CharacterState } from './CharacterState';
 import { Event, TicksPerSecond } from './ARPGState';
-import { Damage } from './Damage';
+import { Damage, ILeechSpec } from './Damage';
 
 /** Burns last for 8 seconds */
 export const BurnDuration = 8 * TicksPerSecond;
@@ -188,7 +188,7 @@ export class StatusEffects {
      * Given one of the leech specifications associated with a hit,
      * determine how much of the total Damage is leeched
      */
-    private getLeechRate(hit: Damage, spec: { [key: string]: number }): number {
+    private getLeechRate(hit: Damage, spec: ILeechSpec): number {
         let {phys, fire, light, cold} = spec;
         let sum = phys * hit.phys + fire * hit.fire +
             light * hit.light + cold * hit.cold;
