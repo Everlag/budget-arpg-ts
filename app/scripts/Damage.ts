@@ -41,6 +41,14 @@ export class Damage {
     /** Chance for Damage application to cause persistent burn */
     public burnChance = 0.0;
 
+    /** Portion of Damage that that can be leeched as life or mana */
+    public healthLeech: { [key: string]: number } = {
+        phys: 0, fire: 0, light: 0, cold: 0,
+    };
+    public manaLeech: { [key: string]: number } = {
+        phys: 0, fire: 0, light: 0, cold: 0,
+    };
+
     /** Increased multipliers */
     public increased = {
         phys: 1,
@@ -123,11 +131,11 @@ export class Damage {
     }
 
     /** 
-     * Apply this Damage to a target
+     * Apply this Damage to a target from a source
      *
      * TODO: handle conditions and such.
      */
-    public apply(target: CharacterState) {
+    public apply(target: CharacterState, source: CharacterState) {
 
         // Calculate sum
         let sum = this.sum();
@@ -152,6 +160,9 @@ export class Damage {
         // Handle the possibility of a chill if we did
         // at least some cold damage
         if (this.cold > 0) target.statuses.applyChill(this);
+
+        // Always apply leech to the source, let statuses handle it
+        source.statuses.applyLeech(this);
 
         // TODO: handle applying the rest of the conditions...
     }

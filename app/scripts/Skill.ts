@@ -38,7 +38,7 @@ export class SkillResult {
         // Calculate and apply initial damage
         let initialDamage = this.mods
             .apply(new Damage(this.tags), target, source);
-        initialDamage.apply(target);
+        initialDamage.apply(target, source);
 
         // Skip followup calculation when we don't have one.
         if (!this.hasFollowup) return;
@@ -53,7 +53,7 @@ export class SkillResult {
                 if (this.postmods) {
                     let postDamage = this.postmods
                         .apply(new Damage(new Set()), target, source);
-                    postDamage.apply(target);
+                    postDamage.apply(target, source);
                 }
 
                 return null;

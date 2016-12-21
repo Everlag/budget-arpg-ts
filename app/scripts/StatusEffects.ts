@@ -17,6 +17,17 @@ export const MaxChilldDuration = 4 * TicksPerSecond;
 /** Chills slow for a flat 40% */
 export const ChillSlowMultiplier = 1.4;
 
+/** 
+ * Leech can recover 3% of maximum health per second per instance
+ *
+ * This is calculated post-mitigation, so this isn't actually
+ * as significant a buff as it seems.
+ *
+ * NOTE: there is no overall cap for leeching as that doesn't fit nicely
+ *       into the current code. That will probably be added later.
+ */
+export const LeechRate = 0.03 / TicksPerSecond;
+
 interface IStatusMod {
     DamageMod: IDamageMod | null;
     StatMod: IStatusStatMod | null;
@@ -127,6 +138,54 @@ export class StatusEffects {
         this.add(chill);
 
         console.log(`chill applied, fraction=${fraction} attackTime=${this.selfState.context.stats.attackTime}`);
+    }
+
+    /** Apply Leech to a Character off of a hit if it has cold damage */
+    public applyLeech(hit: Damage) {
+
+        // Determine the amounts leeched and if we should bother
+        // actually applying a status
+        let lifeLeeched = this.getLeechRate(hit, hit.healthLeech);
+        let manaLeeched = this.getLeechRate(hit, hit.manaLeech);
+        if (lifeLeeched + manaLeeched === 0) return;
+
+        // Determine how long this leech lasts for in ticks
+        // 
+        // The leech lasts for whichever of health and mana takes longer
+        // so the shorter is effectively extended for free.
+        let maxHealth = this.selfState.context.baseStats.health;
+        let maxMana = this.selfState.context.baseStats.mana;
+        let lifeDuration = lifeLeeched / (maxHealth * LeechRate);
+        let manaDuration = manaLeeched / (maxMana * LeechRate);
+        let duration = Math.max(lifeDuration, manaDuration);
+
+        // Prepare the IStatusMod
+        let leech: IStatusMod = {
+            DamageMod: null,
+            StatMod: new Leech(lifeLeeched / lifeDuration,
+                manaLeeched / manaDuration),
+        };
+
+        // Set an event to remove the burn
+        let end = new Event(this.selfState.state.now + duration,
+            () => {
+                this.remove(leech);
+                return null;
+            }, null);
+        this.selfState.state.addEvent(end);
+
+        // Finally, add the mod
+        this.add(leech);
+    }
+
+    /**
+     * Given one of the leech specifications associated with a hit,
+     * determine how much of the total Damage is leeched
+     */
+    private getLeechRate(hit: Damage, spec: { [key: string]: number }): number {
+        let {phys, fire, light, cold} = spec;
+        return phys * hit.phys + fire * hit.fire +
+            light * hit.light + cold * hit.cold;
     }
 
     /** Invert all currently active StatMods */
@@ -301,5 +360,61 @@ export class Chilled implements IStatusStatMod {
     public inverse(): IStatMod {
         // Luckily, burning is an effect that is trivial to reverse
         return new ChilledInverse(this.multiplier);
+    }
+}
+
+export class LeechInverse implements IStatMod {
+
+    public name = 'LeechInverseMod';
+    public canSum = true;
+
+    public position = StatModOrder.StatusEffects;
+
+    constructor(public healthRate: number, public manaRate: number) { }
+
+    public apply(s: Stats): Stats {
+        s.healthRegen -= this.healthRate;
+        s.manaRegen -= this.manaRate;
+        return s;
+    }
+
+    public sum(other: LeechInverse): LeechInverse {
+        // These are allowed to sum as there can be more than one possible
+        // Leech instance active at a time
+        return new LeechInverse(this.healthRate + other.healthRate,
+            this.manaRate + other.manaRate);
+    }
+}
+
+export class Leech implements IStatusStatMod {
+
+    public name = 'LeechMod';
+    public canSum = false;
+
+    public position = StatModOrder.StatusEffects;
+
+    /** Status mod defaults to not being in effect */
+    public effective = false;
+
+    constructor(public healthRate: number, public manaRate: number) { }
+
+    public apply(s: Stats): Stats {
+        this.effective = true;
+        s.healthRegen += this.healthRate;
+        s.manaRegen += this.manaRate;
+        return s;
+    }
+
+    /** Return the higher of the two Burning instance's rates */
+    public sum(other: Leech): Leech {
+        other.effective = true;
+        this.effective = true;
+        return new Leech(this.healthRate + other.healthRate,
+            this.manaRate + other.manaRate);
+    }
+
+    public inverse(): IStatMod {
+        // Luckily, burning is an effect that is trivial to reverse
+        return new LeechInverse(this.healthRate, this.manaRate);
     }
 }
