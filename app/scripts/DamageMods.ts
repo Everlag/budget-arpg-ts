@@ -99,11 +99,12 @@ export const enum DamageModOrder {
      */
     PostMitigation,
     /**
-     * Mods that do not directly modify the immediate Damage
+     * Mods that modify the impact of statuses that the Damage
+     * can apply but do not effect the actual sum of the Damage.
      *
      * ie, calculating percent of fire leeched as life 
      */
-    PostCalc,
+    StatusCalc,
 }
 
 /** 

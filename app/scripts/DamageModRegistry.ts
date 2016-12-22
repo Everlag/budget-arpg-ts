@@ -407,7 +407,7 @@ export class AllLeechedAsLife implements IDamageModSummable {
     public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
-    public position = DamageModOrder.PostCalc;
+    public position = DamageModOrder.StatusCalc;
 
     constructor(public percent: number) { }
 
@@ -436,7 +436,7 @@ export class PhysLeechedAsLife implements IDamageModSummable {
     public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
-    public position = DamageModOrder.PostCalc;
+    public position = DamageModOrder.StatusCalc;
 
     constructor(public percent: number) { }
 
@@ -464,7 +464,7 @@ export class ElementLeechedAsLife implements IDamageModSummable {
     public direction = DamageModDirection.Dealing;
 
     public reqTags = new Set();
-    public position = DamageModOrder.PostCalc;
+    public position = DamageModOrder.StatusCalc;
 
     constructor(public percent: number, public element: Elements) { }
 
