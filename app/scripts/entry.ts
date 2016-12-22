@@ -96,6 +96,7 @@ let trashLoadout = new LoadOut([
         new DamageMods.LocalElement(0, 2, Elements.Fire),
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.Armor(4),
+        new DamageMods.ReducedBurnDuration(0.8),
         // These should have no effect 
         new DamageMods.IncreasedMeleePhysical(1.0),
         new DamageMods.ElementLeechedAsLife(0.9, Elements.Light),
@@ -158,6 +159,8 @@ let tickTimes: Array<Number> = [];
 // x.disengage();
 console.log(x);
 
+let totalEvents = 0;
+
 // Simulate 1 minute of combat
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let tickStart = performance.now();
@@ -167,12 +170,13 @@ for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
         // console.log('yRegen=', (<any>y.states)[0].context.healthCalc._rate)
         // console.log('xRegen=', (<any>x.states)[0].context.healthCalc._rate)
         console.log(`retired ${completed} events`);
+        totalEvents += completed;
         tickTimes.push(tickEnd - tickStart);
     }
 }
 
 let end = performance.now();
-console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks`);
+console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks with ${totalEvents} events`);
 
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;

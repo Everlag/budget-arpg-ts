@@ -116,7 +116,7 @@ export class StatusEffects {
         // Finally, add the mod
         this.add(burn);
 
-        console.log(`burn applied, healthRegen=${this.selfState.context.stats.healthRegen}`);
+        console.log(`burn applied, healthRegen=${this.selfState.context.stats.healthRegen}, duration=${burnDuration}`);
     }
 
     /** Apply Chilled to a Character off of a hit if it has cold damage */

@@ -495,3 +495,35 @@ export class ElementLeechedAsLife implements IDamageModSummable {
         return `${this.percent * 100}% of ${ElementToPrettyString(this.element)} damage leeched as life`;
     }
 }
+
+export class ReducedBurnDuration implements IDamageModSummable {
+    public name = 'ReducedBurnDurationDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.StatusCalc;
+
+    constructor(public percent: number) { }
+
+    public apply(d: Damage): Damage {
+        d.statusEffects.burnDuration *= (1 - this.percent);
+
+        return d;
+    }
+
+    public sum(other: ReducedBurnDuration): ReducedBurnDuration {
+        // Enforce a cap that burn duration reduction can be at most 80%
+        // of the default duration. 
+        let capped = Math.min(this.percent + other.percent, 0.8);
+        return new ReducedBurnDuration(capped);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new ReducedBurnDuration(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% reduced Burn duration`;
+    }
+}
