@@ -179,10 +179,6 @@ export class StatusEffects {
             }, null);
         this.selfState.state.addEvent(end);
 
-        console.log(leech.StatMod)
-        throw "";
-
-
         // Finally, add the mod
         this.add(leech);
         console.log(`leech applied, summedTotal=${lifeLeeched + manaLeeched}, duration=${duration}`);
