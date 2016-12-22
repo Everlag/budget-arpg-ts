@@ -7,6 +7,13 @@ import { CharacterState } from './CharacterState';
 import { Event, TicksPerSecond } from './ARPGState';
 import { Damage, ILeechSpec } from './Damage';
 
+/**
+ * Export default values for the status effects
+ *
+ * Each Damage instance will have these available.
+ * This allows StatusEffects to be affected by DamageMods
+ */
+
 /** Burns last for 8 seconds */
 export const BurnDuration = 8 * TicksPerSecond;
 /** Burns deal 50% of the initial hit's fire damage over the duration */
@@ -87,8 +94,10 @@ export class StatusEffects {
 
         console.log('applying burn!');
 
+        let {burnDuration, burnRatio} = hit.statusEffects;
+
         // Determine the rate of damage scaled off the initial hit
-        let rate = (BurnRatio * hit.fire) / BurnDuration;
+        let rate = (burnRatio * hit.fire) / burnDuration;
 
         // Prepare the IStatusMod
         let burn: IStatusMod = {
@@ -97,7 +106,7 @@ export class StatusEffects {
         };
 
         // Set an event to remove the burn
-        let end = new Event(this.selfState.state.now + BurnDuration,
+        let end = new Event(this.selfState.state.now + burnDuration,
             () => {
                 this.remove(burn);
                 return null;
@@ -114,16 +123,18 @@ export class StatusEffects {
     public applyChill(hit: Damage) {
         if (hit.cold === 0) return;
 
+        let {maxChillDuration, chillSlowMultiplier} = hit.statusEffects;
+
         // Determine the duration as based off of the target's max health
         let fraction = (hit.cold / this.selfState.context.baseStats.health);
-        let duration = fraction * MaxChilldDuration;
+        let duration = fraction * maxChillDuration;
         // Potential chills for less than 200ms are ignored
         if (duration < 0.2 * TicksPerSecond) return;
 
         // Prepare the IStatusMod
         let chill: IStatusMod = {
             DamageMod: null,
-            StatMod: new Chilled(ChillSlowMultiplier),
+            StatMod: new Chilled(chillSlowMultiplier),
         };
 
         // Set an event to remove the burn
@@ -149,6 +160,8 @@ export class StatusEffects {
         let manaLeeched = this.getLeechRate(hit, hit.manaLeech);
         if (lifeLeeched + manaLeeched === 0) return;
 
+        let {leechRate} = hit.statusEffects;
+
         // Determine how long this leech lasts for in ticks
         // 
         // The leech lasts for whichever of health and mana takes longer
@@ -157,11 +170,11 @@ export class StatusEffects {
         if (lifeLeeched > manaLeeched) {
             // Life determines duration
             let maxHealth = this.selfState.context.baseStats.health;
-            duration = lifeLeeched / (maxHealth * LeechRate);
+            duration = lifeLeeched / (maxHealth * leechRate);
         } else {
             // Mana determines duration
             let maxMana = this.selfState.context.baseStats.mana;
-            duration = manaLeeched / (maxMana * LeechRate);
+            duration = manaLeeched / (maxMana * leechRate);
         }
 
         // Prepare the IStatusMod

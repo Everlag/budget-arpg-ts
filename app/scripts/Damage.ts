@@ -1,5 +1,10 @@
 import { CharacterState } from './CharacterState';
 import { rollSuccess } from './random';
+import {
+    BurnDuration, BurnRatio,
+    MaxChilldDuration, ChillSlowMultiplier,
+    LeechRate,
+} from './StatusEffects';
 
 export const enum Elements {
     Fire = 0,
@@ -94,6 +99,23 @@ export class Damage {
 
     /** Chance for Damage application to cause persistent burn */
     public burnChance = 0.0;
+
+    /**
+     * Status effects
+     *
+     * This allows us to use the DamageMod system to change
+     * the impact of the statuses which can be applied.
+     *
+     * For a description of each value, see StatusEffects top level
+     * exported values.
+     */
+    public statusEffects = {
+        maxChillDuration: MaxChilldDuration,
+        chillSlowMultiplier: ChillSlowMultiplier,
+        burnDuration: BurnDuration,
+        burnRatio: BurnRatio,
+        leechRate: LeechRate,
+    };
 
     /** Portion of Damage that that can be leeched as life or mana */
     public healthLeech: ILeechSpec = {
