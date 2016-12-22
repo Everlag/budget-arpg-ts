@@ -125,6 +125,8 @@ export const enum DamageModDirection {
 export interface IDamageMod {
     /** Name of a DamageMod */
     name: String;
+    /** Pretty printing the DamageMod */
+    readonly pretty: string;
     /**
      * The set of DamageTag enums that all must
      * be present for the mod to be applied.
@@ -259,6 +261,10 @@ class PostGlobalAddCleanup implements IDamageMod {
 
     public clone(): IDamageMod {
         throw Error('attempted to clone PostGlobalAddCleanup');
+    }
+
+    public get pretty(): string {
+        return ``;
     }
 }
 

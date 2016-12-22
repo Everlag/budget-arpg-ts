@@ -26,6 +26,20 @@ export function ElementToString(element: Elements) {
     }
 }
 
+/** Convert an element to its pretty printed string name */
+export function ElementToPrettyString(element: Elements) {
+    switch (element) {
+        case Elements.Fire:
+            return 'Fire';
+        case Elements.Light:
+            return 'Lightning';
+        case Elements.Cold:
+            return 'Cold';
+        default:
+            throw Error('fell through Elements switch');
+    }
+}
+
 export const enum DamageTag {
     // Top level tags that must be attached to Damage
     Attack, Spell, DOT,

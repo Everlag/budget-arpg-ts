@@ -4,7 +4,7 @@ import {
 } from './DamageMods';
 import {
     Damage, DamageTag,
-    Elements, ElementArray,
+    Elements, ElementArray, ElementToPrettyString,
     getLeechSpecElement, setLeechSpecElement,
 } from './Damage';
 import { MovementDirection } from './Movement';
@@ -51,6 +51,10 @@ export class DiscreteRange implements IRangeMod {
     public clone(): IRangeMod {
         return Object.assign(new DiscreteRange(0), this);
     }
+
+    public get pretty(): string {
+        return `${this.range} discrete range`;
+    }
 }
 
 /** The application of armor to mitigate physical damage */
@@ -76,6 +80,10 @@ export class Armor implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new Armor(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.armor} added Armor`;
     }
 }
 
@@ -116,6 +124,10 @@ export class Resistance implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new Resistance(0, Elements.Fire), this);
+    }
+
+    public get pretty(): string {
+        return `${this.resistance * 100}% increased ${ElementToPrettyString(this.element)} resistance`;
     }
 }
 
@@ -177,6 +189,10 @@ export class Resolve implements IDamageModSummable {
     public clone(): IDamageMod {
         return Object.assign(new Resolve(0), this);
     }
+
+    public get pretty(): string {
+        return `${this.percent * 100} increased Resolve(% damage diverted to mana)`;
+    }
 }
 
 /** Zero the Damage to nothing */
@@ -200,6 +216,10 @@ export class Zero implements IDamageMod {
 
     public clone(): IDamageMod {
         return Object.assign(new Zero(), this);
+    }
+
+    public get pretty(): string {
+        return `Deal no damage`;
     }
 }
 
@@ -232,6 +252,10 @@ export class LocalPhysical implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new LocalPhysical(0, 0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.min}-${this.max} added Physical damage`;
     }
 }
 
@@ -278,6 +302,10 @@ export class LocalElement implements IDamageModSummable {
     public clone(): IDamageMod {
         return Object.assign(new LocalElement(0, 0, Elements.Fire), this);
     }
+
+    public get pretty(): string {
+        return `${this.min}-${this.max} added ${ElementToPrettyString(this.element)} damage`;
+    }
 }
 
 export class IncreasedCritChance implements IDamageModSummable {
@@ -302,6 +330,10 @@ export class IncreasedCritChance implements IDamageModSummable {
     public clone(): IDamageMod {
         return Object.assign(new IncreasedCritChance(0), this);
     }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% increased critical strike chance`;
+    }
 }
 
 export class IncreasedMeleePhysical implements IDamageModSummable {
@@ -325,6 +357,10 @@ export class IncreasedMeleePhysical implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new IncreasedMeleePhysical(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% increased melee Physical damage`;
     }
 }
 
@@ -359,6 +395,10 @@ export class IncreasedMeleeElement implements IDamageModSummable {
     public clone(): IDamageMod {
         return Object.assign(new IncreasedMeleeElement(0, Elements.Fire), this);
     }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% increased melee ${ElementToPrettyString(this.element)} damage`;
+    }
 }
 
 export class AllLeechedAsLife implements IDamageModSummable {
@@ -377,12 +417,16 @@ export class AllLeechedAsLife implements IDamageModSummable {
         return d;
     }
 
-    public sum(other: IncreasedMeleeElement): AllLeechedAsLife {
+    public sum(other: AllLeechedAsLife): AllLeechedAsLife {
         return new AllLeechedAsLife(this.percent + other.percent);
     }
 
     public clone(): IDamageMod {
         return Object.assign(new AllLeechedAsLife(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% of all damage leeched as life`;
     }
 }
 
@@ -407,6 +451,10 @@ export class PhysLeechedAsLife implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new PhysLeechedAsLife(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% of Physical damage leeched as life`;
     }
 }
 
@@ -441,5 +489,9 @@ export class ElementLeechedAsLife implements IDamageModSummable {
 
     public clone(): IDamageMod {
         return Object.assign(new ElementLeechedAsLife(0, Elements.Fire), this);
+    }
+
+    public get pretty(): string {
+        return `${this.percent * 100}% of ${ElementToPrettyString(this.element)} damage leeched as life`;
     }
 }
