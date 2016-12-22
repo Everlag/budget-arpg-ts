@@ -78,6 +78,8 @@ export const enum StatModOrder {
 export interface IStatMod {
     /** Name of a StatMod */
     name: String;
+    /** Pretty printing the StatMod */
+    readonly pretty: string;
     /** Whether or not the StatMod can be reasonably summed */
     canSum: Boolean;
     /** The point this StatMod is applied relative to other StatMods */
@@ -124,6 +126,10 @@ export class FlatAddedHealth implements IStatMod {
     public sum(other: FlatAddedHealth): FlatAddedHealth {
         return new FlatAddedHealth(this.flat + other.flat);
     }
+
+    public get pretty(): string {
+        return `${this.flat} added Health`;
+    }
 }
 
 /** Explicit additions to the mana pool before scaling */
@@ -142,6 +148,10 @@ export class FlatAddedMana implements IStatMod {
 
     public sum(other: FlatAddedMana): FlatAddedMana {
         return new FlatAddedMana(this.flat + other.flat);
+    }
+
+    public get pretty(): string {
+        return `${this.flat} added Mana`;
     }
 }
 
@@ -162,6 +172,10 @@ export class BaseAttackTime implements IStatMod {
     public sum(other: BaseAttackTime): BaseAttackTime {
         // Disallow multiple BaseAttackTimes by catching it here.
         throw Error('BaseAttackTime should have a single source');
+    }
+
+    public get pretty(): string {
+        return `${(this.time / TicksPerSecond).toFixed(2)} attacks per second`;
     }
 }
 
@@ -184,6 +198,10 @@ export class IncreasedAttackSpeed implements IStatMod {
     public sum(other: IncreasedAttackSpeed): IncreasedAttackSpeed {
         return new IncreasedAttackSpeed(this.percent + other.percent);
     }
+
+    public get pretty(): string {
+        return `${this.percent} increased attack speed`;
+    }
 }
 
 /** Percentage increased movement speed */
@@ -203,6 +221,10 @@ export class IncreasedMovespeed implements IStatMod {
 
     public sum(other: IncreasedMovespeed): IncreasedMovespeed {
         return new IncreasedMovespeed(this.percent + other.percent);
+    }
+
+    public get pretty(): string {
+        return `${this.percent} increased movement speed`;
     }
 }
 

@@ -179,6 +179,10 @@ export class StatusEffects {
             }, null);
         this.selfState.state.addEvent(end);
 
+        console.log(leech.StatMod)
+        throw "";
+
+
         // Finally, add the mod
         this.add(leech);
         console.log(`leech applied, summedTotal=${lifeLeeched + manaLeeched}, duration=${duration}`);
@@ -275,6 +279,10 @@ export class BurningInverse implements IStatMod {
         console.log('other is:', other);
         throw Error('burning inverse attempted to sum');
     }
+
+    public get pretty(): string {
+        throw 'attempted to pretty print inverse IStatusStatMod';
+    }
 }
 
 export class Burning implements IStatusStatMod {
@@ -309,6 +317,10 @@ export class Burning implements IStatusStatMod {
         // Luckily, burning is an effect that is trivial to reverse
         return new BurningInverse(this.rate);
     }
+
+    public get pretty(): string {
+        return `Burning for ${this.rate * TicksPerSecond} per second`;
+    }
 }
 
 export class ChilledInverse implements IStatMod {
@@ -332,6 +344,10 @@ export class ChilledInverse implements IStatMod {
         // Burning instance at a time.
         console.log('other is:', other);
         throw Error('chilled inverse attempted to sum');
+    }
+
+    public get pretty(): string {
+        throw 'attempted to pretty print inverse IStatusStatMod';
     }
 }
 
@@ -369,6 +385,10 @@ export class Chilled implements IStatusStatMod {
         // Luckily, burning is an effect that is trivial to reverse
         return new ChilledInverse(this.multiplier);
     }
+
+    public get pretty(): string {
+        return `Chilled to ${this.multiplier * 100}% of normal speed`;
+    }
 }
 
 export class LeechInverse implements IStatMod {
@@ -391,6 +411,10 @@ export class LeechInverse implements IStatMod {
         // Leech instance active at a time
         return new LeechInverse(this.healthRate + other.healthRate,
             this.manaRate + other.manaRate);
+    }
+
+    public get pretty(): string {
+        throw 'attempted to pretty print inverse IStatusStatMod';
     }
 }
 
@@ -424,5 +448,16 @@ export class Leech implements IStatusStatMod {
     public inverse(): IStatMod {
         // Luckily, burning is an effect that is trivial to reverse
         return new LeechInverse(this.healthRate, this.manaRate);
+    }
+
+    public get pretty(): string {
+        let healthPortion = '';
+        let manaPortion = '';
+        if (this.healthRate > 0) healthPortion = `${this.healthRate * TicksPerSecond} health`;
+        if (this.manaRate > 0) manaPortion = `${this.manaRate * TicksPerSecond} mana`;
+        if (healthPortion && manaPortion) {
+            return `Leeching for ${healthPortion} and ${manaPortion} per second`;
+        }
+        return `Leeching for ${healthPortion}${manaPortion} per second`;
     }
 }
