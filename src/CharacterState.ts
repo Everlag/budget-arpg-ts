@@ -12,6 +12,9 @@ import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
 
+import { register } from './SerialDecorate';
+
+@register
 class GlobalContext {
     /** Current stats */
     public stats: Stats;
@@ -115,6 +118,7 @@ class GlobalContext {
  *
  * Per-state scratch can only be mutated, it can not be replaced.
  */
+@register
 export class CharacterState extends CharacterMachine {
 
     // Context shared across states
