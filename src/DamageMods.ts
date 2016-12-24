@@ -119,7 +119,7 @@ export const enum DamageModDirection {
     /** Apply this mod only when dealing damage */
     Dealing,
     /** Always apply this mod */
-    Always
+    Always,
 }
 
 /** Any Damage Modifier that effects the calculation of damage */

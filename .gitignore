@@ -4,3 +4,5 @@ bower_components
 .tmp
 .publish/
 .ts.js
+bundle.js
+stats.json

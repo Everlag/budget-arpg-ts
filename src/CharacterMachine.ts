@@ -1,4 +1,4 @@
-import * as StateMachine from 'state-machine';
+import { StateMachine } from 'javascript-state-machine';
 import { CharacterState } from './CharacterState';
 import { Event } from './ARPGState';
 import { ISkill } from './Skill';
@@ -158,7 +158,7 @@ export type CharacterStates =
     | 'deciding'
     | 'skillwait'
     | 'moving'
-    | 'dead'
+    | 'dead';
 
 StateMachine.create({
     target: CharacterMachine.prototype,

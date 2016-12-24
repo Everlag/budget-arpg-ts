@@ -1,13 +1,14 @@
 {  
   "compilerOptions": {
-    "module": "amd",
+    "module": "ES2015",
     "target": "ES6",
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "strictNullChecks": true
   },
-  "exclude": [
-  	"node_modules"
+  "include": [
+    "src/**/*",
+    "node_modules/@types/**/*"
   ]
 }

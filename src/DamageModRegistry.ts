@@ -9,7 +9,7 @@ import {
 } from './Damage';
 import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
-import { intfromInterval } from './Random';
+import { intfromInterval } from './random';
 import { CharacterState } from './CharacterState';
 
 /** Binary Range handling, is either within range or not */
