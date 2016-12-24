@@ -1,6 +1,8 @@
 {  
   "compilerOptions": {
     "module": "ES2015",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
     "target": "ES6",
     "noImplicitAny": true,
     "removeComments": true,
