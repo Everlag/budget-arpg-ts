@@ -72,7 +72,7 @@ function saveClasses(flat: Iflattened) {
 
     Array.from(flat.nodes.keys()).forEach(n => {
         if (!n) return;
-        let serial = registry.get_serial(n.constructor);
+        let serial = registry.get_serial(n);
         if (!serial) return;
 
         let ref = <{ [key: string]: any }>n;
@@ -116,7 +116,6 @@ function restoreClasses(flat: Iflattened): Map<number, Object> {
         if(!con) throw Error('serial exists but no valid constructor recorded');
         let classful = Object.create(con.prototype);
         idToNode.set(nodeid, Object.assign(classful, obj));
-
     });
 
     return idToNode;
@@ -124,7 +123,8 @@ function restoreClasses(flat: Iflattened): Map<number, Object> {
 
 const ClassNumberField = '$CN';
 const LinkFlag = '$L';
-const LinkFieldSuffix = '$L'
+
+const LinkFlagMatcher = new RegExp(`\\${LinkFlag}=(.*)`);
 
 /**
  * NOTE: links start at extremely high values
@@ -151,13 +151,12 @@ function flatten(root: Object,
     Object.keys(walkable).forEach(key => {
         let value = walkable[key];
         if (typeof value !== 'object') return;
+        console.log('handling object key', key);
 
         let obj: Object = value;
 
         // If we have encountered this node, make a link instead
-        if (flat.nodes.has(obj)) {
-            return;
-        }
+        console.log('not already seen!')
 
         // We haven't seen this node yet, so we flatten it,
         // add it to our node list, and make it into a link
@@ -168,10 +167,8 @@ function flatten(root: Object,
             nextNode++;
         }
 
-        // Indicate this value is a link we need to rebind
-        walkable[key] = LinkFlag;
-        // Insert the link at a computed field
-        walkable[`${LinkFieldSuffix}${key}`] = nextLink;
+        // Indicate this value is a link and set the link
+        walkable[key] = `${LinkFlag}=${nextLink}`;
         // And make the link in the links
         flat.links.set(nextLink, flat.nodes.get(value));
         nextLink++;
@@ -201,13 +198,18 @@ function inflate(flat: Iflattened,
     // Reconnect all links for current node and descend
     let walkable = <{ [key: string]: any }>node;
     Object.keys(walkable).forEach(key => {
-        let value = walkable[key];
+
+        // console.log(key, walkable[key], walkable);
+
+        let match = LinkFlagMatcher.exec(walkable[key]);
 
         // Skip non-link fields
-        if(value !== LinkFlag) return;
+        if(match == null) return;
+
+        // console.log(match);
 
         // Fetch the link
-        let link: number = walkable[`${LinkFieldSuffix}${key}`];
+        let link = Number(match[1]);
         // Fetch the node number from the link map
         let nodeid = flat.links.get(link);
         if(!nodeid) throw Error(`invalid nodeid=${nodeid} discovered on valid link=${link}`);
@@ -229,8 +231,8 @@ function inflate(flat: Iflattened,
 export function snapshot(root: Object) {
 
     // Reset globals
-    nextNode = 0;
-    nextLink = 0;
+    nextNode = 1;
+    nextLink = 1;
 
     let flat = flatten(root, true);
 

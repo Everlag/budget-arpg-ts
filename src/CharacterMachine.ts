@@ -5,6 +5,8 @@ import { ISkill } from './Skill';
 import { Pack } from './Pack';
 import { MovementDirection } from './Movement';
 
+import { register } from './SerialDecorate';
+
 /** Interface all CharacterState contexts must satisfy */
 interface IContext {
     /** Event associated with this context */
@@ -13,6 +15,7 @@ interface IContext {
     cancel(): void;
 }
 
+@register
 export class SkillContext implements IContext {
     public skill: ISkill;
     public target: CharacterState;
@@ -23,6 +26,7 @@ export class SkillContext implements IContext {
     }
 }
 
+@register
 export class MoveContext implements IContext {
     /** Target the move is resolving relative to */
     public target: CharacterState;
@@ -53,6 +57,7 @@ export type StateContext = IContext;
  * This class explicitly carries no state except from what
  * the StateMachine requires. 
  */
+@register
 export class CharacterMachine implements StateMachine {
     // This preamble has two parts.
     // First, we ensure that the StateMachine interface is implemented
