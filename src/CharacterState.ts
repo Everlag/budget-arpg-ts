@@ -40,8 +40,9 @@ class GlobalContext {
         // Calculate base stats once
         let baseStats: Stats;
         ({ stats: baseStats, skill: this.skill } = base);
-        // Assign our base, it should never be modified
+        // Assign our base and freeze to prevent modification
         this.baseStats = baseStats.clone();
+        Object.freeze(this.baseStats);
         // Assign our temporary stats
         this.stats = baseStats.clone();
         // Assign our behavior

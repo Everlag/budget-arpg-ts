@@ -187,13 +187,15 @@ start = performance.now();
 let xSnap = snapshot(x);
 let ySnap = snapshot(y);
 let spec = {
-    packs: [xSnap, ySnap]
-}
+    packs: [xSnap, ySnap],
+};
 let snap = JSON.stringify(spec);
 end = performance.now();
 console.log(`time to serialize is ${(end - start).toFixed(2)}ms`);
 start = performance.now();
 let revived = JSON.parse(snap);
+let xRevived: Pack = JSON.parse((<any>revived).packs[0]);
+let yRevived: Pack = JSON.parse((<any>revived).packs[1]);
 end = performance.now();
 console.log(`time to deserialize is ${(end - start).toFixed(2)}ms`);
 

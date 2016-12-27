@@ -1,13 +1,13 @@
+const ClassNumberField = 'SerialClassFlavor';
+
 interface IConstructor {
     name: string;
-    prototype: Object;
+    prototype: { [key: string]: any };
 }
 
 class TypeRegistry {
     /** serial to constructor lookup */
     private keyToCon: Map<string, IConstructor> = new Map();
-    /** constructor to serial lookup */
-    private conToKey: Map<IConstructor, string> = new Map();
 
     /** The next serial number we can use for classes */
     private nextSerial = 1;
@@ -15,17 +15,25 @@ class TypeRegistry {
     /** Register a type to be deserialized later */
     public register(con: IConstructor) {
         // Sanity check
-        if (this.conToKey.get(con)) throw `attempted to register already registered class ${con.name}`;
+        // 
+        // Technically, this does limit our ability to handle inheritance
+        // but that's fine for now.
+        if (con.prototype[ClassNumberField]) throw `attempted to register already registered class ${con.name}`;
+
+        // Compute and add the serial to the constructor
         let key = `${con.name}${this.nextSerial}`;
+        con.prototype[ClassNumberField] = `${con.name}${this.nextSerial}`;
+
+        // Note the mapping of serial to constructor
         this.keyToCon.set(key, con);
-        this.conToKey.set(con, key);
         this.nextSerial++;
     }
 
     public get_serial(obj: Object): string | undefined {
         // Avoid lookup cost on arrays
         if (obj.constructor.prototype === Array.prototype) return undefined;
-        return this.conToKey.get(obj.constructor);
+        let con = <IConstructor>obj.constructor;
+        return con.prototype[ClassNumberField];
     }
 
     public get_constructor(key: string): IConstructor | undefined {
@@ -36,32 +44,19 @@ class TypeRegistry {
 /** Singleton registry for all of our registration needs */
 const registry = new TypeRegistry();
 
-/** Registration decorator for classes */
+/** 
+ * Registration decorator for classes
+ *
+ * NOTE: when classes are extended, apply the decorator to only
+ *       the class extending.
+ */
 export function registerClass(target: any) {
     let con = (<IConstructor>target);
 
+    // Sanity check to ensure we're actually getting a prototype
     if (!con.prototype) throw Error(`${target.name} has no prototype inside register`);
 
     registry.register(con);
-}
-
-const ClassNumberField = 'SerialClassFlavor';
-
-/** 
- * Annotate an object with which class it has if that class has been registered
- *
- * This is implementation does not descend into the object,
- * rather each object property should be checked.
- */
-function annotateClass(obj: Object) {
-
-    // Skip null
-    if (obj == null) return;
-
-    let ref = <{ [key: string]: any }>obj;
-
-    let serial = registry.get_serial(obj);
-    if (serial) ref[ClassNumberField] = serial;
 }
 
 /** 
@@ -69,6 +64,9 @@ function annotateClass(obj: Object) {
  *
  * This is a lossy snapshot, once serialized all
  * circular references are stripped.
+ *
+ * NOTE: all class annotations are added using @register decorator
+ *       which modified the prototype of every class.
  */
 export function snapshot(root: Object) {
     let cache: Map<Object, null> = new Map();
@@ -79,8 +77,6 @@ export function snapshot(root: Object) {
         if (cache.has(value)) return;
         // Note that we've seen it
         cache.set(value, null);
-        // And add a class annotation if it needs one
-        annotateClass(value);
         return value;
     });
 }

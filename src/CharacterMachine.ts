@@ -56,7 +56,6 @@ export type StateContext = IContext;
  * This class explicitly carries no state except from what
  * the StateMachine requires. 
  */
-@registerClass
 export class CharacterMachine implements StateMachine {
     // This preamble has two parts.
     // First, we ensure that the StateMachine interface is implemented
