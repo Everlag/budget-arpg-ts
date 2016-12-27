@@ -4,8 +4,7 @@ import { Event } from './ARPGState';
 import { ISkill } from './Skill';
 import { Pack } from './Pack';
 import { MovementDirection } from './Movement';
-
-import { register } from './SerialDecorate';
+import registerClass from './Snapshot';
 
 /** Interface all CharacterState contexts must satisfy */
 interface IContext {
@@ -15,7 +14,7 @@ interface IContext {
     cancel(): void;
 }
 
-@register
+@registerClass
 export class SkillContext implements IContext {
     public skill: ISkill;
     public target: CharacterState;
@@ -26,7 +25,7 @@ export class SkillContext implements IContext {
     }
 }
 
-@register
+@registerClass
 export class MoveContext implements IContext {
     /** Target the move is resolving relative to */
     public target: CharacterState;
@@ -57,7 +56,7 @@ export type StateContext = IContext;
  * This class explicitly carries no state except from what
  * the StateMachine requires. 
  */
-@register
+@registerClass
 export class CharacterMachine implements StateMachine {
     // This preamble has two parts.
     // First, we ensure that the StateMachine interface is implemented

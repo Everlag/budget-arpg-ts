@@ -2,20 +2,19 @@ import { State } from './ARPGState';
 import { MovementDirection, Position } from './Movement';
 import { Character } from './Character';
 import { CharacterState } from './CharacterState';
-
-import { register } from './SerialDecorate';
+import registerClass from './Snapshot';
 
 /**
  * An argument to Pack that bundles initial Character information
  * along with necessary behavior.
  */
-@register
+@registerClass
 export class PackInit {
     constructor(public character: Character,
         public position: Position, public behavior: IBehavior) { }
 }
 
-@register
+@registerClass
 export class Pack {
     public states: Array<CharacterState> = [];
 
@@ -54,7 +53,7 @@ export const enum Action {
  *
  * distance is amount of distance to move in a direction
  */
-@register
+@registerClass
 export class MoveDistance {
     constructor(public direction: MovementDirection,
         public distance: number) { }
@@ -68,7 +67,7 @@ export class MoveDistance {
 /** 
  * Desired movement as a result of a behavior
  */
-@register
+@registerClass
 export class MoveTime {
     constructor(public direction: MovementDirection,
         public duration: number) { }

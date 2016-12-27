@@ -1,4 +1,5 @@
 import { State } from './ARPGState';
+import registerClass from './Snapshot';
 
 /** 
  * A set of callbacks ConstantCalc calls when
@@ -20,6 +21,7 @@ export interface IConstantCalcExtremaCallbacks {
  * The cap can either be a ceiling of what the value can take
  * or null
  */
+@registerClass
 export class ConstantCalc {
 
     // Last tick-time we updated the internal _value 

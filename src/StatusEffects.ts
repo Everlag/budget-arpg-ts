@@ -6,6 +6,7 @@ import { IDamageMod } from './DamageMods';
 import { CharacterState } from './CharacterState';
 import { Event, TicksPerSecond } from './ARPGState';
 import { Damage, ILeechSpec } from './Damage';
+import registerClass from './Snapshot';
 
 /**
  * Export default values for the status effects
@@ -43,6 +44,7 @@ interface IStatusMod {
 // TODO: handle diff, ie changing the rate of HealthRegen
 // and such when the equivalent stats entry changes
 
+@registerClass
 export class StatusEffects {
 
     private mods: Array<IStatusMod> = [];
@@ -268,6 +270,7 @@ export class StatusEffects {
     }
 }
 
+@registerClass
 export class BurningInverse implements IStatMod {
 
     public name = 'BurningInverseMod';
@@ -294,6 +297,7 @@ export class BurningInverse implements IStatMod {
     }
 }
 
+@registerClass
 export class Burning implements IStatusStatMod {
 
     public name = 'BurningMod';
@@ -332,6 +336,7 @@ export class Burning implements IStatusStatMod {
     }
 }
 
+@registerClass
 export class ChilledInverse implements IStatMod {
 
     public name = 'ChilledInverseMod';
@@ -360,6 +365,7 @@ export class ChilledInverse implements IStatMod {
     }
 }
 
+@registerClass
 export class Chilled implements IStatusStatMod {
 
     public name = 'ChilledMod';
@@ -400,6 +406,7 @@ export class Chilled implements IStatusStatMod {
     }
 }
 
+@registerClass
 export class LeechInverse implements IStatMod {
 
     public name = 'LeechInverseMod';
@@ -427,6 +434,7 @@ export class LeechInverse implements IStatMod {
     }
 }
 
+@registerClass
 export class Leech implements IStatusStatMod {
 
     public name = 'LeechMod';

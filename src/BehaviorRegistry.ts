@@ -1,6 +1,7 @@
 import { CharacterState } from './CharacterState';
 import { MovementDirection } from './Movement';
 import { Pack, Action, MoveTime, IBehavior } from './Pack';
+import registerClass from './Snapshot';
 
 /**
  * Choose the nearest possible target,
@@ -9,6 +10,7 @@ import { Pack, Action, MoveTime, IBehavior } from './Pack';
  * This works best with skills that are all-or-nothing affairs
  * with how their damage suffers over distances.
  */
+@registerClass
 export class AgressiveNaiveMelee implements IBehavior {
 
     public state: CharacterState;

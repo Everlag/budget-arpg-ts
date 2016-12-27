@@ -1,5 +1,6 @@
 import { TicksPerSecond } from './ARPGState';
 import { PositionBounds } from './Movement';
+import registerClass from './Snapshot';
 
 /** Argument type for Stats constructor */
 export type StatsArg = {
@@ -41,6 +42,7 @@ export const baseStatsArg: StatsArg = {
     CastTime: 0,
 };
 
+@registerClass
 export class Stats {
     public health: number;
     public healthRegen: number;
@@ -110,6 +112,7 @@ export interface IStatusStatMod extends IStatMod {
 }
 
 /** Explicit additions to the health pool before scaling */
+@registerClass
 export class FlatAddedHealth implements IStatMod {
     public name = 'FlatAddedHealthMod';
     public canSum = true;
@@ -133,6 +136,7 @@ export class FlatAddedHealth implements IStatMod {
 }
 
 /** Explicit additions to the mana pool before scaling */
+@registerClass
 export class FlatAddedMana implements IStatMod {
     public name = 'FlatAddedManaMod';
     public canSum = true;
@@ -156,6 +160,7 @@ export class FlatAddedMana implements IStatMod {
 }
 
 /** Flat attack time */
+@registerClass
 export class BaseAttackTime implements IStatMod {
     public name = 'BaseAttackSpeedMod';
     public canSum = true;
@@ -180,6 +185,7 @@ export class BaseAttackTime implements IStatMod {
 }
 
 /** Percentage increased attack speed */
+@registerClass
 export class IncreasedAttackSpeed implements IStatMod {
     public name = 'IncreasedAttackSpeedMod';
     public canSum = true;
@@ -205,6 +211,7 @@ export class IncreasedAttackSpeed implements IStatMod {
 }
 
 /** Percentage increased movement speed */
+@registerClass
 export class IncreasedMovespeed implements IStatMod {
     public name = 'IncreasedMovespeed';
     public canSum = true;
@@ -235,6 +242,7 @@ export class IncreasedMovespeed implements IStatMod {
  *
  * NOTE: This is mostly derived from DamageModGroup's implementation.
  */
+@registerClass
 export class StatModGroup {
 
     /** Return all summable mods as their sums */

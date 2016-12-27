@@ -2,8 +2,7 @@ import { IDamageMod } from './DamageMods';
 import { Stats, StatModGroup, baseStatsArg, IStatMod } from './StatMods';
 import { ISkill } from './Skill';
 import { entityCode } from './random';
-
-import { register } from './SerialDecorate';
+import registerClass from './Snapshot';
 
 export const enum GearSlot {
     Chest = 0,
@@ -13,14 +12,14 @@ export const enum GearSlot {
     Weapon,
 }
 
-@register
+@registerClass
 export class Gear {
     constructor(public slot: GearSlot,
         public damageMods: Array<IDamageMod>,
         public statMods: Array<IStatMod>) { }
 }
 
-@register
+@registerClass
 export class LoadOut {
     constructor(public gear: Array<Gear>) {
         // Ensure each piece of gear is sitting in a different slot
@@ -59,7 +58,7 @@ export class LoadOut {
     }
 }
 
-@register
+@registerClass
 export class Character {
     public identity: string;
     constructor(public loadout: LoadOut,

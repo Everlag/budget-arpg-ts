@@ -11,8 +11,10 @@ import { MovementDirection } from './Movement';
 import { MoveDistance } from './Pack';
 import { intfromInterval } from './random';
 import { CharacterState } from './CharacterState';
+import registerClass from './Snapshot';
 
 /** Binary Range handling, is either within range or not */
+@registerClass
 export class DiscreteRange implements IRangeMod {
     public name = 'DiscreteRangeDamageMod';
 
@@ -58,6 +60,7 @@ export class DiscreteRange implements IRangeMod {
 }
 
 /** The application of armor to mitigate physical damage */
+@registerClass
 export class Armor implements IDamageModSummable {
     public name = 'ArmorDamageMod';
 
@@ -88,6 +91,7 @@ export class Armor implements IDamageModSummable {
 }
 
 /** The application of a resistance to mitigate an element's damage */
+@registerClass
 export class Resistance implements IDamageModSummable {
     public name = 'ResistsDamageMod';
 
@@ -138,6 +142,7 @@ export class Resistance implements IDamageModSummable {
  * When not enough manner is available to eat the full percentage,
  * whatever percentage can be mitigated will be mitigated
  */
+@registerClass
 export class Resolve implements IDamageModSummable {
     public name = 'ResolveDamageMod';
 
@@ -196,6 +201,7 @@ export class Resolve implements IDamageModSummable {
 }
 
 /** Zero the Damage to nothing */
+@registerClass
 export class Zero implements IDamageMod {
     public name = 'ZeroDamageMod';
 
@@ -228,6 +234,7 @@ export class Zero implements IDamageMod {
  *
  * NOTE: this does sum
  */
+@registerClass
 export class LocalPhysical implements IDamageModSummable {
     public name = 'LocalPhysicalDamageMod';
 
@@ -264,6 +271,7 @@ export class LocalPhysical implements IDamageModSummable {
  *
  * NOTE: this does sum
  */
+@registerClass
 export class LocalElement implements IDamageModSummable {
     public name = 'LocalElementDamageMod';
 
@@ -308,6 +316,7 @@ export class LocalElement implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class IncreasedCritChance implements IDamageModSummable {
     public name = 'IncreasedCritChanceDamageMod';
 
@@ -336,6 +345,7 @@ export class IncreasedCritChance implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class IncreasedMeleePhysical implements IDamageModSummable {
     public name = 'IncreasedMeleePhysicalDamageMod';
 
@@ -364,6 +374,7 @@ export class IncreasedMeleePhysical implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class IncreasedMeleeElement implements IDamageModSummable {
     public name = 'IncreasedMeleeElementDamageMod';
 
@@ -401,6 +412,7 @@ export class IncreasedMeleeElement implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class AllLeechedAsLife implements IDamageModSummable {
     public name = 'AllLeechedAsLifeDamageMod';
 
@@ -430,6 +442,7 @@ export class AllLeechedAsLife implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class PhysLeechedAsLife implements IDamageModSummable {
     public name = 'PhysLeechedAsLifeDamageMod';
 
@@ -458,6 +471,7 @@ export class PhysLeechedAsLife implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class ElementLeechedAsLife implements IDamageModSummable {
     public name = 'ElementLeechedAsLifeDamageMod';
 
@@ -496,6 +510,7 @@ export class ElementLeechedAsLife implements IDamageModSummable {
     }
 }
 
+@registerClass
 export class ReducedBurnDuration implements IDamageModSummable {
     public name = 'ReducedBurnDurationDamageMod';
 

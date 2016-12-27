@@ -1,3 +1,5 @@
+import registerClass from './Snapshot';
+
 /** Meta data governing engagement positions */
 export const PositionBounds = {
     // Limits to valid combat positions
@@ -21,6 +23,7 @@ export const enum MovementDirection {
 }
 
 /** Handles intelligent positioning  */
+@registerClass
 export class Position {
     constructor(public loc: number) { }
 

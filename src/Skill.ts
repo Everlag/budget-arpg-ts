@@ -5,6 +5,7 @@ import { DamageModGroup, IRangeMod, DamageModDirection } from './DamageMods';
 import { PositionBounds } from './Movement';
 import * as DamageMods from './DamageModRegistry';
 import * as StatMods from './StatMods';
+import registerClass from './Snapshot';
 
 /** 
  * A SkillResult contains the mods for the initial skill use
@@ -12,6 +13,7 @@ import * as StatMods from './StatMods';
  *
  * postmods may be null to indicate no followup is to be scheduled.
  */
+@registerClass
 export class SkillResult {
     private applied: Boolean = false;
 
@@ -122,6 +124,7 @@ class BasicAttackEffect implements ISkillEffect {
     }
 }
 
+@registerClass
 export class BasicAttack implements ISkill {
     public name = 'Basic Attack';
 
@@ -176,6 +179,7 @@ class TossedBladeEffect implements ISkillEffect {
 
 }
 
+@registerClass
 export class TossedBlade implements ISkill {
     public name = 'Tossed Blade';
 

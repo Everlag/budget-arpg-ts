@@ -7,6 +7,7 @@ import { Damage, DamageTag, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
+import { snapshot } from './Snapshot';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
@@ -181,3 +182,19 @@ console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks wit
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
 console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
+
+start = performance.now();
+let xSnap = snapshot(x);
+let ySnap = snapshot(y);
+let spec = {
+    packs: [xSnap, ySnap]
+}
+let snap = JSON.stringify(spec);
+end = performance.now();
+console.log(`time to serialize is ${(end - start).toFixed(2)}ms`);
+start = performance.now();
+let revived = JSON.parse(snap);
+end = performance.now();
+console.log(`time to deserialize is ${(end - start).toFixed(2)}ms`);
+
+(<any>window).snapshot = revived;

@@ -4,6 +4,7 @@ import {
 } from './Damage';
 import { MoveDistance } from './Pack';
 import { CharacterState } from './CharacterState';
+import registerClass from './Snapshot';
 
 /**
  * The absolute ordering of DamageMods.
@@ -274,6 +275,7 @@ class PostGlobalAddCleanup implements IDamageMod {
  *
  * This enforces the application order and summation of its underlying mods.
  */
+@registerClass
 export class DamageModGroup {
 
     /** Return all summable mods as their sums */

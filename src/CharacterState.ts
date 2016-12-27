@@ -11,10 +11,9 @@ import { ISkill, SkillTiming } from './Skill';
 import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
+import registerClass from './Snapshot';
 
-import { register } from './SerialDecorate';
-
-@register
+@registerClass
 class GlobalContext {
     /** Current stats */
     public stats: Stats;
@@ -41,9 +40,8 @@ class GlobalContext {
         // Calculate base stats once
         let baseStats: Stats;
         ({ stats: baseStats, skill: this.skill } = base);
-        // Assign our base and freeze it to prevent modification
+        // Assign our base, it should never be modified
         this.baseStats = baseStats.clone();
-        Object.freeze(this.baseStats);
         // Assign our temporary stats
         this.stats = baseStats.clone();
         // Assign our behavior
@@ -118,7 +116,7 @@ class GlobalContext {
  *
  * Per-state scratch can only be mutated, it can not be replaced.
  */
-@register
+@registerClass
 export class CharacterState extends CharacterMachine {
 
     // Context shared across states
