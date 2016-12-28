@@ -1,4 +1,4 @@
-import { State, TicksPerSecond, Event } from './ARPGState';
+import { State, TicksPerSecond } from './ARPGState';
 import {
     Character, LoadOut, Gear, GearSlot,
 } from './Character';
@@ -14,21 +14,7 @@ import * as Behaviors from './BehaviorRegistry';
 
 let start = performance.now();
 
-export class Orange {
-    public flavor: string;
-    constructor(flavor: string) {
-        this.flavor = flavor;
-    }
-}
-
 const globalState = new State();
-
-let nextEvent = new Event(0,
-    (state: State) => null,
-    (state: State) => null);
-globalState.addEvent(nextEvent);
-
-console.log('for fucks sake this works!');
 
 /* tslint:disable */
 (<any>window).globalState = globalState;
@@ -118,7 +104,6 @@ let yInit = [
 let x = new Pack(xInit, globalState);
 let y = new Pack(yInit, globalState);
 
-console.log(x);
 x.engage(y);
 y.engage(x);
 
@@ -142,8 +127,6 @@ for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let completed = globalState.step();
     let tickEnd = performance.now();
     if (completed > 0) {
-        // console.log('yRegen=', (<any>y.states)[0].context.healthCalc._rate)
-        // console.log('xRegen=', (<any>x.states)[0].context.healthCalc._rate)
         console.log(`retired ${completed} events`);
         totalEvents += completed;
         tickTimes.push(tickEnd - tickStart);
