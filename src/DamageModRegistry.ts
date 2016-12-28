@@ -21,15 +21,14 @@ export class DiscreteRange implements IRangeMod {
     public reqTags = new Set();
     public position = DamageModOrder.Range;
 
-    public distance: number | null = null;
-
     constructor(public range: number) { };
 
     public apply(d: Damage): Damage {
-        if (this.distance === null) throw Error('null distance');
+
+        let { distance } = d;
 
         // Zero if distance outside range
-        if (Math.abs(this.distance) > this.range) {
+        if (Math.abs(distance) > this.range) {
             console.log('DiscreteRange calculated, mult = 0!');
             d.phys = 0;
             d.setElement(Elements.Fire, 0);

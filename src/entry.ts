@@ -35,7 +35,7 @@ console.log('for fucks sake this works!');
 (<any>window).globalState = globalState;
 /* tslint:enable */
 
-let d = new Damage(new Set([DamageTag.Melee]), 40, 10, 0, 10);
+let d = new Damage(new Set([DamageTag.Melee]), 0, 40, 10, 0, 10);
 
 let group = new DamageModGroup();
 group.add(new DamageMods.Armor(15), DamageModDirection.Taking);

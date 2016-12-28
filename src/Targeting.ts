@@ -42,16 +42,17 @@ export class SkillTarget {
         public skill: ISkill,
         public targetting: ITargetting) { }
 
+    /** Apply the skill to all possibly affected targets */
     apply(mods: DamageModGroup, state: State): number {
         let {Position: pos} = this.source;
 
         let affected = 0;
+        // Iterate over potential targets
         this.targetting.affected(pos, this.targetSet)
             .forEach(c => {
                 // Add a copy of the skill's RangeMod with
                 // appropriate distance set
                 let rangeBy = this.targetting.rangeMod.clone();
-                rangeBy.distance = c.Position.distanceTo(pos);
                 mods.add(rangeBy, DamageModDirection.Dealing);
 
                 // Pass the DamageModGroup off to the skill for execution

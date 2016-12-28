@@ -135,6 +135,7 @@ export class Damage {
     };
 
     constructor(public tags: Set<DamageTag>,
+        public distance: number,
         public phys: number = 0,
         public fire: number = 0,
         public light: number = 0,

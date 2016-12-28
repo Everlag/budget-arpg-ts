@@ -36,8 +36,9 @@ export class SkillResult {
         this.applied = true;
 
         // Calculate and apply initial damage
+        let distance = target.Position.distanceTo(source.Position);
         let initialDamage = this.mods
-            .apply(new Damage(this.tags), target, source);
+            .apply(new Damage(this.tags, distance), target, source);
         initialDamage.apply(target, source);
 
         // Skip followup calculation when we don't have one.
@@ -51,8 +52,11 @@ export class SkillResult {
 
                 // Calculate and apply scheduled post-damage
                 if (this.postmods) {
+                    let postDistance = target.Position
+                        .distanceTo(source.Position);
                     let postDamage = this.postmods
-                        .apply(new Damage(new Set()), target, source);
+                        .apply(new Damage(new Set(), postDistance),
+                            target, source);
                     postDamage.apply(target, source);
                 }
 
