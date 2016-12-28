@@ -2,7 +2,7 @@ import { CharacterState } from './CharacterState';
 import { State } from './ARPGState';
 import { Pack, MoveDistance } from './Pack';
 import { ISkill } from './Skill';
-import { MovementDirection } from './Movement';
+import { Position, MovementDirection } from './Movement';
 import { DamageModGroup, DamageModDirection, IRangeMod } from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 
@@ -41,9 +41,12 @@ export class SkillTarget {
         public skill: ISkill) { }
 
     /** Apply the skill to all possibly affected targets */
-    public apply(baseTarget: CharacterState,
+    public apply(pos: Position, baseTarget: CharacterState,
         mods: DamageModGroup, state: State): number {
         let { targeting } = this.skill;
+
+        /** If we can't hit the base, we can't use the skill */
+        if (!targeting.baseValid(pos, baseTarget)) return 0;
 
         let affected = 0;
         // Iterate over potential targets
@@ -70,11 +73,19 @@ export interface ITargeting {
     /** RangeMod associated with a specific method of targeting */
     rangeMod: IRangeMod;
     flavor: TargetFlavor;
+    /** Determine if a provided baseCharacter is currently valid target */
+    baseValid(pos: Position, baseTarget: CharacterState): Boolean;
     /** 
      * Get all members of a Pack potentially affected by this
-     * targeting centered around a single Character.
+     * targeting centered around a single baseTarget Character.
+     *
+     * The return value always includes the baseTarget.
+     *
+     * NOTE: baseTarget is assumed to be a valid target,
+     *       this can be checked using baseValid.
      */
-    affected(target: CharacterState, p: Pack): Array<CharacterState>;
+    affected(baseTarget: CharacterState,
+        p: Pack): Array<CharacterState>;
     /** Determine how to move based entirely on provided distance
      *
      * This MUST abide by the rule that Hold means the skill should be used
@@ -96,8 +107,14 @@ export class SingleTargetDiscrete implements ITargeting {
         this.rangeMod = new DamageMods.DiscreteRange(range);
     }
 
+    public baseValid(pos: Position, baseTarget: CharacterState): Boolean {
+        let baseDistance = pos.distanceTo(baseTarget.Position);
+        return baseDistance < this.range;
+    }
+
     public affected(baseTarget: CharacterState,
         p: Pack): Array<CharacterState> {
+
         // We can return only a single target, so we simply pass it back out
         return [baseTarget];
     }
@@ -122,13 +139,19 @@ export class DirectedAoEDiscrete implements ITargeting {
         this.rangeMod = new DamageMods.DiscreteRangeRadius(range, radius);
     }
 
+    public baseValid(pos: Position, baseTarget: CharacterState): Boolean {
+        let baseDistance = pos.distanceTo(baseTarget.Position);
+        return baseDistance < this.range;
+    }
+
     public affected(baseTarget: CharacterState,
         p: Pack): Array<CharacterState> {
+
         // Choose all targets within radius units of the target
         return p.Living.filter(c => {
             let delta = baseTarget.Position.distanceTo(c.Position);
             return Math.abs(delta) <= this.radius;
-        });
+        }).concat(baseTarget);
     }
 
     public movement(distance: number, target: number): MoveDistance {
