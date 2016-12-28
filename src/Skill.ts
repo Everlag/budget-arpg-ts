@@ -40,7 +40,7 @@ export class SkillResult {
         // Calculate and apply initial damage
         let distance = target.Position.distanceTo(source.Position);
         let initialDamage = this.mods
-            .apply(new Damage(this.tags, distance), target, source);
+            .apply(new Damage(this.tags, distance, distance), target, source);
         initialDamage.apply(target, source);
 
         // Skip followup calculation when we don't have one.
@@ -57,7 +57,7 @@ export class SkillResult {
                     let postDistance = target.Position
                         .distanceTo(source.Position);
                     let postDamage = this.postmods
-                        .apply(new Damage(new Set(), postDistance),
+                        .apply(new Damage(new Set(), postDistance, postDistance),
                             target, source);
                     postDamage.apply(target, source);
                 }

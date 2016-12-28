@@ -135,7 +135,20 @@ export class Damage {
     };
 
     constructor(public tags: Set<DamageTag>,
+        /**
+         * The distance to the Character
+         * which this instance will be applied to.
+         */
         public distance: number,
+        /**
+         * The distance to the Character which prompted this Damage
+         * to be created and applied.
+         *
+         * This could possibly differ from the Character this instance
+         * of Damage will eventually be applied to.
+         * ie, in the case of area of effect skills. 
+         */
+        public baseTargetDistance: number,
         public phys: number = 0,
         public fire: number = 0,
         public light: number = 0,

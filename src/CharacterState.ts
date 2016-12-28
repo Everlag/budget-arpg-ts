@@ -11,7 +11,6 @@ import { ISkill, SkillTiming } from './Skill';
 import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
-import { SkillTarget } from './Targeting';
 
 class GlobalContext {
     /** Current stats */
@@ -82,6 +81,13 @@ class GlobalContext {
     public reflectStatChange() {
         this.healthCalc.rate = this.stats.healthRegen;
         this.manaCalc.rate = this.stats.manaRegen;
+    }
+
+    /** 
+     * Choose a target from the Pack
+     */
+    public chooseTargetCharacter(): CharacterState | null {
+        return this.behavior.getTarget(this.target);
     }
 
     private dieCB(): boolean {
@@ -207,7 +213,7 @@ export class CharacterState extends CharacterMachine {
         }
 
         // Choose a target
-        let target = this.targetCharacter;
+        let target = this.context.chooseTargetCharacter();
         if (target === null) {
             // Decide again if we can't get a target
             this.decide();
@@ -310,13 +316,6 @@ export class CharacterState extends CharacterMachine {
         this.context.position = this.interpolatePosition();
         let delta = prev.distanceTo(this.context.position);
         console.log(`${this.EntityCode} moved distance is`, delta);
-    }
-
-    /**
-     * Return a chosen target to attack
-     */
-    get targetCharacter(): CharacterState | null {
-        return this.context.behavior.getTarget(this.context.target);
     }
 
     get EntityCode(): string {

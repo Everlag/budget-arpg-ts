@@ -3,8 +3,7 @@ import {
     Character, LoadOut, Gear, GearSlot,
 } from './Character';
 import { CharacterState } from './CharacterState';
-import { Damage, DamageTag, Elements } from './Damage';
-import { DamageModGroup, DamageModDirection } from './DamageMods';
+import { Elements } from './Damage';
 import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
 import * as DamageMods from './DamageModRegistry';
@@ -34,30 +33,6 @@ console.log('for fucks sake this works!');
 /* tslint:disable */
 (<any>window).globalState = globalState;
 /* tslint:enable */
-
-let d = new Damage(new Set([DamageTag.Melee]), 0, 40, 10, 0, 10);
-
-let group = new DamageModGroup();
-group.add(new DamageMods.Armor(15), DamageModDirection.Taking);
-group.add(new DamageMods.Armor(10), DamageModDirection.Taking);
-group.add(new DamageMods.Armor(50), DamageModDirection.Taking);
-group.add(new DamageMods.Armor(25), DamageModDirection.Taking);
-group.add(new DamageMods.Resistance(0.4, Elements.Fire),
-    DamageModDirection.Taking);
-group.add(new DamageMods.Resistance(0.1, Elements.Fire),
-    DamageModDirection.Taking);
-group.add(new DamageMods.Resistance(0.75, Elements.Cold),
-    DamageModDirection.Taking);
-
-// We can't use any mods that work on a specific character, but that's fine
-let newD = group.apply(d, <CharacterState>{}, <CharacterState>{});
-console.log(newD);
-if (newD.phys !== 32) {
-    throw Error('phys is not 32 wtf');
-}
-if (newD.fire !== 5) {
-    throw Error('fire is not 5 wtf');
-}
 
 SeedRandom('testing!', { global: true });
 

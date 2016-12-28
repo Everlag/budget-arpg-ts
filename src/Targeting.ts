@@ -2,7 +2,7 @@ import { CharacterState } from './CharacterState';
 import { State } from './ARPGState';
 import { Pack, MoveDistance } from './Pack';
 import { ISkill } from './Skill';
-import { Position, MovementDirection } from './Movement';
+import { MovementDirection } from './Movement';
 import { DamageModGroup, DamageModDirection, IRangeMod } from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 
@@ -41,13 +41,13 @@ export class SkillTarget {
         public skill: ISkill) { }
 
     /** Apply the skill to all possibly affected targets */
-    public apply(mods: DamageModGroup, state: State): number {
-        let { Position: pos } = this.source;
+    public apply(baseTarget: CharacterState,
+        mods: DamageModGroup, state: State): number {
         let { targeting } = this.skill;
 
         let affected = 0;
         // Iterate over potential targets
-        targeting.affected(pos, this.targetSet)
+        targeting.affected(baseTarget, this.targetSet)
             .forEach(c => {
                 // Add a copy of the skill's RangeMod with
                 // appropriate distance set
@@ -70,8 +70,11 @@ export interface ITargeting {
     /** RangeMod associated with a specific method of targeting */
     rangeMod: IRangeMod;
     flavor: TargetFlavor;
-    /** Get all members of a Pack potentially affected by this */
-    affected(pos: Position, p: Pack): Array<CharacterState>;
+    /** 
+     * Get all members of a Pack potentially affected by this
+     * targeting centered around a single Character.
+     */
+    affected(target: CharacterState, p: Pack): Array<CharacterState>;
     /** Determine how to move based entirely on provided distance
      *
      * This MUST abide by the rule that Hold means the skill should be used
@@ -93,10 +96,39 @@ export class SingleTargetDiscrete implements ITargeting {
         this.rangeMod = new DamageMods.DiscreteRange(range);
     }
 
-    public affected(pos: Position, p: Pack): Array<CharacterState> {
-        // We can return only a single target... shit
-        // TODO: coherency!
-        return p.Living.filter(c => c.Position.distanceTo(pos) < this.range);
+    public affected(baseTarget: CharacterState,
+        p: Pack): Array<CharacterState> {
+        // We can return only a single target, so we simply pass it back out
+        return [baseTarget];
+    }
+
+    public movement(distance: number, target: number): MoveDistance {
+        // Out of range implies we have to move closer
+        if (Math.abs(distance) > this.range) {
+            return new MoveDistance(MovementDirection.Closer,
+                distance - this.range);
+        }
+        return new MoveDistance(MovementDirection.Hold, 0);
+    }
+}
+
+export class DirectedAoEDiscrete implements ITargeting {
+
+    public flavor = TargetFlavor.DirectedAoE;
+
+    public rangeMod: IRangeMod;
+
+    constructor(public range: number, public radius: number) {
+        this.rangeMod = new DamageMods.DiscreteRangeRadius(range, radius);
+    }
+
+    public affected(baseTarget: CharacterState,
+        p: Pack): Array<CharacterState> {
+        // Choose all targets within radius units of the target
+        return p.Living.filter(c => {
+            let delta = baseTarget.Position.distanceTo(c.Position);
+            return Math.abs(delta) <= this.radius;
+        });
     }
 
     public movement(distance: number, target: number): MoveDistance {

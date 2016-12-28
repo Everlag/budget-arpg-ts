@@ -7,8 +7,6 @@ import {
     Elements, ElementArray, ElementToPrettyString,
     getLeechSpecElement, setLeechSpecElement,
 } from './Damage';
-import { MovementDirection } from './Movement';
-import { MoveDistance } from './Pack';
 import { intfromInterval } from './random';
 import { CharacterState } from './CharacterState';
 
@@ -38,13 +36,45 @@ export class DiscreteRange implements IRangeMod {
         return d;
     }
 
-    public movement(distance: number, target: number): MoveDistance {
-        // Out of range implies we have to move closer
-        if (Math.abs(distance) > this.range) {
-            return new MoveDistance(MovementDirection.Closer,
-                distance - this.range);
+    public clone(): IRangeMod {
+        return Object.assign(new DiscreteRange(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.range} discrete range`;
+    }
+}
+
+/** 
+ * Binary Range handling, is either within range or not
+ *
+ * This takes into account a radius
+ */
+export class DiscreteRangeRadius implements IRangeMod {
+    public name = 'DiscreteRangeDamageMod';
+
+    public direction = DamageModDirection.Dealing;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.Range;
+
+    constructor(public range: number, public radius: number) { };
+
+    public apply(d: Damage): Damage {
+
+        let { distance, baseTargetDistance } = d;
+
+        // Determine distance between the baseTarget and the actual target 
+        let delta = Math.abs(distance - baseTargetDistance);
+        // Zero if distance outside range
+        if (delta > this.radius) {
+            console.log('DiscreteRangeRadius calculated, mult = 0!');
+            d.phys = 0;
+            d.setElement(Elements.Fire, 0);
+            d.setElement(Elements.Light, 0);
+            d.setElement(Elements.Cold, 0);
         }
-        return new MoveDistance(MovementDirection.Hold, 0);
+        return d;
     }
 
     public clone(): IRangeMod {
