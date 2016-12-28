@@ -38,7 +38,7 @@ export const baseStatsArg: StatsArg = {
     ManaRegen: baseMana * (0.02) / TicksPerSecond,
     Movespeed: (PositionBounds.ScreenSize / 2) / TicksPerSecond,
     AttackTime: TicksPerSecond / 1,
-    CastTime: 0,
+    CastTime: TicksPerSecond / 1,
 };
 
 export class Stats {

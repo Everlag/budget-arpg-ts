@@ -1,6 +1,6 @@
 import { TicksPerSecond, State, Event } from './ARPGState';
 import { CharacterState } from './CharacterState';
-import { DamageTag, Damage } from './Damage';
+import { DamageTag, Damage, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { PositionBounds } from './Movement';
 import { ITargeting } from './Targeting';
@@ -189,6 +189,52 @@ export class TossedBlade implements ISkill {
     public timeMod = new StatMods.IncreasedAttackSpeed(0.1);
 
     public effects = [new TossedBladeEffect()];
+
+    /** Execute each effect of this skill and return the results */
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): Array<SkillResult> {
+
+        let results = this.effects.map(effect => {
+            return effect.execute(target, user, mods.clone());
+        });
+
+        return results;
+    }
+}
+
+class FireNovaEffect implements ISkillEffect {
+    public static targeting = new Targetings
+        .DirectedAoEDiscrete(PositionBounds.ScreenSize / 5,
+            PositionBounds.ScreenSize / 20);
+
+    public name = 'Fire Nova Effect';
+    public tags = [DamageTag.Spell, DamageTag.Ranged];
+
+    public targeting = FireNovaEffect.targeting;
+
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): SkillResult {
+
+        // Add the flat fire damage
+        mods.add(new DamageMods.LocalElement(3, 6, Elements.Fire),
+            DamageModDirection.Dealing);
+
+        return new SkillResult(mods, new DamageModGroup(),
+            new Set(this.tags), 0);
+    }
+}
+
+// A fire nova explodes at the target Character and is an area of effect.
+export class FireNova implements ISkill {
+
+    public name = 'Fire Nova';
+
+    public timingBy = SkillTiming.Spell;
+    public targeting = FireNovaEffect.targeting;
+    // 10% increased inherent attack speed for fun
+    public timeMod = new StatMods.IncreasedAttackSpeed(0.0);
+
+    public effects = [new FireNovaEffect()];
 
     /** Execute each effect of this skill and return the results */
     public execute(target: CharacterState, user: CharacterState,

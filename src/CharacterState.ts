@@ -11,6 +11,7 @@ import { ISkill, SkillTiming } from './Skill';
 import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
+import { SkillTarget } from './Targeting';
 
 class GlobalContext {
     /** Current stats */
@@ -152,17 +153,8 @@ export class CharacterState extends CharacterMachine {
         });
 
         // Create a new SkillTarget and apply it using our calculated mods
-        // let targets = new SkillTarget(this.context.target, this, skill);
-        // targets.apply(mods, state);
-
-        // Add a copy of the skill's RangeMod
-        let rangeBy = skill.targeting.rangeMod.clone();
-        mods.add(rangeBy, DamageModDirection.Dealing);
-
-        // Pass the DamageModGroup off to the skill for execution
-        // and execute the results.
-        skill.execute(target, this, mods)
-            .forEach(result => result.execute(target, this, state));
+        let targets = new SkillTarget(this.context.target, this, skill);
+        targets.apply(this.Position, target, mods, state);
     }
 
     /** Perform actions using pre-prepared state. */

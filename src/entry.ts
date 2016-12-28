@@ -82,7 +82,7 @@ let coldTrashLoadout = new LoadOut([
         ]),
 ]);
 
-let basex = new Character(basicLoadout, new Skills.BasicAttack(), 'worseness');
+let basex = new Character(basicLoadout, new Skills.FireNova(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
@@ -90,7 +90,7 @@ let coldBaseTrash = new Character(coldTrashLoadout,
     new Skills.BasicAttack(), 'worseness');
 
 let xInit = [
-    new PackInit(basex, new Position(-100), new Behaviors.AgressiveNaiveMelee()),
+    new PackInit(basex, new Position(-100), new Behaviors.GreedyNaiveAoE()),
 ];
 let yInit = [
     new PackInit(baseTrash,
