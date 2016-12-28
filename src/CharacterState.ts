@@ -145,7 +145,7 @@ export class CharacterState extends CharacterMachine {
         });
 
         // Add a copy of the skill's RangeMod
-        let rangeBy = skill.rangeBy.clone();
+        let rangeBy = skill.targeting.rangeMod.clone();
         mods.add(rangeBy, DamageModDirection.Dealing);
 
         // Pass the DamageModGroup off to the skill for execution

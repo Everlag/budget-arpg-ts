@@ -1,9 +1,11 @@
 import { TicksPerSecond, State, Event } from './ARPGState';
 import { CharacterState } from './CharacterState';
 import { DamageTag, Damage } from './Damage';
-import { DamageModGroup, IRangeMod, DamageModDirection } from './DamageMods';
+import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { PositionBounds } from './Movement';
+import { ITargeting } from './Targeting';
 import * as DamageMods from './DamageModRegistry';
+import * as Targetings from './Targeting';
 import * as StatMods from './StatMods';
 
 /** 
@@ -88,7 +90,7 @@ export interface ISkill {
     /** How timing for the skill is performed */
     timingBy: SkillTiming;
     /** How range for the skill is handled, this informs character movement */
-    rangeBy: IRangeMod;
+    targeting: ITargeting;
     /** Singular time modifier allowed for a skill */
     timeMod: StatMods.IStatMod;
     effects: Array<ISkillEffect>;
@@ -98,25 +100,23 @@ export interface ISkill {
 
 /**
  * A partial part of a skill's execution.
- *
- * TODO: handle range here when we introduce it
  */
 export interface ISkillEffect {
     name: String;
     tags: Array<DamageTag>;
-    rangeBy: IRangeMod;
+    targeting: ITargeting;
     execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult;
 }
 
 class BasicAttackEffect implements ISkillEffect {
-    public static rangeBy = new DamageMods.
-        DiscreteRange(PositionBounds.ScreenSize / 10);
+    public static targeting = new Targetings
+        .SingleTargetDiscrete(PositionBounds.ScreenSize / 10);
 
     public name = 'Basic Attack Effect';
     public tags = [DamageTag.Attack, DamageTag.Melee];
 
-    public rangeBy = BasicAttackEffect.rangeBy;
+    public targeting = BasicAttackEffect.targeting;
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
@@ -131,7 +131,7 @@ export class BasicAttack implements ISkill {
 
     public timingBy = SkillTiming.Attack;
 
-    public rangeBy = BasicAttackEffect.rangeBy;
+    public targeting = BasicAttackEffect.targeting;
     // Do not modify the base attack speed set by the gear
     public timeMod = new StatMods.IncreasedAttackSpeed(0);
 
@@ -153,13 +153,13 @@ export class BasicAttack implements ISkill {
  * No initial damage(zeroed) but postmods set to represent travel time.
  */
 class TossedBladeEffect implements ISkillEffect {
-    public static rangeBy = new DamageMods
-        .DiscreteRange(PositionBounds.ScreenSize / 5);
+    public static targeting = new Targetings
+        .SingleTargetDiscrete(PositionBounds.ScreenSize / 5);
 
     public name = 'Tossed Blade Effect';
     public tags = [DamageTag.Attack, DamageTag.Ranged];
 
-    public rangeBy = TossedBladeEffect.rangeBy;
+    public targeting = TossedBladeEffect.targeting;
 
     public execute(target: CharacterState, user: CharacterState,
         mods: DamageModGroup): SkillResult {
@@ -184,7 +184,7 @@ export class TossedBlade implements ISkill {
     public name = 'Tossed Blade';
 
     public timingBy = SkillTiming.Attack;
-    public rangeBy = TossedBladeEffect.rangeBy;
+    public targeting = TossedBladeEffect.targeting;
     // 10% increased inherent attack speed for fun
     public timeMod = new StatMods.IncreasedAttackSpeed(0.1);
 
@@ -201,8 +201,3 @@ export class TossedBlade implements ISkill {
         return results;
     }
 }
-
-// PROBLEM: range needs to be resolved when the event resolves, not
-// when the skill is executed... Each skill has a type of range...
-// SOLUTION: RangeDamageMod will be constructed with two CharacterStates and
-// distance is calculated at apply time. I like this.

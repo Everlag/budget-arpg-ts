@@ -2,7 +2,6 @@ import {
     Damage, DamageTag,
     ElementArray, ElementToString,
 } from './Damage';
-import { MoveDistance } from './Pack';
 import { CharacterState } from './CharacterState';
 
 /**
@@ -160,20 +159,7 @@ export interface IDamageMod {
  * Note: typical usage is a skill adding a clone of its saved instance
  *       with the actual distance set.
  */
-export interface IRangeMod extends IDamageMod {
-    /**
-     * Determine how to move based entirely on provided distance
-     *
-     * This MUST abide by the rule that Hold means the skill should be used
-     * while Closer or Farther mean that movement is absolutely necessary.
-     *
-     * target is the minimum coefficient you wish the mod to apply,
-     * higher coefficient means more damage.
-     */
-    movement(distance: number, target: number): MoveDistance;
-    /** Create a new IRangeMod with equivalenyt functionality */
-    clone(): IRangeMod;
-}
+export interface IRangeMod extends IDamageMod { }
 
 /**
  * Any IDamageMod that can be summed with either all or

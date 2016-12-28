@@ -24,8 +24,8 @@ export class AgressiveNaiveMelee implements IBehavior {
         if (target === null) return Action.NOP;
         let distance = target.Position.distanceTo(this.state.Position);
         // Ask the skill what it wants
-        let {rangeBy} = this.state.context.skill;
-        let distanceToOptimal = rangeBy.movement(distance, 0.5);
+        let { targeting } = this.state.context.skill;
+        let distanceToOptimal = targeting.movement(distance, 0.5);
         // Use a skill if we're allowed to hold, otherwise we need to move.
         if (distanceToOptimal.direction === MovementDirection.Hold) {
             return Action.Skill;
@@ -56,9 +56,9 @@ export class AgressiveNaiveMelee implements IBehavior {
     public getMoveOrder(c: CharacterState): MoveTime {
         if (!this.state) throw 'State of IBehavior not set';
         // Ask the skill how far we need to move
-        let {rangeBy} = this.state.context.skill;
+        let { targeting } = this.state.context.skill;
         let distance = c.Position.distanceTo(this.state.Position);
-        let distanceToOptimal = rangeBy.movement(distance, 0.5);
+        let distanceToOptimal = targeting.movement(distance, 0.5);
 
         // Translate from a distance to an amount of time
         let { movespeed } = this.state.context.stats;

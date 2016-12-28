@@ -6,7 +6,6 @@ import { Position, MovementDirection } from './Movement';
 import { DamageModGroup, DamageModDirection, IRangeMod } from './DamageMods';
 import * as DamageMods from './DamageModRegistry';
 
-
 /**
  * Types of targeting a skill can have
  *
@@ -40,19 +39,19 @@ export class SkillTarget {
     constructor(public targetSet: Pack,
         public source: CharacterState,
         public skill: ISkill,
-        public targetting: ITargetting) { }
+        public targeting: ITargeting) { }
 
     /** Apply the skill to all possibly affected targets */
-    apply(mods: DamageModGroup, state: State): number {
-        let {Position: pos} = this.source;
+    public apply(mods: DamageModGroup, state: State): number {
+        let { Position: pos } = this.source;
 
         let affected = 0;
         // Iterate over potential targets
-        this.targetting.affected(pos, this.targetSet)
+        this.targeting.affected(pos, this.targetSet)
             .forEach(c => {
                 // Add a copy of the skill's RangeMod with
                 // appropriate distance set
-                let rangeBy = this.targetting.rangeMod.clone();
+                let rangeBy = this.targeting.rangeMod.clone();
                 mods.add(rangeBy, DamageModDirection.Dealing);
 
                 // Pass the DamageModGroup off to the skill for execution
@@ -67,8 +66,8 @@ export class SkillTarget {
     }
 }
 
-export interface ITargetting {
-    /** RangeMod associated with a specific method of targetting */
+export interface ITargeting {
+    /** RangeMod associated with a specific method of targeting */
     rangeMod: IRangeMod;
     flavor: TargetFlavor;
     /** Get all members of a Pack potentially affected by this */
@@ -84,7 +83,7 @@ export interface ITargetting {
     movement(distance: number, target: number): MoveDistance;
 }
 
-export class SingleTargetDiscrete implements ITargetting {
+export class SingleTargetDiscrete implements ITargeting {
 
     public flavor = TargetFlavor.Single;
 
