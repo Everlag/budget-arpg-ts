@@ -38,20 +38,20 @@ export class SkillTarget {
 
     constructor(public targetSet: Pack,
         public source: CharacterState,
-        public skill: ISkill,
-        public targeting: ITargeting) { }
+        public skill: ISkill) { }
 
     /** Apply the skill to all possibly affected targets */
     public apply(mods: DamageModGroup, state: State): number {
         let { Position: pos } = this.source;
+        let { targeting } = this.skill;
 
         let affected = 0;
         // Iterate over potential targets
-        this.targeting.affected(pos, this.targetSet)
+        targeting.affected(pos, this.targetSet)
             .forEach(c => {
                 // Add a copy of the skill's RangeMod with
                 // appropriate distance set
-                let rangeBy = this.targeting.rangeMod.clone();
+                let rangeBy = targeting.rangeMod.clone();
                 mods.add(rangeBy, DamageModDirection.Dealing);
 
                 // Pass the DamageModGroup off to the skill for execution
@@ -94,6 +94,8 @@ export class SingleTargetDiscrete implements ITargeting {
     }
 
     public affected(pos: Position, p: Pack): Array<CharacterState> {
+        // We can return only a single target... shit
+        // TODO: coherency!
         return p.Living.filter(c => c.Position.distanceTo(pos) < this.range);
     }
 
