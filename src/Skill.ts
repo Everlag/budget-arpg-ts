@@ -32,15 +32,22 @@ export class SkillResult {
      * This can be used only once.
      */
     public execute(target: CharacterState, source: CharacterState,
+        baseTarget: CharacterState,
         state: State) {
         // Prevent multiple execution.
         if (this.applied) throw Error('cannot apply SkillResult > 1 time');
         this.applied = true;
 
-        // Calculate and apply initial damage
-        let distance = target.Position.distanceTo(source.Position);
+        // Calculate relevant distances
+        let distance = target.Position
+            .distanceTo(source.Position);
+        let baseTargetDistance = baseTarget.Position
+            .distanceTo(source.Position);
+
+        // Apply the Damage
         let initialDamage = this.mods
-            .apply(new Damage(this.tags, distance, distance), target, source);
+            .apply(new Damage(this.tags, distance, baseTargetDistance),
+            target, source);
         initialDamage.apply(target, source);
 
         // Skip followup calculation when we don't have one.
@@ -56,9 +63,11 @@ export class SkillResult {
                 if (this.postmods) {
                     let postDistance = target.Position
                         .distanceTo(source.Position);
+                    let postBaseTargetDistance = baseTarget.Position
+                        .distanceTo(source.Position);
                     let postDamage = this.postmods
-                        .apply(new Damage(new Set(), postDistance, postDistance),
-                            target, source);
+                        .apply(new Damage(new Set(), postDistance, postBaseTargetDistance),
+                        target, source);
                     postDamage.apply(target, source);
                 }
 
@@ -205,7 +214,7 @@ export class TossedBlade implements ISkill {
 class FireNovaEffect implements ISkillEffect {
     public static targeting = new Targetings
         .DirectedAoEDiscrete(PositionBounds.ScreenSize / 5,
-            PositionBounds.ScreenSize / 20);
+        PositionBounds.ScreenSize / 20);
 
     public name = 'Fire Nova Effect';
     public tags = [DamageTag.Spell, DamageTag.Ranged];

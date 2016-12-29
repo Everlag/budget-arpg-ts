@@ -80,12 +80,6 @@ export const enum DamageModOrder {
      */
     PostInitial,
     /**
-     * Distance between two entities effecting scaling
-     *
-     * There should be only a single Range modifier.
-     */
-    Range,
-    /**
      * Mitigations
      *
      * ie, armor for physical damage or resists for elemental
@@ -97,6 +91,12 @@ export const enum DamageModOrder {
      * ie, resolve which should have armor and resists happen first
      */
     PostMitigation,
+    /**
+     * Distance between two entities effecting scaling
+     *
+     * There should be only a single Range modifier.
+     */
+    Range,
     /**
      * Mods that modify the impact of statuses that the Damage
      * can apply but do not effect the actual sum of the Damage.

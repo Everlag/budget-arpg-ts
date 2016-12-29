@@ -78,7 +78,7 @@ export class DiscreteRangeRadius implements IRangeMod {
     }
 
     public clone(): IRangeMod {
-        return Object.assign(new DiscreteRange(0), this);
+        return Object.assign(new DiscreteRangeRadius(0, 0), this);
     }
 
     public get pretty(): string {
@@ -113,6 +113,57 @@ export class Armor implements IDamageModSummable {
 
     public get pretty(): string {
         return `${this.armor} added Armor`;
+    }
+}
+
+/** 
+ * The application of reflexes to increase the distance
+ *
+ * This increases both the floor and ceiling
+ */
+export class Reflexes implements IDamageModSummable {
+    public name = 'EvasionDamageMod';
+
+    public direction = DamageModDirection.Taking;
+
+    public reqTags = new Set();
+    public position = DamageModOrder.Mitigation;
+
+    constructor(public value: number) { }
+
+    public apply(d: Damage): Damage {
+
+        // Short circuit on known useless values
+        if (this.value === 0) return d;
+
+        let { distance } = d;
+        let maxAdded = distance * 0.75;
+
+        // Reflexes value increases both the minimum and maximum values
+        // for the coefficient that can be rolled
+        let coeffFloor = Math.log2(this.value);
+        let coeffMax = Math.log2(this.value) * 10;
+        let coefficient = intfromInterval(coeffFloor, coeffMax) / 100;
+
+        // We have the ceiling of maxAdded to consider
+        let added = Math.min(coefficient * distance, maxAdded);
+
+        // Add it on
+        d.distance += added;
+
+        return d;
+    }
+
+    public sum(other: Reflexes): Reflexes {
+        return new Reflexes(this.value + other.value);
+    }
+
+    public clone(): IDamageMod {
+        return Object.assign(new Reflexes(0), this);
+    }
+
+    public get pretty(): string {
+        return `${this.value} added Reflexes`;
     }
 }
 

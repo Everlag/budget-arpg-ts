@@ -58,6 +58,7 @@ let trashLoadout = new LoadOut([
         new DamageMods.LocalPhysical(2, 3),
         new DamageMods.Armor(4),
         new DamageMods.ReducedBurnDuration(0.8),
+        new DamageMods.Reflexes(30),
         // These should have no effect 
         new DamageMods.IncreasedMeleePhysical(1.0),
         new DamageMods.ElementLeechedAsLife(0.9, Elements.Light),

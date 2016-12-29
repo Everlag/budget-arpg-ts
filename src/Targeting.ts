@@ -60,7 +60,9 @@ export class SkillTarget {
                 // Pass the DamageModGroup off to the skill for execution
                 // and execute the results.
                 this.skill.execute(c, this.source, mods)
-                    .forEach(result => result.execute(c, this.source, state));
+                    .forEach(result => {
+                        result.execute(c, this.source, baseTarget, state);
+                    });
 
                 affected++;
             });
