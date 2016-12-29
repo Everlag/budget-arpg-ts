@@ -14,6 +14,7 @@ import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
 import { SkillTarget } from './Targeting';
 import { entityCode } from './random';
+import { CharacterStateSerial } from './serial';
 
 class GlobalContext {
     /** Current stats */
@@ -160,6 +161,19 @@ export class CharacterState extends CharacterMachine {
         // Create a new SkillTarget and apply it using our calculated mods
         let targets = new SkillTarget(this.context.target, this, skill);
         targets.apply(this.Position, target, mods, state);
+    }
+
+    public toJSON(): CharacterStateSerial {
+        let { health, mana } = this.context;
+        let { health: maxHealth, mana: maxMana } = this.context.baseStats;
+
+        return {
+            EntityCode: this.EntityCode,
+            Position: this.Position.loc,
+            health, mana,
+            maxHealth, maxMana,
+            isDead: this.isDead,
+        };
     }
 
     /** Perform actions using pre-prepared state. */
@@ -401,4 +415,5 @@ export class CharacterState extends CharacterMachine {
         }
         return false;
     }
+
 }
