@@ -244,6 +244,9 @@ export class Damage {
         // Apply summed damage to health.
         target.context.health -= sum;
 
+        // Record this before we check if the target died
+        recordDamage(target, source, sum, isCrit);
+
         // If the target is dead, leave
         if (target.isDead) return;
 
@@ -256,9 +259,6 @@ export class Damage {
 
         // Always apply leech to the source, let statuses handle it
         source.statuses.applyLeech(this);
-
-        // Record this.
-        recordDamage(target, source, sum, isCrit);
 
         // TODO: handle applying the rest of the conditions...
     }

@@ -13,12 +13,13 @@ export enum RecordFlavor {
     EMovement,
     EStatusEffect,
     IDamage,
+    IMovement,
 }
 
 interface IRecord {
     /** Tick-time this record was recorded at */
     when: number;
-    flavor: RecordFlavor | undefined;
+    flavor: RecordFlavor;
 }
 
 interface IDamageRecord extends IRecord {
@@ -38,6 +39,29 @@ export function recordDamage(target: CharacterState, source: CharacterState,
         when: record.now,
         target: target.EntityCode, source: source.EntityCode,
         sum, isCrit,
+    };
+
+    record.pushImplicitEvent(event);
+}
+
+interface IMovementRecord extends IRecord {
+    source: string;
+    /** The Character that prompted this movement */
+    target: string;
+    /** How long the movement takes */
+    duration: number;
+    /** Coefficient determing absolute movement, in {0, 1} */
+    moveCoeff: number;
+}
+
+export function recordMovement(source: CharacterState, target: CharacterState,
+    duration: number, moveCoeff: number) {
+
+    let event: IMovementRecord = {
+        flavor: RecordFlavor.IMovement,
+        when: record.now,
+        source: source.EntityCode, target: target.EntityCode,
+        duration, moveCoeff,
     };
 
     record.pushImplicitEvent(event);
@@ -96,6 +120,15 @@ export class Recording {
         // Remove them
         this.retired = this.retired.filter(rec => rec.when > when);
         return popped;
+    }
+
+    /**
+     * Return and remove all implicit Records up to and including
+     * the specific tick time. Explicit events up to that time
+     * are discarded
+     */
+    public popImplicitEventsTill(when: number): Array<IRecord> {
+        return this.popEventsTill(when).filter(e=> !(e instanceof Event));
     }
 
     /**

@@ -4,7 +4,7 @@ import {
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
-import { RecordFlavor } from './Recording';
+import { RecordFlavor, recordMovement } from './Recording';
 import { Character } from './Character';
 import { Stats } from './StatMods';
 import { Pack, Action, IBehavior } from './Pack';
@@ -295,6 +295,9 @@ export class CharacterState extends CharacterMachine {
         this.scratch.target = target;
         this.scratch.start = this.state.now;
         this.scratch.event = e;
+
+        // Record this
+        recordMovement(this, target, duration, moveCoeff);
 
         this.state.addEvent(e);
     }
