@@ -1,4 +1,5 @@
-import { State, TicksPerSecond } from './ARPGState';
+import { TicksPerSecond } from './ARPGState';
+import { record, state } from './Recording';
 import {
     Character, LoadOut, Gear, GearSlot,
 } from './Character';
@@ -14,10 +15,9 @@ import * as Behaviors from './BehaviorRegistry';
 
 let start = performance.now();
 
-const globalState = new State();
-
 /* tslint:disable */
-(<any>window).globalState = globalState;
+(<any>window).globalState = state;
+(<any>window).record = record;
 /* tslint:enable */
 
 SeedRandom('testing!', { global: true });
@@ -102,8 +102,8 @@ let yInit = [
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
 ];
 
-let x = new Pack(xInit, globalState);
-let y = new Pack(yInit, globalState);
+let x = new Pack(xInit, state);
+let y = new Pack(yInit, state);
 
 x.engage(y);
 y.engage(x);
@@ -125,17 +125,17 @@ let totalEvents = 0;
 // Simulate 1 minute of combat
 for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let tickStart = performance.now();
-    let completed = globalState.step();
+    let completed = record.runTo(i);
     let tickEnd = performance.now();
-    if (completed.length > 0) {
+    if (completed > 0) {
         console.log(`retired ${completed} events`);
-        totalEvents += completed.length;
+        totalEvents += completed;
         tickTimes.push(tickEnd - tickStart);
     }
 }
 
 let end = performance.now();
-console.log(`took ${(end - start).toFixed(2)}ms for ${globalState.now} ticks with ${totalEvents} events`);
+console.log(`took ${(end - start).toFixed(2)}ms for ${state.now} ticks with ${totalEvents} events`);
 
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;

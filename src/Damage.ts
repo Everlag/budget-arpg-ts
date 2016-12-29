@@ -1,3 +1,4 @@
+import { recordDamage } from './Recording';
 import { CharacterState } from './CharacterState';
 import { rollSuccess } from './random';
 import {
@@ -231,8 +232,9 @@ export class Damage {
         let sum = this.sum();
         if (isNaN(sum)) throw Error('Damage sum is NaN');
 
-        // Check if crit and 
-        if (rollSuccess(this.criticalChance)) {
+        let isCrit = rollSuccess(this.criticalChance);
+        // Check if crit
+        if (isCrit) {
             sum *= this.criticalMultiplier;
             // Set burn possibility to 100%
             this.burnChance = 1;
@@ -254,6 +256,9 @@ export class Damage {
 
         // Always apply leech to the source, let statuses handle it
         source.statuses.applyLeech(this);
+
+        // Record this.
+        recordDamage(target, source, sum, isCrit);
 
         // TODO: handle applying the rest of the conditions...
     }

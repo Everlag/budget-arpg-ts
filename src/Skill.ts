@@ -1,4 +1,5 @@
-import { TicksPerSecond, State, Event, EventType } from './ARPGState';
+import { TicksPerSecond, State, Event } from './ARPGState';
+import { RecordFlavor } from './Recording';
 import { CharacterState } from './CharacterState';
 import { DamageTag, Damage, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
@@ -54,7 +55,7 @@ export class SkillResult {
         if (!this.hasFollowup) return;
 
         // Schedule an event to complete to resolve the postmods
-        let e = new Event(EventType.SkillPostEffect,
+        let e = new Event(RecordFlavor.ESkillPostEffect,
             state.now + this.postDelay,
             () => {
                 // Don't bother calculating and applying damage for the dead...

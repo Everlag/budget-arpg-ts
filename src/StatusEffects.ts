@@ -4,7 +4,8 @@ import {
 } from './StatMods';
 import { IDamageMod } from './DamageMods';
 import { CharacterState } from './CharacterState';
-import { Event, EventType, TicksPerSecond } from './ARPGState';
+import { Event, TicksPerSecond } from './ARPGState';
+import { RecordFlavor } from './Recording';
 import { Damage, ILeechSpec } from './Damage';
 
 /**
@@ -106,7 +107,7 @@ export class StatusEffects {
         };
 
         // Set an event to remove the burn
-        let end = new Event(EventType.StatusEffect,
+        let end = new Event(RecordFlavor.EStatusEffect,
             this.selfState.state.now + burnDuration,
             () => {
                 this.remove(burn);
@@ -139,7 +140,7 @@ export class StatusEffects {
         };
 
         // Set an event to remove the burn
-        let end = new Event(EventType.StatusEffect,
+        let end = new Event(RecordFlavor.EStatusEffect,
             this.selfState.state.now + duration,
             () => {
                 this.remove(chill);
@@ -187,7 +188,7 @@ export class StatusEffects {
         };
 
         // Set an event to remove the effect
-        let end = new Event(EventType.StatusEffect,
+        let end = new Event(RecordFlavor.EStatusEffect,
             this.selfState.state.now + duration,
             () => {
                 this.remove(leech);
