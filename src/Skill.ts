@@ -211,6 +211,48 @@ export class TossedBlade implements ISkill {
     }
 }
 
+class GroundSmashEffect implements ISkillEffect {
+    public static targeting = new Targetings
+        .DirectedAoEDiscrete(PositionBounds.ScreenSize / 10,
+        PositionBounds.ScreenSize / 10);
+
+    public name = 'Ground Smash Effect';
+    public tags = [DamageTag.Attack, DamageTag.Melee];
+
+    public targeting = GroundSmashEffect.targeting;
+
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): SkillResult {
+
+        return new SkillResult(mods, new DamageModGroup(),
+            new Set(this.tags), 0);
+    }
+}
+
+/** An attack aimed at the ground */
+export class GroundSmash implements ISkill {
+
+    public name = 'GroundSmash';
+
+    public timingBy = SkillTiming.Attack;
+    public targeting = GroundSmashEffect.targeting;
+    // 10% reduced inherent attack speed for fun
+    public timeMod = new StatMods.IncreasedAttackSpeed(-0.5);
+
+    public effects = [new GroundSmashEffect()];
+
+    /** Execute each effect of this skill and return the results */
+    public execute(target: CharacterState, user: CharacterState,
+        mods: DamageModGroup): Array<SkillResult> {
+
+        let results = this.effects.map(effect => {
+            return effect.execute(target, user, mods.clone());
+        });
+
+        return results;
+    }
+}
+
 class FireNovaEffect implements ISkillEffect {
     public static targeting = new Targetings
         .DirectedAoEDiscrete(PositionBounds.ScreenSize / 5,

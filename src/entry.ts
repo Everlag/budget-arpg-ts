@@ -83,7 +83,7 @@ let coldTrashLoadout = new LoadOut([
         ]),
 ]);
 
-let basex = new Character(basicLoadout, new Skills.FireNova(), 'worseness');
+let basex = new Character(basicLoadout, new Skills.GroundSmash(), 'worseness');
 
 let baseTrash = new Character(trashLoadout,
     new Skills.TossedBlade(), 'worseness');
