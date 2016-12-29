@@ -4,7 +4,7 @@ import {
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
-import { RecordFlavor, recordMovement } from './Recording';
+import { RecordFlavor, recordMovement, recordDeath } from './Recording';
 import { Character } from './Character';
 import { Stats } from './StatMods';
 import { Pack, Action, IBehavior } from './Pack';
@@ -318,6 +318,18 @@ export class CharacterState extends CharacterMachine {
         this.context.position = this.interpolatePosition();
         let delta = prev.distanceTo(this.context.position);
         console.log(`${this.EntityCode} moved distance is`, delta);
+    }
+
+    /**
+     * This CharacterState goes into the unrecoverable state of 'dead'
+     *
+     * NOTE: it is expected that 'oneleaveSTATE' handlers will take care
+     * of canceling any events which need to be canceled and similar.
+     */
+    private ondie() {
+        console.log(`${this.EntityCode} ondie`, this.current);
+        // Record event
+        recordDeath(this);
     }
 
     get EntityCode(): string {

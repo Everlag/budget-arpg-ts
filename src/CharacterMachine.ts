@@ -136,16 +136,6 @@ export class CharacterMachine implements StateMachine {
         this.scratch = null;
     }
 
-    /**
-     * This CharacterState goes into the unrecoverable state of 'dead'
-     *
-     * NOTE: it is expected that 'oneleaveSTATE' handlers will take care
-     * of canceling any events which need to be canceled and similar.
-     */
-    private ondie() {
-        console.log(`${this.EntityCode} ondie`, this.current);
-    }
-
     // Boilerplate EntityCode, inheritors must override
     get EntityCode(): string {
         throw Error('EntityCode called on CharacterMachine');

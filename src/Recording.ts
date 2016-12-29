@@ -14,6 +14,7 @@ export enum RecordFlavor {
     EStatusEffect,
     IDamage,
     IMovement,
+    IDeath,
 }
 
 interface IRecord {
@@ -62,6 +63,20 @@ export function recordMovement(source: CharacterState, target: CharacterState,
         when: record.now,
         source: source.EntityCode, target: target.EntityCode,
         duration, moveCoeff,
+    };
+
+    record.pushImplicitEvent(event);
+}
+
+interface IDeathRecord extends IRecord {
+    source: string;
+}
+
+export function recordDeath(source: CharacterState) {
+    let event: IDeathRecord = {
+        flavor: RecordFlavor.IDeath,
+        when: record.now,
+        source: source.EntityCode,
     };
 
     record.pushImplicitEvent(event);
@@ -128,7 +143,7 @@ export class Recording {
      * are discarded
      */
     public popImplicitEventsTill(when: number): Array<IRecord> {
-        return this.popEventsTill(when).filter(e=> !(e instanceof Event));
+        return this.popEventsTill(when).filter(e => !(e instanceof Event));
     }
 
     /**
