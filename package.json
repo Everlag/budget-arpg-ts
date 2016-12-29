@@ -20,9 +20,11 @@
     "webpack-dev-server": "^2.2.0-rc.0"
   },
   "dependencies": {
+    "@types/d3": "^4.4.0",
     "@types/js-priority-queue": "0.0.5",
     "@types/seedrandom": "^2.4.27",
     "@types/state-machine": "^2.3.30",
+    "d3": "^4.4.0",
     "javascript-state-machine": "^2.4.0",
     "js-priority-queue": "^0.1.5",
     "seedrandom": "^2.4.2"

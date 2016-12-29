@@ -17,13 +17,13 @@ export enum RecordFlavor {
     IDeath,
 }
 
-interface IRecord {
+export interface IRecord {
     /** Tick-time this record was recorded at */
     when: number;
     flavor: RecordFlavor;
 }
 
-interface IDamageRecord extends IRecord {
+export interface IDamageRecord extends IRecord {
     target: string;
     source: string;
     /** Actual amount of damage the Target took post-mitigation */
@@ -45,7 +45,7 @@ export function recordDamage(target: CharacterState, source: CharacterState,
     record.pushImplicitEvent(event);
 }
 
-interface IMovementRecord extends IRecord {
+export interface IMovementRecord extends IRecord {
     source: string;
     /** The Character that prompted this movement */
     target: string;
@@ -68,7 +68,7 @@ export function recordMovement(source: CharacterState, target: CharacterState,
     record.pushImplicitEvent(event);
 }
 
-interface IDeathRecord extends IRecord {
+export interface IDeathRecord extends IRecord {
     source: string;
 }
 
