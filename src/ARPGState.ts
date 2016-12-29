@@ -38,12 +38,12 @@ export class State {
      * Continue one tick in the simulation and return
      * number of events retired.
      */
-    public step(): number {
+    public step(): Array<Event> {
         // Increment current time.
         this.now += 1;
 
         // Note number of events retired
-        let completed = 0;
+        let completed: Array<Event> = [];
 
         // Nothing to do, leave
         if (this.queue.length === 0) return completed;
@@ -51,7 +51,7 @@ export class State {
         let next = this.queue.peek();
         while (!(this.queue.length === 0) &&
             next.when <= this.now &&
-            completed < MaxEventsPerTick) {
+            completed.length < MaxEventsPerTick) {
 
             // Remove lowest event from queue
             let e = this.queue.dequeue();
@@ -61,8 +61,8 @@ export class State {
             followups.filter(followup => Boolean(followup))
                 .forEach((followup) => this.addEvent(followup));
 
-            completed++;
-            if (completed > MaxEventsPerTick) {
+            completed.push(e);
+            if (completed.length > MaxEventsPerTick) {
                 throw Error(`more than ${MaxEventsPerTick} retired in tick`);
             }
 

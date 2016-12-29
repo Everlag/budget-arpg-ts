@@ -127,9 +127,9 @@ for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
     let tickStart = performance.now();
     let completed = globalState.step();
     let tickEnd = performance.now();
-    if (completed > 0) {
+    if (completed.length > 0) {
         console.log(`retired ${completed} events`);
-        totalEvents += completed;
+        totalEvents += completed.length;
         tickTimes.push(tickEnd - tickStart);
     }
 }
