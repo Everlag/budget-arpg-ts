@@ -1,5 +1,5 @@
 import { TicksPerSecond, State, Event } from './ARPGState';
-import { RecordFlavor } from './Recording';
+import { RecordFlavor } from './Records';
 import { CharacterState } from './CharacterState';
 import { DamageTag, Damage, Elements } from './Damage';
 import { DamageModGroup, DamageModDirection } from './DamageMods';

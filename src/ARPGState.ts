@@ -1,4 +1,4 @@
-import { RecordFlavor } from './Recording';
+import { RecordFlavor } from './Records';
 import * as PriorityQueue from 'js-priority-queue';
 
 export const TicksPerSecond: number = 100;

@@ -5,7 +5,7 @@ import {
 import { IDamageMod } from './DamageMods';
 import { CharacterState } from './CharacterState';
 import { Event, TicksPerSecond } from './ARPGState';
-import { RecordFlavor } from './Recording';
+import { RecordFlavor } from './Records';
 import { Damage, ILeechSpec } from './Damage';
 
 /**

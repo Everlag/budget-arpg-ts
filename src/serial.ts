@@ -1,17 +1,6 @@
-import { Pack } from './Pack';
-
 /** Losssy serialization of current combat state */
 export interface StateSerial {
     packs: Array<PackSerial>;
-}
-
-/** Convert current state to a packed snapshot */
-export function snapshot(packs: Array<Pack>): string {
-    let serial: StateSerial = {
-        packs: packs.map(p => p.toJSON()),
-    }
-
-    return JSON.stringify(serial);
 }
 
 /** Revive a packed state snapshot taken with snapshot */

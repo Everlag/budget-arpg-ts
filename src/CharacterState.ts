@@ -4,7 +4,8 @@ import {
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
-import { RecordFlavor, recordMovement, recordDeath } from './Recording';
+import { recordMovement, recordDeath } from './Recording';
+import { RecordFlavor } from './Records';
 import { Character } from './Character';
 import { Stats } from './StatMods';
 import { Pack, Action, IBehavior } from './Pack';
