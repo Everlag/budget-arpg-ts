@@ -2,6 +2,7 @@ import { State } from './ARPGState';
 import { MovementDirection, Position } from './Movement';
 import { Character } from './Character';
 import { CharacterState } from './CharacterState';
+import { PackSerial } from './serial';
 
 /**
  * An argument to Pack that bundles initial Character information
@@ -35,6 +36,16 @@ export class Pack {
     /** Return all non-dead states */
     public get Living(): Array<CharacterState> {
         return this.states.filter(c => !c.isDead);
+    }
+
+    public toJSON(): PackSerial {
+        let states = this.states.map(c => c.toJSON());
+        let Living = states.filter(s => !s.isDead);
+
+        return {
+            states, Living,
+            isDead: Living.length === 0,
+        };
     }
 }
 
