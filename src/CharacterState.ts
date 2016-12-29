@@ -3,7 +3,7 @@ import {
     MoveContext, SkillContext,
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
-import { Event, State, TicksPerSecond } from './ARPGState';
+import { Event, EventType, State, TicksPerSecond } from './ARPGState';
 import { Character } from './Character';
 import { Stats } from './StatMods';
 import { Pack, Action, IBehavior } from './Pack';
@@ -225,7 +225,8 @@ export class CharacterState extends CharacterMachine {
             default:
                 throw Error('fell through timingBy switch');
         }
-        let e = new Event(this.state.now + waitTime,
+        let e = new Event(EventType.SkillUse,
+            this.state.now + waitTime,
             (state: State): Event | null => {
                 this.endskill();
                 return null;
@@ -279,7 +280,8 @@ export class CharacterState extends CharacterMachine {
         this.scratch.moveCoeff = moveCoeff;
 
         // Schedule an event to complete the move
-        let e = new Event(this.state.now + duration,
+        let e = new Event(EventType.Movement,
+            this.state.now + duration,
             (state: State): Event | null => {
                 this.endmove();
                 return null;

@@ -83,6 +83,32 @@ export class State {
  */
 export type GeneralEffect = (state: State) => Event | null;
 
+/**
+ * What type of event has happened.
+ */
+export enum EventType {
+    SkillUse = 0,
+    SkillPostEffect,
+    Movement,
+    StatusEffect,
+}
+
+/** Convert an element to its canonical string name */
+export function EventTypeToString(type: EventType) {
+    switch (type) {
+        case EventType.SkillUse:
+            return 'Skill Use';
+        case EventType.SkillPostEffect:
+            return 'Skill Post Effect';
+        case EventType.Movement:
+            return 'Movement';
+        case EventType.StatusEffect:
+            return 'Status Effect';
+        default:
+            throw Error('fell through Eventtype switch');
+    }
+}
+
 export class Event {
     private used: Boolean = false;
     private cancelled: Boolean = false;
@@ -90,7 +116,8 @@ export class Event {
 
     private newWhen: number;
 
-    constructor(public when: number,
+    constructor(public type: EventType,
+        public when: number,
         public action: GeneralEffect,
         public post: GeneralEffect | null) {
 
@@ -120,7 +147,7 @@ export class Event {
             if (!this.newWhen) {
                 throw Error('Event delayed but no newWhen present');
             }
-            return [new Event(this.newWhen, this.action, this.post)];
+            return [new Event(this.type, this.newWhen, this.action, this.post)];
         }
 
         // Execute actions 
