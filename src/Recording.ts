@@ -1,4 +1,4 @@
-import { State, Event } from './ARPGState';
+import { State, Event, TicksPerSecond } from './ARPGState';
 import { CharacterState } from './CharacterState';
 
 /** 
@@ -123,6 +123,24 @@ export class Recording {
         }
 
         return retired;
+    }
+
+    /** 
+     * Run the Recording for a given number of realtime seconds
+     * with an optional speedup multiplier.
+     *
+     * Returns the tick-time reached
+     */
+    public runForDuration(seconds: number, speedup: number = 1): number {
+        // Determine how long we run for and what that gives us
+        // in rounded-down tick-time
+        let duration = seconds * TicksPerSecond * speedup;
+        let when = Math.floor(this.now + duration);
+
+        // Run
+        this.runTo(when);
+
+        return when;
     }
 
     /**
