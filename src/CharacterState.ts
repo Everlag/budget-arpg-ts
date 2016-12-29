@@ -12,6 +12,7 @@ import { Position } from './Movement';
 import { ConstantCalc } from './ConstantCalc';
 import { StatusEffects } from './StatusEffects';
 import { SkillTarget } from './Targeting';
+import { entityCode } from './random';
 
 class GlobalContext {
     /** Current stats */
@@ -128,6 +129,9 @@ export class CharacterState extends CharacterMachine {
     // Context shared across states
     public context: GlobalContext;
     public statuses: StatusEffects;
+
+    // Private identity used to uniquely identify in EntityCode
+    private identity = entityCode();
 
     constructor(private character: Character,
         public state: State, initPosition: Position, behavior: IBehavior) {
@@ -313,7 +317,7 @@ export class CharacterState extends CharacterMachine {
     }
 
     get EntityCode(): string {
-        return `ST${this.character.identity}`;
+        return `CH${this.character.identity}ST${this.identity}`;
     }
 
     /**
