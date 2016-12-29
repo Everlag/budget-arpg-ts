@@ -1,4 +1,3 @@
-import { TicksPerSecond } from './ARPGState';
 import { record, state } from './Recording';
 import {
     Character, LoadOut, Gear, GearSlot,
@@ -7,6 +6,7 @@ import { CharacterState } from './CharacterState';
 import { Elements } from './Damage';
 import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
+import { snapshot } from './Snapshot';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
@@ -117,25 +117,43 @@ let tickTimes: Array<Number> = [];
 (<any>window).tickTimes = tickTimes;
 /* tslint:enable */
 
-// x.disengage();
-console.log(x);
+/** 16ms between snapshots ~ 1 frame at 60fps */
+let snapshotTime = 16 / 1000;
+/** Work faster than realtime */
+let speedup = 5;
 
-let totalEvents = 0;
+/** Simulate up to a total of 60 seconds */
+let duration = 60;
 
-// Simulate 1 minute of combat
-for (let i = 0; i < TicksPerSecond * 60 && !(x.isDead || y.isDead); i++) {
-    let tickStart = performance.now();
-    let completed = record.runTo(i);
-    let tickEnd = performance.now();
-    if (completed > 0) {
-        console.log(`retired ${completed} events`);
-        totalEvents += completed;
-        tickTimes.push(tickEnd - tickStart);
-    }
+/** How many snapshots we take for a given amount of time */
+let snapshotCount = duration / snapshotTime;
+
+/** Register all actie Packs */
+let packs = [x, y];
+
+/** Serialized snapshots */
+let snapshots: Array<string> = [];
+
+// Simulate 1 minute of combat taking a snapshot every frameTime
+// with a speedup.
+// 
+// We also exit if any of the packs involved are dead yet
+// TODO: this only handle two confronting Packs, handle more?
+for (let i = 0; i < snapshotCount && !packs.some(p => p.isDead); i++) {
+    // Run for a duration and get back tick-time we managed to reach
+    let when = record.runForDuration(snapshotTime, speedup);
+    // Pop all the implicit events we care about
+    let events = record.popImplicitEventsTill(when);
+    // Take a snapshot
+    let snap = snapshot(record.now, events, packs);
+    // Record the snapshot
+    snapshots.push(snap);
 }
 
 let end = performance.now();
-console.log(`took ${(end - start).toFixed(2)}ms for ${state.now} ticks with ${totalEvents} events`);
+console.log(`took ${(end - start).toFixed(2)}ms for ${state.now} ticks`);
+
+(<any>window).snapshots = snapshots;
 
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;

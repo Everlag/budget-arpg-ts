@@ -1,6 +1,13 @@
+import { IRecord } from './Records';
+
 /** Losssy serialization of current combat state */
 export interface StateSerial {
+    /** Tick time this serial represents */
+    when: number;
+    /** States of packs we have */
     packs: Array<PackSerial>;
+    /** Records of notable implicit events retired since last snapshot */
+    events: Array<IRecord>;
 }
 
 /** Revive a packed state snapshot taken with snapshot */
