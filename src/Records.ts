@@ -12,6 +12,7 @@ export enum RecordFlavor {
     EStatusEffect,
     IDamage,
     IMovement,
+    ISkillApply,
     IDeath,
 }
 
@@ -39,6 +40,13 @@ export interface IMovementRecord extends IRecord {
     moveCoeff: number;
 }
 
+export interface ISkillApply extends IRecord {
+    source: string;
+    target: string;
+    /** Specific name the skill ahs */
+    skillName: string;
+}
+
 export interface IDeathRecord extends IRecord {
     source: string;
 }
@@ -52,6 +60,9 @@ export function ImplictRecordToString(record: IRecord) {
         case RecordFlavor.IMovement:
             let move = <IMovementRecord>record;
             return `${move.source} moves ${move.moveCoeff} for ${Math.floor(move.duration)}`;
+        case RecordFlavor.ISkillApply:
+            let apply = <ISkillApply>record;
+            return `${apply.source} uses ${apply.skillName} on ${apply.target}`;
         case RecordFlavor.IDeath:
             let death = <IMovementRecord>record;
             return `${death.source} dies`;

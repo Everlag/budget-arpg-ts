@@ -4,7 +4,7 @@ import {
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
-import { recordMovement, recordDeath } from './Recording';
+import { recordMovement, recordSkillApply, recordDeath } from './Recording';
 import { RecordFlavor } from './Records';
 import { Character } from './Character';
 import { Stats } from './StatMods';
@@ -158,6 +158,9 @@ export class CharacterState extends CharacterMachine {
         target.character.getMods().forEach(mod => {
             mods.add(mod, DamageModDirection.Taking);
         });
+
+        // Record
+        recordSkillApply(this, target, skill.name);
 
         // Create a new SkillTarget and apply it using our calculated mods
         let targets = new SkillTarget(this.context.target, this, skill);

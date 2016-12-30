@@ -1,6 +1,9 @@
 import { State, Event, TicksPerSecond } from './ARPGState';
 import { CharacterState } from './CharacterState';
-import { RecordFlavor, IRecord, IDamageRecord, IMovementRecord, IDeathRecord } from './Records';
+import {
+    RecordFlavor, IRecord,
+    IDamageRecord, IMovementRecord, ISkillApply, IDeathRecord,
+} from './Records';
 
 /** Record a DamageRecord */
 export function recordDamage(target: CharacterState, source: CharacterState,
@@ -24,6 +27,19 @@ export function recordMovement(source: CharacterState, target: CharacterState,
         when: record.now,
         source: source.EntityCode, target: target.EntityCode,
         duration, moveCoeff,
+    };
+
+    record.pushImplicitEvent(event);
+}
+
+export function recordSkillApply(source: CharacterState, target: CharacterState,
+    skillName: string) {
+
+    let event: ISkillApply = {
+        flavor: RecordFlavor.ISkillApply,
+        when: record.now,
+        source: source.EntityCode, target: target.EntityCode,
+        skillName,
     };
 
     record.pushImplicitEvent(event);
