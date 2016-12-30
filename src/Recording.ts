@@ -65,7 +65,7 @@ export class Recording {
         // Determine how many ticks we run for
         let start = this.state.now;
         let duration = when - start;
-        if (duration < 0) throw Error('runTo cannot run to a when before now');
+        if (duration < 0) throw Error(`runTo cannot run to a when before now, duration=${duration}`);
 
         let retired = 0;
 

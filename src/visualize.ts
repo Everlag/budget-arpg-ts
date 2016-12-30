@@ -48,7 +48,7 @@ class Character extends Vue {
     </div>`,
     components: {
         Character,
-    }
+    },
 })
 class Pack extends Vue {
     private readonly pack: PackSerial;
@@ -77,7 +77,7 @@ class Pack extends Vue {
     </div>`,
     components: {
         Pack,
-    }
+    },
 })
 class State extends Vue {
     private readonly state: StateSerial;
@@ -87,11 +87,17 @@ class State extends Vue {
     }
 
     public get packs(): Array<PackSerial> {
-        return this.state.packs
+        return this.state.packs;
     }
 }
 
-export function renderVue() {
+export interface IMountPoint {
+    $data: {
+        state: StateSerial,
+    };
+}
+
+export function renderVue(): IMountPoint {
     // mount
     let mount = new Vue({
         el: '#el',
@@ -116,12 +122,16 @@ export function renderVue() {
         },
     });
     if (!mount) throw Error('vue not mounted');
-    console.log(mount);
+    // console.log(mount);
 
-    let snapshots: Array<string> = (<any>window).snapshots;
-    let renderState: StateSerial = JSON.parse(snapshots[0]);
+    // let snapshots: Array<string> = (<any>window).snapshots;
+    // let renderState: StateSerial = JSON.parse(snapshots[0]);
 
-    (<any>mount.$data).state = renderState;
+    // (<any>mount.$data).state = renderState;
+
+    // Yes, this is hacky but this is the best we can do
+    // for type safety right now :|
+    return <IMountPoint>(<any>mount);
 }
 
 export function visualize(seedState: Object, events: Array<IRecord>) {

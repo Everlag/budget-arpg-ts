@@ -121,7 +121,7 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 5;
+let speedup = 1;
 
 /** Simulate up to a total of 60 seconds */
 let duration = 60;
@@ -140,16 +140,16 @@ let snapshots: Array<string> = [];
 // 
 // We also exit if any of the packs involved are dead yet
 // TODO: this only handle two confronting Packs, handle more?
-for (let i = 0; i < snapshotCount && !packs.some(p => p.isDead); i++) {
-    // Run for a duration and get back tick-time we managed to reach
-    let when = record.runForDuration(snapshotTime, speedup);
-    // Pop all the implicit events we care about
-    let events = record.popImplicitEventsTill(when);
-    // Take a snapshot
-    let snap = snapshot(record.now, events, packs);
-    // Record the snapshot
-    snapshots.push(snap);
-}
+// for (let i = 0; i < snapshotCount && !packs.some(p => p.isDead); i++) {
+//     // Run for a duration and get back tick-time we managed to reach
+//     let when = record.runForDuration(snapshotTime, speedup);
+//     // Pop all the implicit events we care about
+//     let events = record.popImplicitEventsTill(when);
+//     // Take a snapshot
+//     let snap = snapshot(record.now, events, packs);
+//     // Record the snapshot
+//     snapshots.push(snap);
+// }
 
 let end = performance.now();
 console.log(`took ${(end - start).toFixed(2)}ms for ${state.now} ticks`);
@@ -160,4 +160,36 @@ console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc)
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
 console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
 
-renderVue();
+let mount = renderVue();
+
+let previousTime = performance.now();
+function runFrame(now: number) {
+
+    // How long has it been since the last update?
+    // TODO: use this
+    console.log(now, previousTime);
+    let delta = now - previousTime;
+
+    // Run for a duration and get back tick-time we managed to reach
+    let when = record.runForDuration(snapshotTime, speedup);
+    // Pop all the implicit events we care about
+    let events = record.popImplicitEventsTill(when);
+    // Take a snapshot
+    let snap = snapshot(record.now, events, packs);
+
+    // Update the model
+    // 
+    // Yes, I know we don't need to serialize then deserialize but
+    // this is preparing for later when we will need to.
+    mount.$data.state = JSON.parse(snap);
+
+    // If a pack is dead, we're done
+    if (packs.some(p => p.isDead)) return;
+
+    // Update the old time
+    previousTime = now;
+    // Run the next frame
+    requestAnimationFrame(runFrame);
+}
+
+runFrame(previousTime + 1);
