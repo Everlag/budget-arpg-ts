@@ -97,7 +97,7 @@ export const enum SkillTiming {
  * A full skill with all effects
  */
 export interface ISkill {
-    name: String;
+    name: string;
     /** How timing for the skill is performed */
     timingBy: SkillTiming;
     /** How range for the skill is handled, this informs character movement */
