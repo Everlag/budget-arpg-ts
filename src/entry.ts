@@ -167,7 +167,6 @@ function runFrame(now: number) {
 
     // How long has it been since the last update?
     // TODO: use this
-    console.log(now, previousTime);
     let delta = now - previousTime;
 
     // Run for a duration and get back tick-time we managed to reach
