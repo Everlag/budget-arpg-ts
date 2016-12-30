@@ -7,6 +7,7 @@ import { Elements } from './Damage';
 import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
 import { snapshot } from './Snapshot';
+import { renderVue } from './visualize';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
@@ -158,3 +159,5 @@ console.log(`took ${(end - start).toFixed(2)}ms for ${state.now} ticks`);
 console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
 let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
 console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
+
+renderVue();

@@ -12,6 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "awesome-typescript-loader": "^3.0.0-beta.17",
+    "raw-loader": "^0.5.1",
     "tslint": "^4.2.0",
     "tslint-eslint-rules": "^3.2.1",
     "tslint-loader": "^3.3.0",
@@ -24,9 +25,12 @@
     "@types/js-priority-queue": "0.0.5",
     "@types/seedrandom": "^2.4.27",
     "@types/state-machine": "^2.3.30",
+    "@types/vue": "^2.0.0",
     "d3": "^4.4.0",
     "javascript-state-machine": "^2.4.0",
     "js-priority-queue": "^0.1.5",
-    "seedrandom": "^2.4.2"
+    "seedrandom": "^2.4.2",
+    "vue": "^2.1.8",
+    "vue-class-component": "^4.4.0"
   }
 }
