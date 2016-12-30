@@ -1,7 +1,7 @@
 // import { TicksPerSecond } from './ARPGState';
 import {
     //     RecordFlavor,
-    IRecord,
+    IRecord, ImplictRecordToString,
     //     IMovementRecord, IDamageRecord, IDeathRecord
 } from './Records';
 import { StateSerial, PackSerial, CharacterStateSerial } from './Serial';
@@ -65,6 +65,73 @@ class Pack extends Vue {
 
 @Component({
     props: {
+        event: Object,
+    },
+    template: `
+    <div>
+        {{event.when}} - {{text}}
+    </div>`,
+})
+class Event extends Vue {
+    private readonly event: IRecord;
+
+    public mounted() {
+        if (!this.event) return;
+    }
+
+    public get text(): string {
+        return ImplictRecordToString(this.event);
+    }
+}
+
+@Component({
+    props: {
+        when: Number,
+        events: Array,
+        historyDuration: Number,
+    },
+    template: `
+    <div>
+        <event
+            v-for="e in recent" 
+            v-bind:event="e"></event>
+    </div>`,
+    components: {
+        Event,
+    },
+})
+class EventLog extends Vue {
+    private readonly when: number;
+    private readonly events: Array<IRecord>;
+    private readonly historyDuration: number;
+
+    private history: Array<IRecord> = [];
+
+    public mounted() {
+        if (!this.events) return;
+    }
+
+    /** If recent is triggered, then a prop is updated */
+    private get recent(): Array<IRecord> {
+        // Check to see if there are new events for us
+        // to look through
+        if (this.events.length > 0) {
+            this.history.push(...this.events);
+            // Filter out events past duration and sort
+            this.history = this.history
+                .filter(e => (this.when - e.when) < this.historyDuration)
+                .sort((a, b) => {
+                    let delta = a.when - b.when;
+                    if (delta !== 0) return delta;
+                    return a.flavor;
+                });
+        }
+        return this.history;
+    }
+}
+
+@Component({
+    props: {
         state: Object,
     },
     template: `
@@ -74,9 +141,13 @@ class Pack extends Vue {
             <hr v-if="index">
             <pack :pack="pack"></character>
         </template>
+        <event-log
+            :history-duration="100"
+            :when=when
+            :events=events></event-log>
     </div>`,
     components: {
-        Pack,
+        Pack, EventLog,
     },
 })
 class State extends Vue {
@@ -86,8 +157,16 @@ class State extends Vue {
         if (!this.state) return;
     }
 
+    public get when(): Number {
+        return this.state.when;
+    }
+
     public get packs(): Array<PackSerial> {
         return this.state.packs;
+    }
+
+    public get events(): Array<IRecord> {
+        return this.state.events;
     }
 }
 

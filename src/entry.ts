@@ -122,7 +122,7 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 20;
+let speedup = 5;
 
 /** Register all actie Packs */
 let packs = [x, y];

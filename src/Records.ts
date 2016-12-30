@@ -42,3 +42,20 @@ export interface IMovementRecord extends IRecord {
 export interface IDeathRecord extends IRecord {
     source: string;
 }
+
+/** Convert an implicit record to a short, human readable string */
+export function ImplictRecordToString(record: IRecord) {
+    switch (record.flavor) {
+        case RecordFlavor.IDamage:
+            let damage = <IDamageRecord>record;
+            return `${damage.source} damages ${damage.target} for ${Math.floor(damage.sum)}`;
+        case RecordFlavor.IMovement:
+            let move = <IMovementRecord>record;
+            return `${move.source} moves ${move.moveCoeff} for ${Math.floor(move.duration)}`;
+        case RecordFlavor.IDeath:
+            let death = <IMovementRecord>record;
+            return `${death.source} dies`;
+        default:
+            throw Error('fell through record flavor switch');
+    }
+}
