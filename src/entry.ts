@@ -68,10 +68,7 @@ let trashLoadout = new LoadOut([
         [
             new StatMods.FlatAddedHealth(4),
         ]),
-    new Gear(GearSlot.Boots, [],
-        [
-            new StatMods.IncreasedMovespeed(0.5),
-        ]),
+    new Gear(GearSlot.Boots, [], []),
 ]);
 
 let coldTrashLoadout = new LoadOut([
@@ -97,7 +94,7 @@ let xInit = [
 ];
 let yInit = [
     new PackInit(baseTrash,
-        new Position(100), new Behaviors.AgressiveNaiveMelee()),
+        new Position(100), new Behaviors.StrafingRanged()),
     new PackInit(baseTrash,
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
     new PackInit(coldBaseTrash,
@@ -122,7 +119,7 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 5;
+let speedup = 20;
 
 /** Register all actie Packs */
 let packs = [x, y];
