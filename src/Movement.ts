@@ -74,8 +74,16 @@ export class Position {
             case MovementDirection.Farther:
                 // We need to work with clamped distances for farther,
                 // otherwise we'll just exit out bounds infinitely.
-                posDistance = other.distanceTo(positive.clamp());
-                negDistance = other.distanceTo(negative.clamp());
+                // 
+                // However, we need to account for clamp loss when handling
+                // distances. This works. I think... yeah.
+                // TODO: review
+                let savedPos = positive.loc; // Save distance before clamped
+                let savedNeg = negative.loc;
+                let posClampLoss = Math.abs(savedPos - positive.clamp().loc);
+                let negClampLoss = Math.abs(savedNeg - negative.clamp().loc);
+                posDistance = other.distanceTo(positive.clamp()) - posClampLoss;
+                negDistance = other.distanceTo(negative.clamp()) - negClampLoss;
                 if (posDistance > negDistance) {
                     return 1;
                 }
