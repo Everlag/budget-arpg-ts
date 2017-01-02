@@ -76,7 +76,7 @@ export interface ITargeting {
     rangeMod: IRangeMod;
     flavor: TargetFlavor;
     /** Determine if a provided baseCharacter is currently valid target */
-    baseValid(pos: Position, baseTarget: CharacterState): Boolean;
+    baseValid(pos: Position, baseTarget: CharacterState): boolean;
     /** 
      * Get all members of a Pack potentially affected by this
      * targeting centered around a single baseTarget Character.
@@ -109,7 +109,7 @@ export class SingleTargetDiscrete implements ITargeting {
         this.rangeMod = new DamageMods.DiscreteRange(range);
     }
 
-    public baseValid(pos: Position, baseTarget: CharacterState): Boolean {
+    public baseValid(pos: Position, baseTarget: CharacterState): boolean {
         let baseDistance = pos.distanceTo(baseTarget.Position);
         return baseDistance < this.range;
     }
@@ -141,7 +141,7 @@ export class DirectedAoEDiscrete implements ITargeting {
         this.rangeMod = new DamageMods.DiscreteRangeRadius(range, radius);
     }
 
-    public baseValid(pos: Position, baseTarget: CharacterState): Boolean {
+    public baseValid(pos: Position, baseTarget: CharacterState): boolean {
         let baseDistance = pos.distanceTo(baseTarget.Position);
         return baseDistance < this.range;
     }
