@@ -1,32 +1,52 @@
 import { select, Selection } from 'd3-selection'
 import { interval } from 'd3-timer';
 import { shuffle } from 'd3-array';
+// Needed as a side efect to inject transition
+// into the selection api.
+import 'd3-transition';
 
 function update(root: Selection<any, any, any, any>,
     dataset: Array<string>) {
 
+    let duration = 750;
+
     // JOIN
     let text = root.selectAll('text')
-        .data(dataset, (d: string)=> d)
+        .data(dataset, (d: string) => d)
+
+    // EXIT
+    // Discard unused elements
+    text.exit()
+        .attr('class', 'exit')
+        // Everything after the duration
+        // call is transitioned out
+        .transition().duration(duration)
+        .attr('y', 60)
+        .style('fill-opacity', 1e-6)
+        .remove();
 
     // UPDATE
     // 
     // Change old elements as required
-    text.attr('class', 'update');
+    text.attr('class', 'update')
+        .attr('y', 0)
+        .style('fill-opacity', 1)
+        .transition().duration(duration)
+        .attr('x', (d, i) => i * 32);
 
     // ENTER
     // create new elements
     text.enter().append('text')
         .attr('class', 'enter')
         .attr('dy', '0.35em')
-        .text(d=> d)
+        .attr('y', -60)
+        .attr('x', (d, i) => i * 32)
+        .style('fill-opacity', 1e-6)
+        .text(d => d)
         // Add the old elements and set positions for all elements
-        .merge(text)
-        .attr('x', (d, i) => i * 32);
-
-    // EXIT
-    // Discard unused elements
-    text.exit().remove();
+        .transition().duration(duration)
+        .attr('y', 0)
+        .style('fill-opacity', 1);
 
 }
 
@@ -45,6 +65,10 @@ export function visualize() {
 
         .update {
             fill: black;
+        }
+
+        .exit {
+            fill: orange;
         }
     `);
     style.appendChild(styleContent);
@@ -67,7 +91,7 @@ export function visualize() {
 
     update(groot, alphabet.split(''));
 
-    interval(()=> {
+    interval(() => {
         let newData = shuffle(alphabet.split(''))
             .slice(0, Math.random() * 26);
         update(groot, newData);
