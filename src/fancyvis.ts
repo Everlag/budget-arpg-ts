@@ -1,53 +1,43 @@
-import { select, Selection } from 'd3-selection'
+import { select, Selection } from 'd3-selection';
 import { interval } from 'd3-timer';
-import { shuffle } from 'd3-array';
 // Needed as a side efect to inject transition
 // into the selection api.
 import 'd3-transition';
+import { easeBounce } from 'd3-ease';
+import { transition } from 'd3-transition';
 
-function update(root: Selection<any, any, any, any>,
-    dataset: Array<string>) {
+function circles(root: Selection<any, any, any, any>,
+    dataset: Array<ICircleSpec>) {
 
-    let duration = 750;
+    let t = transition('circleTransition')
+        .ease(easeBounce)
+        .duration(100);
 
     // JOIN
-    let text = root.selectAll('text')
-        .data(dataset, (d: string) => d)
+    let dots = root.selectAll('circle')
+        .data(dataset, (d: ICircleSpec) => d.id);
 
-    // EXIT
-    // Discard unused elements
-    text.exit()
-        .attr('class', 'exit')
-        // Everything after the duration
-        // call is transitioned out
-        .transition().duration(duration)
-        .attr('y', 60)
-        .style('fill-opacity', 1e-6)
-        .remove();
-
-    // UPDATE
-    // 
-    // Change old elements as required
-    text.attr('class', 'update')
-        .attr('y', 0)
-        .style('fill-opacity', 1)
-        .transition().duration(duration)
-        .attr('x', (d, i) => i * 32);
+    // UPDATE existing
+    dots.attr('class', 'update')
+        .transition(t)
+        .attr('r', d => d.radius / 2)
+        .attr('cx', (d, i) => (i) * (40 + (d.radius / 2) * 1.1) % 500);
 
     // ENTER
-    // create new elements
-    text.enter().append('text')
-        .attr('class', 'enter')
-        .attr('dy', '0.35em')
-        .attr('y', -60)
-        .attr('x', (d, i) => i * 32)
-        .style('fill-opacity', 1e-6)
-        .text(d => d)
-        // Add the old elements and set positions for all elements
-        .transition().duration(duration)
-        .attr('y', 0)
-        .style('fill-opacity', 1);
+    dots.enter()
+        .append('circle')
+        .attr('cx', (d, i) => (i) * (40 + d.radius * 1.1) % 500)
+        .attr('cy', (d) => d.radius + 200 * Math.sin(Math.random() * 2 * Math.PI))
+        .attr('r', d => d.radius)
+        .attr('class', 'enter');
 
+    // EXIT
+    dots.exit().remove();
+}
+
+interface ICircleSpec {
+    radius: number;
+    id: string;
 }
 
 export function visualize() {
@@ -87,14 +77,21 @@ export function visualize() {
     let groot = svgroot.append('g')
         .attr('transform', `translate(32, ${height / 2})`);
 
-    let alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    let data: Array<ICircleSpec> = [];
+    circles(groot, data);
 
-    update(groot, alphabet.split(''));
-
+    let i = 0;
     interval(() => {
-        let newData = shuffle(alphabet.split(''))
-            .slice(0, Math.random() * 26);
-        update(groot, newData);
-    }, 1000);
+        data.push({
+            radius: i * 20 % 70,
+            id: `${i}a`,
+        });
+        data.push({
+            radius: i * 21 % 49,
+            id: `${i}b`,
+        });
+        i++;
+        circles(groot, data);
+    }, 200);
 
 }
