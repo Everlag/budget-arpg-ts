@@ -1,12 +1,13 @@
 import { select, Selection } from 'd3-selection'
 import { interval } from 'd3-timer';
+import { shuffle } from 'd3-array';
 
 function update(root: Selection<any, any, any, any>,
     dataset: Array<string>) {
 
     // JOIN
     let text = root.selectAll('text')
-        .data(dataset);
+        .data(dataset, (d: string)=> d)
 
     // UPDATE
     // 
@@ -17,11 +18,11 @@ function update(root: Selection<any, any, any, any>,
     // create new elements
     text.enter().append('text')
         .attr('class', 'enter')
-        .attr('x', (d, i) => i * 32)
         .attr('dy', '0.35em')
-        // Add the old elements and set their content
+        .text(d=> d)
+        // Add the old elements and set positions for all elements
         .merge(text)
-        .text(d=> d);
+        .attr('x', (d, i) => i * 32);
 
     // EXIT
     // Discard unused elements
@@ -35,7 +36,7 @@ export function visualize() {
     style.type = 'text/css';
     let styleContent = document.createTextNode(`
         text {
-            font: bold 24px monospace;
+            font: bold 38px monospace;
         }
 
         .enter {
@@ -52,7 +53,7 @@ export function visualize() {
     let root = document.querySelector('#d3root');
     if (!root) throw Error('d3 root element not present');
 
-    let [width, height] = [500, 500];
+    let [width, height] = [960, 500];
 
     let svgroot = select(root).append('svg')
         .attr('width', width)
@@ -67,8 +68,7 @@ export function visualize() {
     update(groot, alphabet.split(''));
 
     interval(()=> {
-        let newData = alphabet
-            .split('')
+        let newData = shuffle(alphabet.split(''))
             .slice(0, Math.random() * 26);
         update(groot, newData);
     }, 1000);
