@@ -223,7 +223,3 @@ export function renderVue(): IMountPoint {
     // for type safety right now :|
     return <IMountPoint>(<any>mount);
 }
-
-export function visualize(seedState: Object, events: Array<IRecord>) {
-    console.log('yeah, about that');
-}

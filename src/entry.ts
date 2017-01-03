@@ -9,6 +9,7 @@ import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
 import { snapshot } from './Snapshot';
 import { renderVue } from './visualize';
+import { visualize } from './fancyvis';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
@@ -119,48 +120,50 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 20;
+let speedup = 100;
 
 /** Register all actie Packs */
 let packs = [x, y];
 
-let mount = renderVue();
+visualize();
 
-let finish = () => {
-    let end = performance.now();
-    let delta = end - start;
-    console.log(`took ${delta.toFixed(2)}ms for ${state.now} ticks`);
-    let effSpeedup = (state.now / TicksPerSecond) / (delta / 1000);
-    console.log(`effective speedup=${(effSpeedup).toFixed(2)} vs desired=${speedup}`);
+// let mount = renderVue();
 
-    console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
-    let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
-    console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
-};
+// let finish = () => {
+//     let end = performance.now();
+//     let delta = end - start;
+//     console.log(`took ${delta.toFixed(2)}ms for ${state.now} ticks`);
+//     let effSpeedup = (state.now / TicksPerSecond) / (delta / 1000);
+//     console.log(`effective speedup=${(effSpeedup).toFixed(2)} vs desired=${speedup}`);
 
-function runFrame() {
+//     console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
+//     let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
+//     console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
+// };
 
-    // Run for a duration and get back tick-time we managed to reach
-    let when = record.runForDuration(snapshotTime, speedup);
-    // Pop all the implicit events we care about
-    let events = record.popImplicitEventsTill(when);
-    // Take a snapshot
-    let snap = snapshot(record.now, events, packs);
+// function runFrame() {
 
-    // Update the model
-    // 
-    // Yes, I know we don't need to serialize then deserialize but
-    // this is preparing for later when we will need to.
-    mount.$data.state = JSON.parse(snap);
+//     // Run for a duration and get back tick-time we managed to reach
+//     let when = record.runForDuration(snapshotTime, speedup);
+//     // Pop all the implicit events we care about
+//     let events = record.popImplicitEventsTill(when);
+//     // Take a snapshot
+//     let snap = snapshot(record.now, events, packs);
 
-    // If a pack is dead, we're done
-    if (packs.some(p => p.isDead)) {
-        finish();
-        return;
-    }
+//     // Update the model
+//     // 
+//     // Yes, I know we don't need to serialize then deserialize but
+//     // this is preparing for later when we will need to.
+//     mount.$data.state = JSON.parse(snap);
 
-    // Run the next frame
-    requestAnimationFrame(runFrame);
-}
+//     // If a pack is dead, we're done
+//     if (packs.some(p => p.isDead)) {
+//         finish();
+//         return;
+//     }
 
-runFrame();
+//     // Run the next frame
+//     requestAnimationFrame(runFrame);
+// }
+
+// runFrame();
