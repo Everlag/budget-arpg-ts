@@ -136,7 +136,7 @@ class EventLog extends Vue {
     },
     template: `
     <div>
-        <div>Tick-Time={{state.when}}</div>
+        <div :style="whenStyle">Tick-Time={{state.when}}</div>
         <template v-for="(pack, index) in packs">
             <hr v-if="index">
             <pack :pack="pack"></character>
@@ -167,6 +167,17 @@ class State extends Vue {
 
     public get events(): Array<IRecord> {
         return this.state.events;
+    }
+
+    public get whenStyle(): Object {
+        let color = 'black';
+        if (this.when > 500) {
+            color = 'red';
+        }
+        return {
+            color,
+            fontSize: '2em',
+        };
     }
 }
 
