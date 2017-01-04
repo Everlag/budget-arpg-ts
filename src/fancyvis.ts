@@ -243,16 +243,16 @@ export function visualize() {
     ]
     graph(groot, width, height, xScale, points);
 
-    let moves: Array<IMove> = [
-        {
-            duration: 4000,
-            newPos: -100,
-            id: `${i}`,
-        },
-    ]
+    let moves: Array<IMove> = points.map(p=> {
+        return {
+            duration: intfromInterval(1000, 4000),
+            newPos: 0,
+            id: p.id,
+        };
+    });
 
     interval(() => {
-        moves[0].newPos = intfromInterval(-100, 100);
+        moves.forEach(m=> m.newPos = intfromInterval(-100, 100));
         console.log('moving to', moves[0].newPos);
         move(groot, width, height, xScale, moves);
     }, 2000);
