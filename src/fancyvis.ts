@@ -1,38 +1,54 @@
 import { select, Selection } from 'd3-selection';
-import { interval } from 'd3-timer';
 // Needed as a side efect to inject transition
 // into the selection api.
 import 'd3-transition';
-import { easeBounce } from 'd3-ease';
-import { transition } from 'd3-transition';
+import { line, curveCardinalClosed } from 'd3-shape';
+import { interpolateString } from 'd3-interpolate';
 
-function circles(root: Selection<any, any, any, any>,
-    dataset: Array<ICircleSpec>) {
+interface ILinePoint {
+    x: number;
+    y: number;
+    id: string;
+}
 
-    let t = transition('circleTransition')
-        .ease(easeBounce)
-        .duration(100);
+type tweenCB = (t: number) => string;
 
-    // JOIN
-    let dots = root.selectAll('circle')
-        .data(dataset, (d: ICircleSpec) => d.id);
+function tweenDash(): tweenCB {
+    // Narrow this
+    let p: SVGPathElement = this;
 
-    // UPDATE existing
-    dots.attr('class', 'update')
-        .transition(t)
-        .attr('r', d => d.radius / 2)
-        .attr('cx', (d, i) => (i) * (40 + (d.radius / 2) * 1.1) % 500);
+    let length = p.getTotalLength();
+    let interp = interpolateString(`0,${length}`, `${length}, ${length}`);
+    return (t: number) => interp(t);
+}
 
-    // ENTER
-    dots.enter()
-        .append('circle')
-        .attr('cx', (d, i) => (i) * (40 + d.radius * 1.1) % 500)
-        .attr('cy', (d) => d.radius + 200 * Math.sin(Math.random() * 2 * Math.PI))
-        .attr('r', d => d.radius)
-        .attr('class', 'enter');
+function transitionThis(path: Selection<any, any, any, any>) {
+    path.transition().duration(5000)
+        .attrTween('stroke-dasharray', tweenDash);
+}
 
-    // EXIT
-    dots.exit().remove();
+function curve(root: Selection<any, any, any, any>,
+    dataset: Array<[number, number]>) {
+
+    // Line creation function
+    let xLine = line()
+        .curve(curveCardinalClosed);
+
+    let renderLine = xLine(dataset);
+    if (!renderLine) throw Error('no curve generated');
+
+    root.append('path')
+        .style('stroke', '#aaa')
+        .style('stroke-dasharray', '4,4')
+        // Add the line
+        .attr('d', renderLine);
+
+    // Add a path to fill in over the path
+    root.append('path')
+        .style('stroke', 'black')
+        .attr('d', renderLine)
+        .call(transitionThis);
+
 }
 
 interface ICircleSpec {
@@ -47,6 +63,10 @@ export function visualize() {
     let styleContent = document.createTextNode(`
         text {
             font: bold 38px monospace;
+        }
+
+        path {
+            fill: none;
         }
 
         .enter {
@@ -74,24 +94,14 @@ export function visualize() {
         .attr('height', height);
 
     // Create a group for our content
-    let groot = svgroot.append('g')
-        .attr('transform', `translate(32, ${height / 2})`);
+    let groot = svgroot.append('g');
 
-    let data: Array<ICircleSpec> = [];
-    circles(groot, data);
-
-    let i = 0;
-    interval(() => {
-        data.push({
-            radius: i * 20 % 70,
-            id: `${i}a`,
-        });
-        data.push({
-            radius: i * 21 % 49,
-            id: `${i}b`,
-        });
-        i++;
-        circles(groot, data);
-    }, 200);
+    let curveData: Array<[number, number]> = [
+        [480, 200],
+        [580, 400],
+        [680, 100],
+        [780, 300],
+    ];
+    curve(groot, curveData);
 
 }
