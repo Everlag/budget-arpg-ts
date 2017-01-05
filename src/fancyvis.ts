@@ -70,6 +70,9 @@ interface IMove {
 
 const graphRootID = 'graphRootID';
 
+const circleGroupIDPrefix = 'group';
+const circleGroupClass = 'group';
+
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
     let margin = {
@@ -120,7 +123,7 @@ function graph(root: Selection<any, any, any, any>,
     [width, height] = graphMargins(width, height);
 
     // Grab the root of our graph
-    let markers = select(`#${graphRootID}`).selectAll('circle');
+    let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
 
     let inTransition = transition('markersIn').duration(2000);
 
@@ -129,20 +132,33 @@ function graph(root: Selection<any, any, any, any>,
         .transition().duration(() => 20);
 
     // ENTER
-    markers.data(points, (p: IPoint) => p.id)
+    let markerGroups = markers.data(points, (p: IPoint) => p.id)
         .enter()
-        .append('circle')
-        .attr('class', 'enter')
-        .attr('r', 10)
+        // Add a group for the circle and associated elements
+        .append('g')
+        .attr('class', circleGroupClass)
+        .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
         // Convert simulation position to display coord
-        .attr('cx', d => xScale(d.pos))
-        // Start at +-height and fade in
-        .attr('cy', (d, i) => Math.pow(-1, i) * height)
+        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
+    
+    // Start groups at +-height and fade in
+    markerGroups
+        .attr('transform', (d, i)=> {
+            return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
+        })
+        // .attr('cy', (d, i) => Math.pow(-1, i) * height)
         .style('opacity', 0)
         // Transition the markers into position
         .transition(inTransition)
         .style('opacity', 1)
-        .attr('cy', height / 2);
+        .attr('transform', (d, i)=> {
+            return `translate(${xScale(d.pos)}, ${height / 2})`
+        })
+    
+    // Add a circle to each group
+    let circles = markerGroups.append('circle')
+        .attr('class', 'enter')
+        .attr('r', 10)
 
     // EXIT
     markers.exit().remove();
@@ -164,19 +180,22 @@ function move(root: Selection<any, any, any, any>,
     let movedIDs = new Map<string, boolean>();
     move.forEach(m => movedIDs.set(m.id, true));
 
+    let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
+
     // Grab the markers that moved
-    let moved = select(`#${graphRootID}`).selectAll('circle')
+    let moved = markers
         .data(move, (p: IMove) => p.id)
         // Filter only for those that moved
         .filter((d: IMove) => movedIDs.has(d.id));
 
     moved.transition()
         .duration(d => d.duration)
-        .attr('cx', d => xScale(d.newPos))
-
+        .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
 }
 
 export function visualize() {
+
+    (<any>window).select = select;
 
     let style = document.createElement('style');
     style.type = 'text/css';
