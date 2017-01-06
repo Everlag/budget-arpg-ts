@@ -21,10 +21,26 @@ interface IMove {
     coeff: number;
 }
 
+interface IDamage {
+    /** 
+     * id is required to be present
+     *
+     * So we can remove the IDamage after its
+     * presentation is complete
+     */
+    id: string;
+    /** Absolute time this was added */
+    when: number;
+    /** Amount of damage taken */
+    sum: number;
+    isCrit: boolean;
+}
+
 interface ICharSpec {
     id: string;
     staticPos: IPoint;
     move: IMove | null;
+    damages: Array<IDamage>;
 }
 
 /** Make a copy of a character spec which can be changed independently */
@@ -35,11 +51,16 @@ function copyCharSpec(spec: ICharSpec): ICharSpec {
     // Children
     fresh.staticPos = Object.assign({}, fresh.staticPos);
     fresh.move = Object.assign({}, fresh.move);
+    fresh.damages = fresh.damages.map(d => Object.assign({}, d));
 
     return fresh;
 }
 
 const graphRootID = 'graphRootID';
+
+// How large our unit circles, sizing of everything
+// else is based around this.
+const circleRadius = 10;
 
 const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
@@ -48,6 +69,8 @@ const circleMiscTextClass = 'circleMiscText';
 const intentArrowClass = 'intentArrow';
 const intentRight = 'intentRight';
 const intentLeft = 'intentLeft';
+
+const damageTextClass = 'damageText';
 
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
@@ -202,6 +225,46 @@ function move(merged: Selection<any, any, any, any>,
         });
 }
 
+function damaged(merged: Selection<any, any, any, any>,
+    width: number, height: number,
+    xScale: ScaleLinear<number, number>,
+    points: Array<ICharSpec>) {
+
+    // UPDATE - display damage done
+    let wasDamaged = merged.filter((d: ICharSpec) => d.damages.length > 0);
+
+    let damageDuration = 1000;
+
+    // So, what we're doing here is a nested selection... okay then.
+    wasDamaged.selectAll(`.${damageTextClass}`)
+        .data((d: ICharSpec) => d.damages)
+        .enter()
+        // Fill in the text
+        .append('text')
+        .text(d => d.sum.toFixed(1))
+        // Set the class so the selectAll works :|
+        .classed(damageTextClass, true)
+        // Explicit defaults for relevant attributes
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('opacity', 1)
+        // Start transition
+        .transition().duration(damageDuration)
+        .attr('y', -height / 4)
+        .attr('opacity', 0)
+        // Remove the element at the end of the transition
+        .remove()
+        // Remove the IDamage from the character at the end
+        .on('end', d => {
+            // Find the spec
+            let spec = points.find(other => other.id === d.id);
+            if (!spec) throw Error('cannot find parent to remove IDamage from');
+            // Remove d
+            spec.damages = spec.damages.filter(other => other !== d);
+        });
+
+}
+
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
@@ -209,10 +272,6 @@ function graph(root: Selection<any, any, any, any>,
 
     // Consider our margins
     [width, height] = graphMargins(width, height);
-
-    // Specify radius of our circles, many
-    // things are based off this.
-    let circleRadius = 10;
 
     // JOIN
     let groups = root.selectAll(`g.${circleGroupClass}`)
@@ -285,8 +344,9 @@ function graph(root: Selection<any, any, any, any>,
     // 
     //       ie, a move is handled in only move
     //           and filtered out everywhere else.
-    inactive(merged, width, height, xScale, points)
+    inactive(merged, width, height, xScale, points);
     move(merged, width, height, xScale, points);
+    damaged(merged, width, height, xScale, points);
 
     // EXIT
     groups.exit().remove();
@@ -348,6 +408,7 @@ export function visualize() {
                 loc: 0,
             },
             move: null,
+            damages: [],
         },
         {
             id: `${++i}`,
@@ -355,6 +416,7 @@ export function visualize() {
                 loc: 30,
             },
             move: null,
+            damages: [],
         },
         {
             id: `${++i}`,
@@ -362,6 +424,7 @@ export function visualize() {
                 loc: -70,
             },
             move: null,
+            damages: [],
         },
         {
             id: `${++i}`,
@@ -369,6 +432,14 @@ export function visualize() {
                 loc: -20,
             },
             move: null,
+            damages: [
+                {
+                    id: `${i}`,
+                    isCrit: false,
+                    sum: 20,
+                    when: 0,
+                },
+            ],
         },
         {
             id: `${++i}`,
@@ -380,10 +451,13 @@ export function visualize() {
                 coeff: -1,
                 duration: 2000,
             },
+            damages: [],
         },
     ];
     // Draw initial points
     graph(groot, width, height, xScale, points);
+
+    console.log(points);
 
     let waiter: Timer;
 
@@ -413,6 +487,16 @@ export function visualize() {
                     p.staticPos.loc = p.move.newPos;
                 }
                 p.move = null;
+            }
+
+            let isNotDamaged = intfromInterval(0, 5);
+            if (!isNotDamaged) {
+                p.damages.push({
+                    id: p.id,
+                    isCrit: false,
+                    when: 0,
+                    sum: intfromInterval(0, 10),
+                });
             }
         });
 
