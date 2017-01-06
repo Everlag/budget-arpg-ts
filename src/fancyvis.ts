@@ -116,10 +116,13 @@ function inactive(merged: Selection<any, any, any, any>,
     //     hide intent arrows
     let inactive = merged.filter(d => d.move === null);
 
-    // Usee static positions for those null moves
+    // Use static positions for those null moves
     inactive.attr('transform', d => {
         return getGroupTransform(xScale(d.staticPos.loc), height);
     });
+
+    // Clear out the text value and make it invisible
+    inactive.select(`.${circleMiscTextClass}`).text('').attr('opacity', 0);
 
     // Hide intent arrows
     inactive.selectAll(`.${intentArrowClass}.${intentRight}`)
@@ -149,6 +152,8 @@ function move(merged: Selection<any, any, any, any>,
             if (!d.move) throw Error('move required but not present');
             return d.move.duration;
         })
+        // Ensure its visible
+        .attr('opacity', 1)
         // Transition it to zero over time
         .transition(textTransition)
         .duration(d => {
