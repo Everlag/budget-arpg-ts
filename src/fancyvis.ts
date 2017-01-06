@@ -59,14 +59,18 @@ function curve(root: Selection<any, any, any, any>,
 }
 
 interface IPoint {
-    pos: number;
-    id: string;
+    loc: number;
 }
 
 interface IMove {
-    id: string;
     duration: number;
     newPos: number;
+}
+
+interface ICharSpec {
+    id: string;
+    staticPos: IPoint;
+    move: IMove | null;
 }
 
 const graphRootID = 'graphRootID';
@@ -121,51 +125,10 @@ function prepGraph(root: Selection<any, any, any, any>,
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<IPoint>): number {
+    points: Array<ICharSpec>): number {
 
     // Consider our margins
     [width, height] = graphMargins(width, height);
-
-    // let dataset = 'apples'.split('');
-    // let duration = 1000;
-
-    //  // JOIN
-    // let text = root.selectAll('text')
-    //     .data(dataset, (d: string) => d)
-
-    // // EXIT
-    // // Discard unused elements
-    // text.exit()
-    //     .attr('class', 'exit')
-    //     // Everything after the duration
-    //     // call is transitioned out
-    //     .transition().duration(duration)
-    //     .attr('y', 60)
-    //     .style('fill-opacity', 1e-6)
-    //     .remove();
-
-    // // UPDATE
-    // // 
-    // // Change old elements as required
-    // text.attr('class', 'update')
-    //     .attr('y', 0)
-    //     .style('fill-opacity', 1)
-    //     .transition().duration(duration)
-    //     .attr('x', (d, i) => i * 32);
-
-    // // ENTER
-    // // create new elements
-    // text.enter().append('text')
-    //     .attr('class', 'enter')
-    //     .attr('dy', '0.35em')
-    //     .attr('y', -60)
-    //     .attr('x', (d, i) => i * 32)
-    //     .style('fill-opacity', 1e-6)
-    //     .text(d => d)
-    //     // Add the old elements and set positions for all elements
-    //     .transition().duration(duration)
-    //     .attr('y', 0)
-    //     .style('fill-opacity', 1);
 
     console.log('graph called!')
 
@@ -180,11 +143,10 @@ function graph(root: Selection<any, any, any, any>,
 
     // JOIN
     let groups = root.selectAll(`g.${circleGroupClass}`)
-        .data(points, (p: IPoint) => p.id);
+        .data(points, (p: ICharSpec) => p.id);
 
     // ENTER - setup groups
-    let entered = root.selectAll(`.${circleGroupClass}`)
-        .data(points, (p: IPoint) => p.id).enter();
+    let entered = groups.enter();
 
     // ENTER - Add a group per-data
     let newGroups = entered.append('g')
@@ -193,17 +155,18 @@ function graph(root: Selection<any, any, any, any>,
         // Set id per-group
         .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
         // Move into horizontal position
-        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
+        .attr('transform', d=> `translate(${xScale(d.staticPos.loc)}, 0)`)
         // Have them start off screen and invisible
         .attr('transform', (d, i)=> {
-            return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
+            let offScreenY = Math.pow(-1, i) * height;
+            return `translate(${xScale(d.staticPos.loc)}, ${offScreenY})`
         })
         .attr('opacity', 0);
 
     // ENTER - Have newGroups fall into place
     newGroups.transition(inTransition)
         .attr('transform', (d, i)=> {
-            return `translate(${xScale(d.pos)}, ${height / 2})`
+            return `translate(${xScale(d.staticPos.loc)}, ${height / 2})`
         })
         .attr('opacity', 1);
 
@@ -280,38 +243,38 @@ function graph(root: Selection<any, any, any, any>,
 
 const moveIntentClass = 'moveIntent';
 
-function move(root: Selection<any, any, any, any>,
-    width: number, height: number,
-    xScale: ScaleLinear<number, number>,
-    move: Array<IMove>) {
+// function move(root: Selection<any, any, any, any>,
+//     width: number, height: number,
+//     xScale: ScaleLinear<number, number>,
+//     move: Array<IMove>) {
 
-    // Consider our margins
-    [width, height] = graphMargins(width, height);
+//     // Consider our margins
+//     [width, height] = graphMargins(width, height);
 
-    // // Grab the markers that moved
-    let moved = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`)
-        .data(move, (p: IMove) => p.id);
+//     // // Grab the markers that moved
+//     let moved = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`)
+//         .data(move, (p: IMove) => p.id);
 
-    console.log(moved);
+//     console.log(moved);
 
-    // let intentText = moved.enter()
-    //     .append('text')
-    //     .text(d=> {
-    //         console.log('I am evaulted!');
-    //         return d.id;
-    //     })
-    //     .attr('x', -30)
-    //     .attr('y', 50);
-   // console.log(moved, intentText);
+//     // let intentText = moved.enter()
+//     //     .append('text')
+//     //     .text(d=> {
+//     //         console.log('I am evaulted!');
+//     //         return d.id;
+//     //     })
+//     //     .attr('x', -30)
+//     //     .attr('y', 50);
+//    // console.log(moved, intentText);
 
-   //  // Move the group's position
-   //  moved.transition()
-   //      .duration(d => d.duration)
-        // .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
+//    //  // Move the group's position
+//    //  moved.transition()
+//    //      .duration(d => d.duration)
+//         // .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
 
-    // Cleanup
-    // info.exit().remove();
-}
+//     // Cleanup
+//     // info.exit().remove();
+// }
 
 export function visualize() {
 
@@ -358,26 +321,41 @@ export function visualize() {
     let xScale = prepGraph(groot, width, height);
 
     let i = 0;
-    let points: Array<IPoint> = [
+    let points: Array<ICharSpec> = [
         {
             id: `${++i}`,
-            pos: 0,
+            staticPos: {
+                loc: 0,
+            },
+            move: null,
         },
         {
             id: `${++i}`,
-            pos: 30,
+            staticPos: {
+                loc: 30,
+            },
+            move: null,
         },
         {
             id: `${++i}`,
-            pos: -70,
+            staticPos: {
+                loc: -70,
+            },
+            move: null,
         },
         {
             id: `${++i}`,
-            pos: -20,
+            staticPos: {
+                loc: -20,
+            },
+            move: null,
         },
         {
             id: `${++i}`,
-            pos: 80,
+            staticPos: {
+                loc: 80,
+            },
+            move: null,
         },
     ]
     let waitTime = graph(groot, width, height, xScale, points);
