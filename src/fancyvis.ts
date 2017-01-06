@@ -6,7 +6,7 @@ import { transition } from 'd3-transition';
 import { interval, Timer } from 'd3-timer';
 import { axisBottom } from 'd3-axis';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
-import { easeQuad } from 'd3-ease';
+import { easeQuad, easeLinear } from 'd3-ease';
 
 import { intfromInterval } from './random';
 
@@ -25,12 +25,24 @@ interface ICharSpec {
     move: IMove | null;
 }
 
+/** Make a copy of a character spec which can be changed independently */
+function copyCharSpec(spec: ICharSpec): ICharSpec {
+    // Container
+    let fresh = Object.assign({}, spec);
+
+    // Children
+    fresh.staticPos = Object.assign({}, fresh.staticPos);
+    fresh.move = Object.assign({}, fresh.move);
+
+    return fresh;
+}
+
 const graphRootID = 'graphRootID';
 
 const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
 
-const circleIDTextClass = 'circleIDText';
+const circleMiscTextClass = 'circleMiscText';
 
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
@@ -94,6 +106,10 @@ function graph(root: Selection<any, any, any, any>,
         .duration(inDuration)
         .ease(easeQuad);
 
+    const moveTransitionName = 'movement';
+    let moveTransition = transition(moveTransitionName)
+        .ease(easeLinear);
+
     // Uh...
     let circleRadius = 10;
 
@@ -125,6 +141,13 @@ function graph(root: Selection<any, any, any, any>,
         .attr('x', -circleRadius)
         .attr('y', -(circleRadius * 1.5));
 
+    // ENTER - Give the newGroups a place to put extra info
+    newGroups.append('text')
+        .text('')
+        .attr('class', circleMiscTextClass)
+        .attr('x', -circleRadius)
+        .attr('y', (circleRadius * 3));
+
     // UPDATE - merge new and old to work on them
     let merged = groups.merge(newGroups);
 
@@ -135,8 +158,37 @@ function graph(root: Selection<any, any, any, any>,
         });
 
     // UPDATE - start movements
-    merged.filter(d => d.move != null)
-        .transition(inTransition)
+    let doMove = merged.filter(d => d.move != null);
+
+    doMove.select(`.${circleMiscTextClass}`)
+        // Set initial text value
+        .text(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        // Transition it to zero over time
+        .transition(moveTransition)
+        .duration(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        .tween('text', function(d: ICharSpec) {
+            // Capture 'this' and make available in closure
+            if (this === null) throw Error('null this in text tween');
+            let ref = <Element>this;
+            // Make a copy of the spec.
+            let vendor = copyCharSpec(d);
+            return (t) => {
+                if (!vendor.move) throw Error('move required but not present');
+                // Calculate time remaining on the duration
+                // in terms of seconds
+                let duration = vendor.move.duration / 1000;
+                ref.textContent = (duration - (duration * t)).toFixed(1);
+            };
+        });
+
+    // Move the groups
+    doMove.transition(inTransition)
         .duration(d => {
             if (!d.move) throw Error('move required but not present');
             return d.move.duration;
