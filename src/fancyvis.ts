@@ -8,6 +8,7 @@ import { line, curveCardinalClosed } from 'd3-shape';
 import { axisBottom } from 'd3-axis';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { interpolateString } from 'd3-interpolate';
+import { easeQuad } from 'd3-ease';
 
 import { intfromInterval } from './random';
 
@@ -168,6 +169,15 @@ function graph(root: Selection<any, any, any, any>,
 
     console.log('graph called!')
 
+    // Setup transitions
+    let inDuration = 750;
+    let inTransition = transition('markersIn')
+        .duration(inDuration)
+        .ease(easeQuad);
+
+    // Uh...
+    let circleRadius = 10;
+
     // JOIN
     let groups = root.selectAll(`g.${circleGroupClass}`)
         .data(points, (p: IPoint) => p.id);
@@ -183,19 +193,40 @@ function graph(root: Selection<any, any, any, any>,
         // Set id per-group
         .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
         // Move into horizontal position
-        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`);
+        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
+        // Have them start off screen and invisible
+        .attr('transform', (d, i)=> {
+            return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
+        })
+        .attr('opacity', 0);
 
-    // UPDATE
+    // ENTER - Have newGroups fall into place
+    newGroups.transition(inTransition)
+        .attr('transform', (d, i)=> {
+            return `translate(${xScale(d.pos)}, ${height / 2})`
+        })
+        .attr('opacity', 1);
+
+        
+    // ENTER - Add circles to newGroups
+    newGroups.append('circle')
+        .attr('r', circleRadius);
+
+    // ENTER - Add identifiers to newGroups
+    newGroups.append('text')
+        .text(d=> d.id)
+        .attr('x', -circleRadius)
+        .attr('y', -(circleRadius * 1.5));
+
+    // UPDATE - merge new and old to work on them
+    let merged = groups.merge(newGroups);
+
 
     // EXIT
     groups.exit().remove();
 
     // // Grab the root of our graph
     // let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
-
-    let inDuration = 200;
-    // let inTransition = transition('markersIn').duration(inDuration);
-
     // // UPDATE
     // // NOTHING
 
