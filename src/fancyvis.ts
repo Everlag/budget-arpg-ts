@@ -100,6 +100,36 @@ function getGroupTransform(x: number, height: number) {
     return `translate(${x}, ${height / 2})`;
 }
 
+/** 
+ * Set merged selection of groups to their inactive state
+ *
+ * This filters for anything not performing another action,
+ * ie a move, and sets them to rest.
+ */
+function inactive(merged: Selection<any, any, any, any>,
+    width: number, height: number,
+    xScale: ScaleLinear<number, number>,
+    points: Array<ICharSpec>) {
+
+    // UPDATE - handle non-moving
+    //     stop active transitions
+    //     hide intent arrows
+    let inactive = merged.filter(d => d.move === null);
+
+    // Usee static positions for those null moves
+    inactive.attr('transform', d => {
+        return getGroupTransform(xScale(d.staticPos.loc), height);
+    });
+
+    // Hide intent arrows
+    inactive.selectAll(`.${intentArrowClass}.${intentRight}`)
+        .attr('opacity', 0);
+    inactive.selectAll(`.${intentArrowClass}.${intentLeft}`)
+        .attr('opacity', 0);
+    // Stop active transitions
+    inactive.transition();
+}
+
 /** Handle movement of provided merged selection of groups */
 function move(merged: Selection<any, any, any, any>,
     width: number, height: number,
@@ -243,23 +273,14 @@ function graph(root: Selection<any, any, any, any>,
     // UPDATE - merge new and old to work on them
     let merged = groups.merge(newGroups);
 
-    // UPDATE - handle non-moving
-    //     stop active transitions
-    //     hide intent arrows
-    let stay = merged.filter(d => d.move === null);
-
-    // Usee static positions for those null moves
-    stay.attr('transform', d => {
-        return getGroupTransform(xScale(d.staticPos.loc), height);
-    });
-
-    // Hide intent arrows
-    stay.selectAll(`.${intentArrowClass}.${intentRight}`).attr('opacity', 0);
-    stay.selectAll(`.${intentArrowClass}.${intentLeft}`).attr('opacity', 0);
-    // Stop active transitions
-    stay.transition();
-
-    // UPDATE - handle those that move
+    // UPDATE - handle various ways data can effect the mergd result
+    // 
+    // NOTE: a given data point should be represented in only one
+    //       of the following functions.
+    // 
+    //       ie, a move is handled in only move
+    //           and filtered out everywhere else.
+    inactive(merged, width, height, xScale, points)
     move(merged, width, height, xScale, points);
 
     // EXIT
