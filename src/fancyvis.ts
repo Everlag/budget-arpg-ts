@@ -121,6 +121,12 @@ function prepGraph(root: Selection<any, any, any, any>,
     return x;
 }
 
+// Given an x position in screen coordinates and height of element,
+// return the transform string a group should have
+function getGroupTransform(x: number, height: number) {
+    return `translate(${x}, ${height / 2})`
+}
+
 // Returns duration to wait for graph to be prepared
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
@@ -134,7 +140,8 @@ function graph(root: Selection<any, any, any, any>,
 
     // Setup transitions
     let inDuration = 750;
-    let inTransition = transition('markersIn')
+    const inTransitionName = 'markersIn';
+    let inTransition = transition(inTransitionName)
         .duration(inDuration)
         .ease(easeQuad);
 
@@ -153,37 +160,44 @@ function graph(root: Selection<any, any, any, any>,
         // Set class so the selectAll can actually find this...
         .attr('class', circleGroupClass)
         // Set id per-group
-        .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
-        // Move into horizontal position
-        .attr('transform', d=> `translate(${xScale(d.staticPos.loc)}, 0)`)
-        // Have them start off screen and invisible
-        .attr('transform', (d, i)=> {
-            let offScreenY = Math.pow(-1, i) * height;
-            return `translate(${xScale(d.staticPos.loc)}, ${offScreenY})`
-        })
-        .attr('opacity', 0);
+        .attr('id', d => `${circleGroupIDPrefix}${d.id}`)
+        // Set them to start at their static position
+        .attr('transform', d => {
+            return getGroupTransform(xScale(d.staticPos.loc), height);
+        });
 
-    // ENTER - Have newGroups fall into place
-    newGroups.transition(inTransition)
-        .attr('transform', (d, i)=> {
-            return `translate(${xScale(d.staticPos.loc)}, ${height / 2})`
-        })
-        .attr('opacity', 1);
-
-        
     // ENTER - Add circles to newGroups
     newGroups.append('circle')
         .attr('r', circleRadius);
 
     // ENTER - Add identifiers to newGroups
     newGroups.append('text')
-        .text(d=> d.id)
+        .text(d => d.id)
         .attr('x', -circleRadius)
         .attr('y', -(circleRadius * 1.5));
 
     // UPDATE - merge new and old to work on them
     let merged = groups.merge(newGroups);
 
+    // UPDATE - use static positions for those null moves
+    merged.filter(d => d.move === null)
+        .attr('transform', d => {
+            return getGroupTransform(xScale(d.staticPos.loc), height);
+        });
+
+    // UPDATE - start movements
+    merged.filter(d => d.move != null)
+        .transition(inTransition)
+        .duration(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        .attr('transform', d => {
+            if (!d.move) throw Error('move required but not present');
+
+            return getGroupTransform(xScale(d.move.newPos), height);
+        })
+    // TODO: we'll filter for non-null .moves
 
     // EXIT
     groups.exit().remove();
@@ -201,7 +215,7 @@ function graph(root: Selection<any, any, any, any>,
     //     .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
     //     // Convert simulation position to display coord
     //     .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
-    
+
     // // Start groups at +-height and fade in
     // markerGroups
     //     .attr('transform', (d, i)=> {
@@ -215,7 +229,7 @@ function graph(root: Selection<any, any, any, any>,
     //     .attr('transform', (d, i)=> {
     //         return `translate(${xScale(d.pos)}, ${height / 2})`
     //     })
-    
+
     // let circleRadius = 10;
 
     // // Add a circle to each group
@@ -355,7 +369,10 @@ export function visualize() {
             staticPos: {
                 loc: 80,
             },
-            move: null,
+            move: {
+                newPos: 0,
+                duration: 2000,
+            },
         },
     ]
     let waitTime = graph(groot, width, height, xScale, points);
@@ -367,11 +384,11 @@ export function visualize() {
     graph(groot, width, height, xScale, points);
 
 
-    let waitTimer = interval(()=> {
+    let waitTimer = interval(() => {
         // Prevent this from firing again
         waitTimer.stop();
 
-        let moves: Array<IMove> = points.map(p=> {
+        let moves: Array<IMove> = points.map(p => {
             return {
                 duration: intfromInterval(1000, 4000),
                 newPos: 0,
