@@ -45,7 +45,7 @@ const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
 
 const circleMiscTextClass = 'circleMiscText';
-const intentArrowClass = "intentArrow"
+const intentArrowClass = 'intentArrow';
 const intentRight = 'intentRight';
 const intentLeft = 'intentLeft';
 
@@ -94,11 +94,77 @@ const leftArrowPath = 'M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z';
 const rightArrowPath = 'M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z';
 const defaultArrowHeight = 12;
 
-
 // Given an x position in screen coordinates and height of element,
 // return the transform string a group should have
 function getGroupTransform(x: number, height: number) {
     return `translate(${x}, ${height / 2})`;
+}
+
+/** Handle movement of provided merged selection of groups */
+function move(merged: Selection<any, any, any, any>,
+    width: number, height: number,
+    xScale: ScaleLinear<number, number>,
+    points: Array<ICharSpec>) {
+
+    let textTransition = transition('textMoveTransition').ease(easeLinear);
+    let circleTransition = transition('circleMoveTransition').ease(easeQuad);
+
+    // UPDATE - start movements
+    let doMove = merged.filter(d => d.move != null);
+
+    // Show their text change over time
+    doMove.select(`.${circleMiscTextClass}`)
+        // Set initial text value
+        .text(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        // Transition it to zero over time
+        .transition(textTransition)
+        .duration(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        .tween('text', function(d: ICharSpec) {
+            // Capture 'this' and make available in closure
+            if (this === null) throw Error('null this in text tween');
+            let ref = <Element>this;
+            // Make a copy of the spec.
+            let vendor = copyCharSpec(d);
+            return (t) => {
+                if (!vendor.move) throw Error('move required but not present');
+                // Calculate time remaining on the duration
+                // in terms of seconds
+                let duration = vendor.move.duration / 1000;
+                ref.textContent = (duration - (duration * t)).toFixed(1);
+            };
+        });
+
+    // Show right intent arrow and hide left intent arrow when moving right
+    let moveRight = doMove.filter(d => !(!d.move) && d.move.coeff === 1);
+    moveRight.selectAll(`.${intentArrowClass}.${intentRight}`)
+        .attr('opacity', 1);
+    moveRight.selectAll(`.${intentArrowClass}.${intentLeft}`)
+        .attr('opacity', 0);
+
+    // Show left intent arrow and hide right intent arrow when moving left
+    let moveLeft = doMove.filter(d => !(!d.move) && d.move.coeff === -1);
+    moveLeft.selectAll(`.${intentArrowClass}.${intentLeft}`)
+        .attr('opacity', 1);
+    moveLeft.selectAll(`.${intentArrowClass}.${intentRight}`)
+        .attr('opacity', 0);
+
+    // Move the groups
+    doMove.transition(circleTransition)
+        .duration(d => {
+            if (!d.move) throw Error('move required but not present');
+            return d.move.duration;
+        })
+        .attr('transform', d => {
+            if (!d.move) throw Error('move required but not present');
+
+            return getGroupTransform(xScale(d.move.newPos), height);
+        });
 }
 
 function graph(root: Selection<any, any, any, any>,
@@ -109,18 +175,8 @@ function graph(root: Selection<any, any, any, any>,
     // Consider our margins
     [width, height] = graphMargins(width, height);
 
-    // Setup transitions
-    let inDuration = 750;
-    const inTransitionName = 'markersIn';
-    let inTransition = transition(inTransitionName)
-        .duration(inDuration)
-        .ease(easeQuad);
-
-    const moveTransitionName = 'movement';
-    let moveTransition = transition(moveTransitionName)
-        .ease(easeLinear);
-
-    // Uh...
+    // Specify radius of our circles, many
+    // things are based off this.
     let circleRadius = 10;
 
     // JOIN
@@ -161,7 +217,7 @@ function graph(root: Selection<any, any, any, any>,
             translate = `translate(-${2.3 * circleRadius}, -${circleRadius})`;
         }
         return `scale(${arrowScale})${translate}`;
-    }
+    };
     // ENTER - Add right-facing intent markers
     newGroups.append('path')
         .classed(intentArrowClass, true)
@@ -200,66 +256,11 @@ function graph(root: Selection<any, any, any, any>,
     // Hide intent arrows
     stay.selectAll(`.${intentArrowClass}.${intentRight}`).attr('opacity', 0);
     stay.selectAll(`.${intentArrowClass}.${intentLeft}`).attr('opacity', 0);
-
     // Stop active transitions
     stay.transition();
 
-    // UPDATE - start movements
-    let doMove = merged.filter(d => d.move != null);
-
-    // Show their text change over time
-    doMove.select(`.${circleMiscTextClass}`)
-        // Set initial text value
-        .text(d => {
-            if (!d.move) throw Error('move required but not present');
-            return d.move.duration;
-        })
-        // Transition it to zero over time
-        .transition(moveTransition)
-        .duration(d => {
-            if (!d.move) throw Error('move required but not present');
-            return d.move.duration;
-        })
-        .tween('text', function(d: ICharSpec) {
-            // Capture 'this' and make available in closure
-            if (this === null) throw Error('null this in text tween');
-            let ref = <Element>this;
-            // Make a copy of the spec.
-            let vendor = copyCharSpec(d);
-            return (t) => {
-                if (!vendor.move) throw Error('move required but not present');
-                // Calculate time remaining on the duration
-                // in terms of seconds
-                let duration = vendor.move.duration / 1000;
-                ref.textContent = (duration - (duration * t)).toFixed(1);
-            };
-        });
-
-    // Show right intent arrow and hide left intent arrow when moving right
-    let moveRight = doMove.filter(d => !(!d.move) && d.move.coeff === 1);
-    moveRight.selectAll(`.${intentArrowClass}.${intentRight}`)
-        .attr('opacity', 1);
-    moveRight.selectAll(`.${intentArrowClass}.${intentLeft}`)
-        .attr('opacity', 0);
-
-    // Show left intent arrow and hide right intent arrow when moving left
-    let moveLeft = doMove.filter(d => !(!d.move) && d.move.coeff === -1)
-    moveLeft.selectAll(`.${intentArrowClass}.${intentLeft}`)
-        .attr('opacity', 1);
-    moveLeft.selectAll(`.${intentArrowClass}.${intentRight}`)
-        .attr('opacity', 0);
-
-    // Move the groups
-    doMove.transition(inTransition)
-        .duration(d => {
-            if (!d.move) throw Error('move required but not present');
-            return d.move.duration;
-        })
-        .attr('transform', d => {
-            if (!d.move) throw Error('move required but not present');
-
-            return getGroupTransform(xScale(d.move.newPos), height);
-        });
+    // UPDATE - handle those that move
+    move(merged, width, height, xScale, points);
 
     // EXIT
     groups.exit().remove();
@@ -375,7 +376,7 @@ export function visualize() {
                 let deltaPos = newPos - oldPos;
                 p.move = {
                     duration: intfromInterval(500, 3000),
-                    newPos: newPos,
+                    newPos,
                     coeff: deltaPos / Math.abs(deltaPos),
                 };
             } else {
