@@ -17,6 +17,8 @@ interface IPoint {
 interface IMove {
     duration: number;
     newPos: number;
+    /** Absolute coefficient of movement */
+    coeff: number;
 }
 
 interface ICharSpec {
@@ -43,6 +45,9 @@ const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
 
 const circleMiscTextClass = 'circleMiscText';
+const intentArrowClass = "intentArrow"
+const intentRight = 'intentRight';
+const intentLeft = 'intentLeft';
 
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
@@ -84,6 +89,11 @@ function prepGraph(root: Selection<any, any, any, any>,
 
     return x;
 }
+
+const leftArrowPath = 'M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z';
+const rightArrowPath = 'M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z';
+const defaultArrowHeight = 12;
+
 
 // Given an x position in screen coordinates and height of element,
 // return the transform string a group should have
@@ -141,6 +151,32 @@ function graph(root: Selection<any, any, any, any>,
         .attr('x', -circleRadius)
         .attr('y', -(circleRadius * 1.5));
 
+    // Calculate how much to scale the arrows
+    // to match the size of the circle
+    let arrowScale = (circleRadius * 2) / defaultArrowHeight;
+    let arrowTransform = (isLeft: boolean): string => {
+        let translate = `translate(0, -${circleRadius})`;
+        if (isLeft) {
+            // Yeah, the x translate is a little... shady
+            translate = `translate(-${2.3 * circleRadius}, -${circleRadius})`;
+        }
+        return `scale(${arrowScale})${translate}`;
+    }
+    // ENTER - Add right-facing intent markers
+    newGroups.append('path')
+        .classed(intentArrowClass, true)
+        .classed(intentRight, true)
+        .attr('transform', arrowTransform(false))
+        .attr('d', rightArrowPath)
+        .attr('opacity', 0);
+    // ENTER - Add left-facing intent markers
+    newGroups.append('path')
+        .classed(intentArrowClass, true)
+        .classed(intentLeft, true)
+        .attr('transform', arrowTransform(true))
+        .attr('d', leftArrowPath)
+        .attr('opacity', 0);
+
     // ENTER - Give the newGroups a place to put extra info
     newGroups.append('text')
         .text('')
@@ -151,15 +187,27 @@ function graph(root: Selection<any, any, any, any>,
     // UPDATE - merge new and old to work on them
     let merged = groups.merge(newGroups);
 
-    // UPDATE - use static positions for those null moves
-    merged.filter(d => d.move === null)
-        .attr('transform', d => {
-            return getGroupTransform(xScale(d.staticPos.loc), height);
-        });
+    // UPDATE - handle non-moving
+    //     stop active transitions
+    //     hide intent arrows
+    let stay = merged.filter(d => d.move === null);
+
+    // Usee static positions for those null moves
+    stay.attr('transform', d => {
+        return getGroupTransform(xScale(d.staticPos.loc), height);
+    });
+
+    // Hide intent arrows
+    stay.selectAll(`.${intentArrowClass}.${intentRight}`).attr('opacity', 0);
+    stay.selectAll(`.${intentArrowClass}.${intentLeft}`).attr('opacity', 0);
+
+    // Stop active transitions
+    stay.transition();
 
     // UPDATE - start movements
     let doMove = merged.filter(d => d.move != null);
 
+    // Show their text change over time
     doMove.select(`.${circleMiscTextClass}`)
         // Set initial text value
         .text(d => {
@@ -186,6 +234,20 @@ function graph(root: Selection<any, any, any, any>,
                 ref.textContent = (duration - (duration * t)).toFixed(1);
             };
         });
+
+    // Show right intent arrow and hide left intent arrow when moving right
+    let moveRight = doMove.filter(d => !(!d.move) && d.move.coeff === 1);
+    moveRight.selectAll(`.${intentArrowClass}.${intentRight}`)
+        .attr('opacity', 1);
+    moveRight.selectAll(`.${intentArrowClass}.${intentLeft}`)
+        .attr('opacity', 0);
+
+    // Show left intent arrow and hide right intent arrow when moving left
+    let moveLeft = doMove.filter(d => !(!d.move) && d.move.coeff === -1)
+    moveLeft.selectAll(`.${intentArrowClass}.${intentLeft}`)
+        .attr('opacity', 1);
+    moveLeft.selectAll(`.${intentArrowClass}.${intentRight}`)
+        .attr('opacity', 0);
 
     // Move the groups
     doMove.transition(inTransition)
@@ -216,6 +278,10 @@ export function visualize() {
 
         path {
             fill: none;
+        }
+
+        .${intentArrowClass} {
+            fill: black;
         }
 
         .enter {
@@ -284,6 +350,7 @@ export function visualize() {
             },
             move: {
                 newPos: 0,
+                coeff: -1,
                 duration: 2000,
             },
         },
@@ -303,9 +370,13 @@ export function visualize() {
             let doesMove = intfromInterval(0, 1);
 
             if (doesMove) {
+                let oldPos = p.staticPos.loc;
+                let newPos = intfromInterval(-100, 100);
+                let deltaPos = newPos - oldPos;
                 p.move = {
                     duration: intfromInterval(500, 3000),
-                    newPos: intfromInterval(-100, 100),
+                    newPos: newPos,
+                    coeff: deltaPos / Math.abs(deltaPos),
                 };
             } else {
                 // If we were previously moving, arrive.
