@@ -3,60 +3,12 @@ import { select, Selection } from 'd3-selection';
 // into the selection api.
 import 'd3-transition';
 import { transition } from 'd3-transition';
-import { interval } from 'd3-timer';
-import { line, curveCardinalClosed } from 'd3-shape';
+import { interval, Timer } from 'd3-timer';
 import { axisBottom } from 'd3-axis';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
-import { interpolateString } from 'd3-interpolate';
 import { easeQuad } from 'd3-ease';
 
 import { intfromInterval } from './random';
-
-interface ILinePoint {
-    x: number;
-    y: number;
-    id: string;
-}
-
-type tweenCB = (t: number) => string;
-
-function tweenDash(): tweenCB {
-    // Narrow this
-    let p: SVGPathElement = this;
-
-    let length = p.getTotalLength();
-    let interp = interpolateString(`0,${length}`, `${length}, ${length}`);
-    return (t: number) => interp(t);
-}
-
-function transitionThis(path: Selection<any, any, any, any>) {
-    path.transition().duration(5000)
-        .attrTween('stroke-dasharray', tweenDash);
-}
-
-function curve(root: Selection<any, any, any, any>,
-    dataset: Array<[number, number]>) {
-
-    // Line creation function
-    let xLine = line()
-        .curve(curveCardinalClosed);
-
-    let renderLine = xLine(dataset);
-    if (!renderLine) throw Error('no curve generated');
-
-    root.append('path')
-        .style('stroke', '#aaa')
-        .style('stroke-dasharray', '4,4')
-        // Add the line
-        .attr('d', renderLine);
-
-    // Add a path to fill in over the path
-    root.append('path')
-        .style('stroke', 'black')
-        .attr('d', renderLine)
-        .call(transitionThis);
-
-}
 
 interface IPoint {
     loc: number;
@@ -111,7 +63,7 @@ function prepGraph(root: Selection<any, any, any, any>,
         .attr('height', height);
 
     // Add the axis
-    let axis = group.append('g')
+    group.append('g')
         // Ensure its in the middle
         .attr('transform', `translate(0, ${height / 2})`)
         .attr('height', axisHeight)
@@ -124,19 +76,16 @@ function prepGraph(root: Selection<any, any, any, any>,
 // Given an x position in screen coordinates and height of element,
 // return the transform string a group should have
 function getGroupTransform(x: number, height: number) {
-    return `translate(${x}, ${height / 2})`
+    return `translate(${x}, ${height / 2})`;
 }
 
-// Returns duration to wait for graph to be prepared
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>): number {
+    points: Array<ICharSpec>) {
 
     // Consider our margins
     [width, height] = graphMargins(width, height);
-
-    console.log('graph called!')
 
     // Setup transitions
     let inDuration = 750;
@@ -196,99 +145,11 @@ function graph(root: Selection<any, any, any, any>,
             if (!d.move) throw Error('move required but not present');
 
             return getGroupTransform(xScale(d.move.newPos), height);
-        })
-    // TODO: we'll filter for non-null .moves
+        });
 
     // EXIT
     groups.exit().remove();
-
-    // // Grab the root of our graph
-    // let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
-    // // UPDATE
-    // // NOTHING
-
-    // // ENTER
-    // let markerGroups = markers.data(points, (p: IPoint) => p.id)
-    //     .enter()
-    //     // Add a group for the circle and associated elements
-    //     .append('g')
-    //     .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
-    //     // Convert simulation position to display coord
-    //     .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
-
-    // // Start groups at +-height and fade in
-    // markerGroups
-    //     .attr('transform', (d, i)=> {
-    //         return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
-    //     })
-    //     // .attr('cy', (d, i) => Math.pow(-1, i) * height)
-    //     .style('opacity', 0)
-    //     // Transition the markers into position
-    //     .transition(inTransition)
-    //     .style('opacity', 1)
-    //     .attr('transform', (d, i)=> {
-    //         return `translate(${xScale(d.pos)}, ${height / 2})`
-    //     })
-
-    // let circleRadius = 10;
-
-    // // Add a circle to each group
-    // let circles = markerGroups.append('circle')
-    //     .attr('r', circleRadius);
-
-    // // Add some text to show identities
-    // let texts = markerGroups.selectAll('text').append('text')
-    //     .text(d=> d.id)
-    //     .attr('class', circleIDTextClass)
-    //     .attr('x', -circleRadius)
-    //     .attr('y', -(circleRadius * 1.5));
-
-    // // EXIT
-    // markers.exit().remove();
-
-    // console.log('setup markers', markers, 'group is', markerGroups);
-
-    return inDuration;
-
-    // let valueLine = line<IPoint>()
-    //     .x(d => x(d.pos))
-    //     .y(d => 0);
 }
-
-const moveIntentClass = 'moveIntent';
-
-// function move(root: Selection<any, any, any, any>,
-//     width: number, height: number,
-//     xScale: ScaleLinear<number, number>,
-//     move: Array<IMove>) {
-
-//     // Consider our margins
-//     [width, height] = graphMargins(width, height);
-
-//     // // Grab the markers that moved
-//     let moved = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`)
-//         .data(move, (p: IMove) => p.id);
-
-//     console.log(moved);
-
-//     // let intentText = moved.enter()
-//     //     .append('text')
-//     //     .text(d=> {
-//     //         console.log('I am evaulted!');
-//     //         return d.id;
-//     //     })
-//     //     .attr('x', -30)
-//     //     .attr('y', 50);
-//    // console.log(moved, intentText);
-
-//    //  // Move the group's position
-//    //  moved.transition()
-//    //      .duration(d => d.duration)
-//         // .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
-
-//     // Cleanup
-//     // info.exit().remove();
-// }
 
 export function visualize() {
 
@@ -374,52 +235,45 @@ export function visualize() {
                 duration: 2000,
             },
         },
-    ]
-    let waitTime = graph(groot, width, height, xScale, points);
-    graph(groot, width, height, xScale, points);
-    graph(groot, width, height, xScale, points);
-    graph(groot, width, height, xScale, points);
-    graph(groot, width, height, xScale, points);
-    graph(groot, width, height, xScale, points);
+    ];
+    // Draw initial points
     graph(groot, width, height, xScale, points);
 
+    let waiter: Timer;
 
-    let waitTimer = interval(() => {
-        // Prevent this from firing again
-        waitTimer.stop();
+    // Define update function that runs infinitely
+    let update = () => {
+        waiter.stop();
 
-        let moves: Array<IMove> = points.map(p => {
-            return {
-                duration: intfromInterval(1000, 4000),
-                newPos: 0,
-                id: p.id,
-            };
+        // Mess with the data to move them
+        points.forEach(p => {
+            // Roll to see if it moves this tick
+            let doesMove = intfromInterval(0, 1);
+
+            if (doesMove) {
+                p.move = {
+                    duration: intfromInterval(500, 3000),
+                    newPos: intfromInterval(-100, 100),
+                };
+            } else {
+                // If we were previously moving, arrive.
+                // NOTE: this can cause flickering to the new position
+                //       if the movement is interrupted!
+                if (p.move) {
+                    p.staticPos.loc = p.move.newPos;
+                }
+                p.move = null;
+            }
         });
 
-        console.log('calling move');
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // move(groot, width, height, xScale, moves);
-        // interval(() => {
-        //     moves.forEach(m=> m.newPos = intfromInterval(-100, 100));
-        //     console.log('moving to', moves[0].newPos);
-        //     move(groot, width, height, xScale, moves);
-        // }, 500);
+        // Update display
+        graph(groot, width, height, xScale, points);
 
-    }, waitTime)
+        // Run this again
+        waiter = interval(update, intfromInterval(500, 2000));
+    };
+
+    // Start the infinite loop
+    waiter = interval(update, 200);
 
 }
