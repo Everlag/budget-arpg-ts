@@ -63,15 +63,17 @@ interface IPoint {
 }
 
 interface IMove {
+    id: string;
     duration: number;
     newPos: number;
-    id: string;
 }
 
 const graphRootID = 'graphRootID';
 
 const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
+
+const circleIDTextClass = 'circleIDText';
 
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
@@ -114,59 +116,138 @@ function prepGraph(root: Selection<any, any, any, any>,
     return x;
 }
 
+// Returns duration to wait for graph to be prepared
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<IPoint>) {
+    points: Array<IPoint>): number {
 
     // Consider our margins
     [width, height] = graphMargins(width, height);
 
-    // Grab the root of our graph
-    let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
+    // let dataset = 'apples'.split('');
+    // let duration = 1000;
 
-    let inTransition = transition('markersIn').duration(2000);
+    //  // JOIN
+    // let text = root.selectAll('text')
+    //     .data(dataset, (d: string) => d)
+
+    // // EXIT
+    // // Discard unused elements
+    // text.exit()
+    //     .attr('class', 'exit')
+    //     // Everything after the duration
+    //     // call is transitioned out
+    //     .transition().duration(duration)
+    //     .attr('y', 60)
+    //     .style('fill-opacity', 1e-6)
+    //     .remove();
+
+    // // UPDATE
+    // // 
+    // // Change old elements as required
+    // text.attr('class', 'update')
+    //     .attr('y', 0)
+    //     .style('fill-opacity', 1)
+    //     .transition().duration(duration)
+    //     .attr('x', (d, i) => i * 32);
+
+    // // ENTER
+    // // create new elements
+    // text.enter().append('text')
+    //     .attr('class', 'enter')
+    //     .attr('dy', '0.35em')
+    //     .attr('y', -60)
+    //     .attr('x', (d, i) => i * 32)
+    //     .style('fill-opacity', 1e-6)
+    //     .text(d => d)
+    //     // Add the old elements and set positions for all elements
+    //     .transition().duration(duration)
+    //     .attr('y', 0)
+    //     .style('fill-opacity', 1);
+
+    console.log('graph called!')
+
+    // JOIN
+    let groups = root.selectAll(`g.${circleGroupClass}`)
+        .data(points, (p: IPoint) => p.id);
+
+    // ENTER - setup groups
+    let entered = root.selectAll(`.${circleGroupClass}`)
+        .data(points, (p: IPoint) => p.id).enter();
+
+    // ENTER - Add a group per-data
+    let newGroups = entered.append('g')
+        // Set class so the selectAll can actually find this...
+        .attr('class', circleGroupClass)
+        // Set id per-group
+        .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
+        // Move into horizontal position
+        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`);
 
     // UPDATE
-    markers.attr('class', 'update')
-        .transition().duration(() => 20);
-
-    // ENTER
-    let markerGroups = markers.data(points, (p: IPoint) => p.id)
-        .enter()
-        // Add a group for the circle and associated elements
-        .append('g')
-        .attr('class', circleGroupClass)
-        .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
-        // Convert simulation position to display coord
-        .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
-    
-    // Start groups at +-height and fade in
-    markerGroups
-        .attr('transform', (d, i)=> {
-            return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
-        })
-        // .attr('cy', (d, i) => Math.pow(-1, i) * height)
-        .style('opacity', 0)
-        // Transition the markers into position
-        .transition(inTransition)
-        .style('opacity', 1)
-        .attr('transform', (d, i)=> {
-            return `translate(${xScale(d.pos)}, ${height / 2})`
-        })
-    
-    // Add a circle to each group
-    let circles = markerGroups.append('circle')
-        .attr('class', 'enter')
-        .attr('r', 10)
 
     // EXIT
-    markers.exit().remove();
+    groups.exit().remove();
+
+    // // Grab the root of our graph
+    // let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
+
+    let inDuration = 200;
+    // let inTransition = transition('markersIn').duration(inDuration);
+
+    // // UPDATE
+    // // NOTHING
+
+    // // ENTER
+    // let markerGroups = markers.data(points, (p: IPoint) => p.id)
+    //     .enter()
+    //     // Add a group for the circle and associated elements
+    //     .append('g')
+    //     .attr('id', d=> `${circleGroupIDPrefix}${d.id}`)
+    //     // Convert simulation position to display coord
+    //     .attr('transform', d=> `translate(${xScale(d.pos)}, 0)`)
+    
+    // // Start groups at +-height and fade in
+    // markerGroups
+    //     .attr('transform', (d, i)=> {
+    //         return `translate(${xScale(d.pos)}, ${Math.pow(-1, i) * height})`
+    //     })
+    //     // .attr('cy', (d, i) => Math.pow(-1, i) * height)
+    //     .style('opacity', 0)
+    //     // Transition the markers into position
+    //     .transition(inTransition)
+    //     .style('opacity', 1)
+    //     .attr('transform', (d, i)=> {
+    //         return `translate(${xScale(d.pos)}, ${height / 2})`
+    //     })
+    
+    // let circleRadius = 10;
+
+    // // Add a circle to each group
+    // let circles = markerGroups.append('circle')
+    //     .attr('r', circleRadius);
+
+    // // Add some text to show identities
+    // let texts = markerGroups.selectAll('text').append('text')
+    //     .text(d=> d.id)
+    //     .attr('class', circleIDTextClass)
+    //     .attr('x', -circleRadius)
+    //     .attr('y', -(circleRadius * 1.5));
+
+    // // EXIT
+    // markers.exit().remove();
+
+    // console.log('setup markers', markers, 'group is', markerGroups);
+
+    return inDuration;
 
     // let valueLine = line<IPoint>()
     //     .x(d => x(d.pos))
     //     .y(d => 0);
 }
+
+const moveIntentClass = 'moveIntent';
 
 function move(root: Selection<any, any, any, any>,
     width: number, height: number,
@@ -176,21 +257,29 @@ function move(root: Selection<any, any, any, any>,
     // Consider our margins
     [width, height] = graphMargins(width, height);
 
-    // Generate a lookup table of ids that moved
-    let movedIDs = new Map<string, boolean>();
-    move.forEach(m => movedIDs.set(m.id, true));
+    // // Grab the markers that moved
+    let moved = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`)
+        .data(move, (p: IMove) => p.id);
 
-    let markers = select(`#${graphRootID}`).selectAll(`.${circleGroupClass}`);
+    console.log(moved);
 
-    // Grab the markers that moved
-    let moved = markers
-        .data(move, (p: IMove) => p.id)
-        // Filter only for those that moved
-        .filter((d: IMove) => movedIDs.has(d.id));
+    // let intentText = moved.enter()
+    //     .append('text')
+    //     .text(d=> {
+    //         console.log('I am evaulted!');
+    //         return d.id;
+    //     })
+    //     .attr('x', -30)
+    //     .attr('y', 50);
+   // console.log(moved, intentText);
 
-    moved.transition()
-        .duration(d => d.duration)
-        .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
+   //  // Move the group's position
+   //  moved.transition()
+   //      .duration(d => d.duration)
+        // .attr('transform', d=> `translate(${xScale(d.newPos)}, ${height / 2})`)
+
+    // Cleanup
+    // info.exit().remove();
 }
 
 export function visualize() {
@@ -260,19 +349,51 @@ export function visualize() {
             pos: 80,
         },
     ]
+    let waitTime = graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points);
     graph(groot, width, height, xScale, points);
 
-    let moves: Array<IMove> = points.map(p=> {
-        return {
-            duration: intfromInterval(1000, 4000),
-            newPos: 0,
-            id: p.id,
-        };
-    });
 
-    interval(() => {
-        moves.forEach(m=> m.newPos = intfromInterval(-100, 100));
-        console.log('moving to', moves[0].newPos);
-        move(groot, width, height, xScale, moves);
-    }, 2000);
+    let waitTimer = interval(()=> {
+        // Prevent this from firing again
+        waitTimer.stop();
+
+        let moves: Array<IMove> = points.map(p=> {
+            return {
+                duration: intfromInterval(1000, 4000),
+                newPos: 0,
+                id: p.id,
+            };
+        });
+
+        console.log('calling move');
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // move(groot, width, height, xScale, moves);
+        // interval(() => {
+        //     moves.forEach(m=> m.newPos = intfromInterval(-100, 100));
+        //     console.log('moving to', moves[0].newPos);
+        //     move(groot, width, height, xScale, moves);
+        // }, 500);
+
+    }, waitTime)
+
 }
