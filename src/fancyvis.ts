@@ -5,6 +5,7 @@ import 'd3-transition';
 import { transition } from 'd3-transition';
 import { interval, Timer } from 'd3-timer';
 import { axisBottom } from 'd3-axis';
+import { line, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { easeQuad, easeLinear } from 'd3-ease';
 
@@ -36,10 +37,18 @@ interface IDamage {
     isCrit: boolean;
 }
 
+interface ISkill {
+    /** The id of the primary target of this skill */
+    target: string;
+    /** How long the skill usage takes */
+    duration: number;
+}
+
 interface ICharSpec {
     id: string;
     staticPos: IPoint;
     move: IMove | null;
+    skill: ISkill | null;
     damages: Array<IDamage>;
 }
 
@@ -71,6 +80,13 @@ const intentRight = 'intentRight';
 const intentLeft = 'intentLeft';
 
 const damageTextClass = 'damageText';
+
+const skillLineClass = "skillLine";
+
+/** Given the simulation identifier for a group, determine it's DOM id */
+function circleGroupDomID(id: string) {
+    return `${circleGroupIDPrefix}${id}`;
+}
 
 function graphMargins(width: number, height: number): [number, number] {
     // Handle our margins
@@ -265,6 +281,40 @@ function damaged(merged: Selection<any, any, any, any>,
 
 }
 
+function skillUse(merged: Selection<any, any, any, any>,
+    width: number, height: number,
+    xScale: ScaleLinear<number, number>,
+    points: Array<ICharSpec>) {
+
+    // UPDATE - show skill relation
+    let skillUsed = merged.filter((d: ICharSpec) => d.skill !== null);
+
+    // Be explicit about our path creation
+    let pathLine = line<[number, number]>()
+        .curve(curveCatmullRom);
+
+    // Now we draw a curved line ending in an arrow
+    // to the target from the source.
+    // NOTE: we do not need a sub-select as there can only
+    //       be one active skill used at a time
+    skillUsed.select(`.${skillLineClass}`)
+        // Compute three necessary points for a fancy curved line
+        .datum(function(d: ICharSpec) {
+            if (this === null) throw Error('null this in skillUse datum')
+
+            // ISSUE: how to get the position of the elements :|
+            let start: [number, number] = [];
+            let mid: [number, number] = [];
+            let end: [number, number] = [];
+
+            return [start, mid, end];
+        })
+        .attr('d', pathLine)
+
+    console.log(skillUsed);
+
+}
+
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
@@ -285,7 +335,7 @@ function graph(root: Selection<any, any, any, any>,
         // Set class so the selectAll can actually find this...
         .attr('class', circleGroupClass)
         // Set id per-group
-        .attr('id', d => `${circleGroupIDPrefix}${d.id}`)
+        .attr('id', d => circleGroupDomID(d.id))
         // Set them to start at their static position
         .attr('transform', d => {
             return getGroupTransform(xScale(d.staticPos.loc), height);
@@ -327,6 +377,10 @@ function graph(root: Selection<any, any, any, any>,
         .attr('d', leftArrowPath)
         .attr('opacity', 0);
 
+    // ENTER - add empty skill path
+    newGroups.append('path')
+        .classed(skillLineClass, true);
+
     // ENTER - Give the newGroups a place to put extra info
     newGroups.append('text')
         .text('')
@@ -347,6 +401,7 @@ function graph(root: Selection<any, any, any, any>,
     inactive(merged, width, height, xScale, points);
     move(merged, width, height, xScale, points);
     damaged(merged, width, height, xScale, points);
+    skillUse(merged, width, height, xScale, points);
 
     // EXIT
     groups.exit().remove();
@@ -369,6 +424,10 @@ export function visualize() {
 
         .${intentArrowClass} {
             fill: black;
+        }
+
+        .${skillLineClass} {
+            fill: orange;
         }
 
         .enter {
@@ -408,6 +467,7 @@ export function visualize() {
                 loc: 0,
             },
             move: null,
+            skill: null,
             damages: [],
         },
         {
@@ -416,6 +476,7 @@ export function visualize() {
                 loc: 30,
             },
             move: null,
+            skill: null,
             damages: [],
         },
         {
@@ -424,6 +485,11 @@ export function visualize() {
                 loc: -70,
             },
             move: null,
+            skill: {
+                // Just target the previous elment
+                target: `${i - 1}`,
+                duration: 600,
+            },
             damages: [],
         },
         {
@@ -432,6 +498,7 @@ export function visualize() {
                 loc: -20,
             },
             move: null,
+            skill: null,
             damages: [
                 {
                     id: `${i}`,
@@ -451,6 +518,7 @@ export function visualize() {
                 coeff: -1,
                 duration: 2000,
             },
+            skill: null,
             damages: [],
         },
     ];
@@ -463,48 +531,48 @@ export function visualize() {
 
     // Define update function that runs infinitely
     let update = () => {
-        waiter.stop();
+        // waiter.stop();
 
-        // Mess with the data to move them
-        points.forEach(p => {
-            // Roll to see if it moves this tick
-            let doesMove = intfromInterval(0, 1);
+        // // Mess with the data to move them
+        // points.forEach(p => {
+        //     // Roll to see if it moves this tick
+        //     let doesMove = intfromInterval(0, 1);
 
-            if (doesMove) {
-                let oldPos = p.staticPos.loc;
-                let newPos = intfromInterval(-100, 100);
-                let deltaPos = newPos - oldPos;
-                p.move = {
-                    duration: intfromInterval(500, 3000),
-                    newPos,
-                    coeff: deltaPos / Math.abs(deltaPos),
-                };
-            } else {
-                // If we were previously moving, arrive.
-                // NOTE: this can cause flickering to the new position
-                //       if the movement is interrupted!
-                if (p.move) {
-                    p.staticPos.loc = p.move.newPos;
-                }
-                p.move = null;
-            }
+        //     if (doesMove) {
+        //         let oldPos = p.staticPos.loc;
+        //         let newPos = intfromInterval(-100, 100);
+        //         let deltaPos = newPos - oldPos;
+        //         p.move = {
+        //             duration: intfromInterval(500, 3000),
+        //             newPos,
+        //             coeff: deltaPos / Math.abs(deltaPos),
+        //         };
+        //     } else {
+        //         // If we were previously moving, arrive.
+        //         // NOTE: this can cause flickering to the new position
+        //         //       if the movement is interrupted!
+        //         if (p.move) {
+        //             p.staticPos.loc = p.move.newPos;
+        //         }
+        //         p.move = null;
+        //     }
 
-            let isNotDamaged = intfromInterval(0, 5);
-            if (!isNotDamaged) {
-                p.damages.push({
-                    id: p.id,
-                    isCrit: false,
-                    when: 0,
-                    sum: intfromInterval(0, 10),
-                });
-            }
-        });
+        //     let isNotDamaged = intfromInterval(0, 5);
+        //     if (!isNotDamaged) {
+        //         p.damages.push({
+        //             id: p.id,
+        //             isCrit: false,
+        //             when: 0,
+        //             sum: intfromInterval(0, 10),
+        //         });
+        //     }
+        // });
 
-        // Update display
-        graph(groot, width, height, xScale, points);
+        // // Update display
+        // graph(groot, width, height, xScale, points);
 
-        // Run this again
-        waiter = interval(update, intfromInterval(500, 2000));
+        // // Run this again
+        // waiter = interval(update, intfromInterval(500, 2000));
     };
 
     // Start the infinite loop
