@@ -3,7 +3,7 @@ import { select, Selection } from 'd3-selection';
 // into the selection api.
 import 'd3-transition';
 import { transition } from 'd3-transition';
-import { interval, Timer } from 'd3-timer';
+import { interval, Timer, now } from 'd3-timer';
 import { axisBottom } from 'd3-axis';
 import { line, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
@@ -46,7 +46,7 @@ interface ISkill {
 
 interface ICharSpec {
     id: string;
-    staticPos: IPoint;
+    staticLoc: number;
     move: IMove | null;
     skill: ISkill | null;
     damages: Array<IDamage>;
@@ -58,7 +58,6 @@ function copyCharSpec(spec: ICharSpec): ICharSpec {
     let fresh = Object.assign({}, spec);
 
     // Children
-    fresh.staticPos = Object.assign({}, fresh.staticPos);
     fresh.move = Object.assign({}, fresh.move);
     fresh.damages = fresh.damages.map(d => Object.assign({}, d));
 
@@ -157,7 +156,7 @@ function inactive(merged: Selection<any, any, any, any>,
 
     // Use static positions for those null moves
     inactive.attr('transform', d => {
-        return getGroupTransform(xScale(d.staticPos.loc), height);
+        return getGroupTransform(xScale(d.staticLoc), height);
     });
 
     // Clear out the text value and make it invisible
@@ -316,8 +315,8 @@ function skillUse(merged: Selection<any, any, any, any>,
 
             // Find our position and set our path in terms
             // of its origin being located relative to this group;
-            let thisPos = xScale(d.staticPos.loc);
-            let targetPos = xScale(target.staticPos.loc);
+            let thisPos = xScale(d.staticLoc);
+            let targetPos = xScale(target.staticLoc);
             let deltaPos = targetPos - thisPos;
 
             // Construct our line
@@ -376,7 +375,7 @@ function graph(root: Selection<any, any, any, any>,
         .attr('id', d => circleGroupDomID(d.id))
         // Set them to start at their static position
         .attr('transform', d => {
-            return getGroupTransform(xScale(d.staticPos.loc), height);
+            return getGroupTransform(xScale(d.staticLoc), height);
         });
 
     // ENTER - Add circles to newGroups
@@ -502,27 +501,21 @@ export function visualize() {
     let points: Array<ICharSpec> = [
         {
             id: `${++i}`,
-            staticPos: {
-                loc: 0,
-            },
+            staticLoc: 0,
             move: null,
             skill: null,
             damages: [],
         },
         {
             id: `${++i}`,
-            staticPos: {
-                loc: 30,
-            },
+            staticLoc: 30,
             move: null,
             skill: null,
             damages: [],
         },
         {
             id: `${++i}`,
-            staticPos: {
-                loc: -70,
-            },
+            staticLoc: -70,
             move: null,
             skill: {
                 // Just target the previous elment
@@ -533,9 +526,7 @@ export function visualize() {
         },
         {
             id: `${++i}`,
-            staticPos: {
-                loc: -20,
-            },
+            staticLoc: -20,
             move: null,
             skill: null,
             damages: [
@@ -549,9 +540,7 @@ export function visualize() {
         },
         {
             id: `${++i}`,
-            staticPos: {
-                loc: 80,
-            },
+            staticLoc: 80,
             move: {
                 newPos: 0,
                 coeff: -1,
@@ -572,7 +561,7 @@ export function visualize() {
     let waiter: Timer;
 
     // Define update function that runs infinitely
-    let update = () => {
+    let update = (elapsed: number) => {
         // waiter.stop();
 
         // // Mess with the data to move them
@@ -581,7 +570,7 @@ export function visualize() {
         //     let doesMove = intfromInterval(0, 1);
 
         //     if (doesMove) {
-        //         let oldPos = p.staticPos.loc;
+        //         let oldPos = p.staticLoc;
         //         let newPos = intfromInterval(-100, 100);
         //         let deltaPos = newPos - oldPos;
         //         p.move = {
@@ -594,7 +583,7 @@ export function visualize() {
         //         // NOTE: this can cause flickering to the new position
         //         //       if the movement is interrupted!
         //         if (p.move) {
-        //             p.staticPos.loc = p.move.newPos;
+        //             p.staticLoc = p.move.newPos;
         //         }
         //         p.move = null;
         //     }
@@ -609,6 +598,8 @@ export function visualize() {
         //         });
         //     }
         // });
+        (<any>window).now = now();
+
 
         // // Update display
         // graph(groot, width, height, xScale, points);
