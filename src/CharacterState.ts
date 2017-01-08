@@ -316,7 +316,7 @@ export class CharacterState extends CharacterMachine {
 
         // Record this
         let deltaPos = (duration * moveCoeff * this.context.stats.movespeed);
-        let endPos = this.Position.loc - deltaPos;
+        let endPos = this.Position.loc + deltaPos;
         recordMovement(this, target, duration, moveCoeff, endPos);
 
         this.state.addEvent(e);
