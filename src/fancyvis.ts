@@ -10,9 +10,17 @@ import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { easeQuad, easeLinear } from 'd3-ease';
 
 import { intfromInterval } from './random';
+import {
+    IRecord, ImplictRecordToString,
+    //     IMovementRecord, IDamageRecord, IDeathRecord
+} from './Records';
+import { StateSerial, PackSerial, CharacterStateSerial } from './Serial';
 
-interface IPoint {
-    loc: number;
+interface IGraphConf {
+    base: Selection<any, any, any, any>;
+    xScale: ScaleLinear<number, number>;
+    width: number;
+    height: number;
 }
 
 interface IMove {
@@ -64,6 +72,9 @@ function copyCharSpec(spec: ICharSpec): ICharSpec {
     return fresh;
 }
 
+/** ID for the base element of the graph */
+const graphID = 'graph';
+/** ID for the prepGraph root */
 const graphRootID = 'graphRootID';
 
 // How large our unit circles, sizing of everything
@@ -296,8 +307,8 @@ function skillUse(merged: Selection<any, any, any, any>,
 
     // Be explicit about our path creation
     let pathLine = line<ISkillLinePoint>()
-        .x(d=> d.x)
-        .y(d=> d.y)
+        .x(d => d.x)
+        .y(d => d.y)
         .curve(curveCatmullRom);
 
     // Now we draw a curved line ending in an arrow
@@ -340,7 +351,7 @@ function skillUse(merged: Selection<any, any, any, any>,
         })
         .attr('d', pathLine)
         .attr('opacity', 1)
-        .transition().duration((d: Array<ISkillLinePoint>)=> {
+        .transition().duration((d: Array<ISkillLinePoint>) => {
             let start = d[0];
             let skill = start.charRef.skill;
             if (skill === null) throw Error('null skill in skillUse transition duration');
@@ -448,54 +459,7 @@ export function visualize() {
 
     (<any>window).select = select;
 
-    let style = document.createElement('style');
-    style.type = 'text/css';
-    let styleContent = document.createTextNode(`
-        text {
-            font: bold 38px monospace;
-        }
-
-        path {
-            fill: none;
-        }
-
-        .${intentArrowClass} {
-            fill: black;
-        }
-
-        .${skillLineClass} {
-            stroke: orange;
-            stroke-width: 3px;
-        }
-
-        .enter {
-            fill: green;
-        }
-
-        .update {
-            fill: black;
-        }
-
-        .exit {
-            fill: orange;
-        }
-    `);
-    style.appendChild(styleContent);
-    document.body.appendChild(style);
-
-    let root = document.querySelector('#d3root');
-    if (!root) throw Error('d3 root element not present');
-
-    let [width, height] = [960, 500];
-
-    let svgroot = select(root).append('svg')
-        .attr('width', width)
-        .attr('height', height);
-
-    // Create a group for our content
-    let groot = svgroot.append('g');
-
-    let xScale = prepGraph(groot, width, height);
+    let { base: groot, width, height, xScale } = prep();
 
     let i = 0;
     let points: Array<ICharSpec> = [
@@ -610,5 +574,68 @@ export function visualize() {
 
     // Start the infinite loop
     waiter = interval(update, 200);
+
+}
+
+/** Prepare to render the graph and return the configuration */
+export function prep(): IGraphConf {
+    let style = document.createElement('style');
+    style.type = 'text/css';
+    let styleContent = document.createTextNode(`
+        text {
+            font: bold 38px monospace;
+        }
+
+        path {
+            fill: none;
+        }
+
+        .${intentArrowClass} {
+            fill: black;
+        }
+
+        .${skillLineClass} {
+            stroke: orange;
+            stroke-width: 3px;
+        }
+
+        .enter {
+            fill: green;
+        }
+
+        .update {
+            fill: black;
+        }
+
+        .exit {
+            fill: orange;
+        }
+    `);
+    style.appendChild(styleContent);
+    document.body.appendChild(style);
+
+    let root = document.querySelector('#d3root');
+    if (!root) throw Error('d3 root element not present');
+
+    let [width, height] = [960, 500];
+
+    let svgroot = select(root).append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    // Create a group for our content
+    let groot = svgroot.append('g').attr('id', graphID);
+
+    let xScale = prepGraph(groot, width, height);
+
+    return {
+        base: groot,
+        height, width,
+        xScale,
+    }
+}
+
+/** Render a frame using the given StateSerial */
+export function frame(config: IGraphConf, state: StateSerial) {
 
 }
