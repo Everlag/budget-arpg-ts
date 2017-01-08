@@ -10,12 +10,18 @@ import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { easeQuad, easeLinear } from 'd3-ease';
 
 import { intfromInterval } from './random';
+import { TicksPerSecond } from './Globals';
 import {
     IRecord, ImplictRecordToString,
     RecordFlavor,
     IMovementRecord, IDamageRecord, IDeathRecord
 } from './Records';
 import { StateSerial, PackSerial, CharacterStateSerial } from './Serial';
+
+/** Convert a given number of simulation ticks to realtime milliseconds */
+function ticksToMillis(ticks: number): number {
+    return (ticks / TicksPerSecond) * 1000;
+}
 
 interface IGraphConf {
     base: Selection<any, any, any, any>;
@@ -664,7 +670,7 @@ export function update(config: IGraphConf, state: StateSerial) {
                 // Set the move for that Character.
                 source.move = {
                     coeff: move.moveCoeff,
-                    duration: move.duration,
+                    duration: ticksToMillis(move.duration),
                     newPos: move.endPos,
                 }
                 break;
