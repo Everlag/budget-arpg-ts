@@ -315,7 +315,9 @@ export class CharacterState extends CharacterMachine {
         this.scratch.event = e;
 
         // Record this
-        recordMovement(this, target, duration, moveCoeff);
+        let deltaPos = (duration * moveCoeff * this.context.stats.movespeed);
+        let endPos = this.Position.loc - deltaPos;
+        recordMovement(this, target, duration, moveCoeff, endPos);
 
         this.state.addEvent(e);
     }

@@ -20,13 +20,13 @@ export function recordDamage(target: CharacterState, source: CharacterState,
 }
 
 export function recordMovement(source: CharacterState, target: CharacterState,
-    duration: number, moveCoeff: number) {
+    duration: number, moveCoeff: number, endPos: number) {
 
     let event: IMovementRecord = {
         flavor: RecordFlavor.IMovement,
         when: record.now,
         source: source.EntityCode, target: target.EntityCode,
-        duration, moveCoeff,
+        duration, moveCoeff, endPos,
     };
 
     record.pushImplicitEvent(event);

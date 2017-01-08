@@ -38,6 +38,8 @@ export interface IMovementRecord extends IRecord {
     duration: number;
     /** Coefficient determing absolute movement, in {0, 1} */
     moveCoeff: number;
+    /** Where the move will place the Character */
+    endPos: number;
 }
 
 export interface ISkillApply extends IRecord {
