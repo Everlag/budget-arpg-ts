@@ -81,7 +81,7 @@ const intentLeft = 'intentLeft';
 
 const damageTextClass = 'damageText';
 
-const skillLineClass = "skillLine";
+const skillLineClass = 'skillLine';
 
 /** Given the simulation identifier for a group, determine it's DOM id */
 function circleGroupDomID(id: string) {
@@ -299,18 +299,27 @@ function skillUse(merged: Selection<any, any, any, any>,
     //       be one active skill used at a time
     skillUsed.select(`.${skillLineClass}`)
         // Compute three necessary points for a fancy curved line
-        .datum(function(d: ICharSpec) {
-            if (this === null) throw Error('null this in skillUse datum')
+        .datum((d: ICharSpec) => {
+            if (d.skill === null) throw Error('null skill in skillUse datum');
 
-            // ISSUE: how to get the position of the elements :|
-            let distance = xScale(50);
+            // Lookup the target
+            let target = pointLookup.get(d.skill.target);
+            if (!target) throw Error('target not found in pointLookup for skillUse');
+
+            // Find our position and set our path in terms
+            // of its origin being located relative to this group;
+            let thisPos = xScale(d.staticPos.loc);
+            let targetPos = xScale(target.staticPos.loc);
+            let deltaPos = targetPos - thisPos;
+
+            // Construct our line
             let start: [number, number] = [0, 0];
-            let mid: [number, number] = [distance / 2, 40];
-            let end: [number, number] = [distance, 0];
+            let mid: [number, number] = [deltaPos / 2, 40];
+            let end: [number, number] = [deltaPos, 0];
 
             return [start, mid, end];
         })
-        .attr('d', pathLine)
+        .attr('d', pathLine);
 
     console.log(skillUsed);
 
