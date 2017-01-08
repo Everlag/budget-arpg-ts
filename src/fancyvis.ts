@@ -281,6 +281,12 @@ function damaged(merged: Selection<any, any, any, any>,
 
 }
 
+interface ISkillLinePoint {
+    x: number;
+    y: number;
+    charRef: ICharSpec;
+}
+
 function skillUse(merged: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
@@ -290,7 +296,9 @@ function skillUse(merged: Selection<any, any, any, any>,
     let skillUsed = merged.filter((d: ICharSpec) => d.skill !== null);
 
     // Be explicit about our path creation
-    let pathLine = line<[number, number]>()
+    let pathLine = line<ISkillLinePoint>()
+        .x(d=> d.x)
+        .y(d=> d.y)
         .curve(curveCatmullRom);
 
     // Now we draw a curved line ending in an arrow
@@ -313,13 +321,33 @@ function skillUse(merged: Selection<any, any, any, any>,
             let deltaPos = targetPos - thisPos;
 
             // Construct our line
-            let start: [number, number] = [0, 0];
-            let mid: [number, number] = [deltaPos / 2, 40];
-            let end: [number, number] = [deltaPos, 0];
+            let start = {
+                x: 0,
+                y: 0,
+                charRef: d,
+            }
+            let mid = {
+                x: deltaPos / 2,
+                y: 40,
+                charRef: d,
+            }
+            let end = {
+                x: deltaPos,
+                y: 0,
+                charRef: d,
+            }
 
             return [start, mid, end];
         })
-        .attr('d', pathLine);
+        .attr('d', pathLine)
+        .attr('opacity', 1)
+        .transition().duration((d: Array<ISkillLinePoint>)=> {
+            let start = d[0];
+            let skill = start.charRef.skill;
+            if (skill === null) throw Error('null skill in skillUse transition duration');
+            return skill.duration;
+        })
+        .attr('opacity', 0);
 
     console.log(skillUsed);
 
@@ -499,7 +527,7 @@ export function visualize() {
             skill: {
                 // Just target the previous elment
                 target: `${i - 1}`,
-                duration: 600,
+                duration: 650,
             },
             damages: [],
         },
