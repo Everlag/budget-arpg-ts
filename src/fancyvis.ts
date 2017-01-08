@@ -12,7 +12,8 @@ import { easeQuad, easeLinear } from 'd3-ease';
 import { intfromInterval } from './random';
 import {
     IRecord, ImplictRecordToString,
-    //     IMovementRecord, IDamageRecord, IDeathRecord
+    RecordFlavor,
+    IMovementRecord, IDamageRecord, IDeathRecord
 } from './Records';
 import { StateSerial, PackSerial, CharacterStateSerial } from './Serial';
 
@@ -21,43 +22,6 @@ interface IGraphConf {
     xScale: ScaleLinear<number, number>;
     width: number;
     height: number;
-}
-
-interface IMove {
-    duration: number;
-    newPos: number;
-    /** Absolute coefficient of movement */
-    coeff: number;
-}
-
-interface IDamage {
-    /** 
-     * id is required to be present
-     *
-     * So we can remove the IDamage after its
-     * presentation is complete
-     */
-    id: string;
-    /** Absolute time this was added */
-    when: number;
-    /** Amount of damage taken */
-    sum: number;
-    isCrit: boolean;
-}
-
-interface ISkill {
-    /** The id of the primary target of this skill */
-    target: string;
-    /** How long the skill usage takes */
-    duration: number;
-}
-
-interface ICharSpec {
-    id: string;
-    staticLoc: number;
-    move: IMove | null;
-    skill: ISkill | null;
-    damages: Array<IDamage>;
 }
 
 /** Make a copy of a character spec which can be changed independently */
@@ -564,7 +528,6 @@ export function visualize() {
         // });
         (<any>window).now = now();
 
-
         // // Update display
         // graph(groot, width, height, xScale, points);
 
@@ -577,7 +540,9 @@ export function visualize() {
 
 }
 
-/** Prepare to render the graph and return the configuration */
+/** 
+ * Prepare to render the graph and return the configuration
+ */
 export function prep(): IGraphConf {
     let style = document.createElement('style');
     style.type = 'text/css';
@@ -635,7 +600,121 @@ export function prep(): IGraphConf {
     }
 }
 
-/** Render a frame using the given StateSerial */
-export function frame(config: IGraphConf, state: StateSerial) {
+let globalSpec: IStateSpec = {
+    chars: new Map(),
+};
 
+/**
+ * Bootstraps the initial state configuration for a graph
+ */
+export function bootstrapState(config: IGraphConf, state: StateSerial) {
+    // Grab all characters from all packs
+    let characters = state.packs
+        .reduce((prev: Array<CharacterStateSerial>, current) => {
+            return prev.concat(current.states)
+        }, []);
+    // Convert those characters into specs
+    let specs = characters.map((c): ICharSpec => {
+        return {
+            id: c.EntityCode,
+            staticLoc: c.Position,
+            damages: [],
+            move: null,
+            skill: null,
+        }
+    });
+
+    // Set state
+    specs.forEach(s => globalSpec.chars.set(s.id, s));
+}
+
+/** Update the state of graph represented by the provided config */
+export function update(config: IGraphConf, state: StateSerial) {
+
+    // Though:
+    //     okay, so we need to merge the events from StateSerial
+    //     into a series of ICharSpec. Hmmmm.
+
+    // Check if there are new characters we need to process
+    let ids = state.packs
+        .reduce((prev: Array<string>, current) => {
+            let codes = current.states.map(s => s.EntityCode);
+            return prev.concat(codes)
+        }, []);
+    if (!ids.every(id => globalSpec.chars.has(id))) {
+        // TODO: actually handle this...
+        throw Error('adding new Characters after bootstrapState unimplemented!');
+    }
+
+    // Early exit if no events to process.
+    if (state.events.length === 0) return;
+
+    state.events.forEach(e => {
+
+        // Narrow type as far as we can and extract
+        // as much as we can before the switch.
+        let eRef = <IDamageRecord | IMovementRecord | IDeathRecord>e;
+        let source = globalSpec.chars.get(eRef.source);;
+        if (!source) throw Error('source ICharSpec not found for event');
+
+        switch (e.flavor) {
+            case RecordFlavor.IMovement:
+                // Narrow type
+                let move = <IMovementRecord>e;
+                // Set the move for that Character.
+                source.move = {
+                    coeff: move.moveCoeff,
+                    duration: move.duration,
+                    newPos: move.endPos,
+                }
+                break;
+
+            default:
+                // code...
+                break;
+        }
+    })
+
+}
+
+interface IMove {
+    duration: number;
+    newPos: number;
+    /** Absolute coefficient of movement */
+    coeff: number;
+}
+
+interface IDamage {
+    /** 
+     * id is required to be present
+     *
+     * So we can remove the IDamage after its
+     * presentation is complete
+     */
+    id: string;
+    /** Absolute time this was added */
+    when: number;
+    /** Amount of damage taken */
+    sum: number;
+    isCrit: boolean;
+}
+
+interface ISkill {
+    /** The id of the primary target of this skill */
+    target: string;
+    /** How long the skill usage takes */
+    duration: number;
+}
+
+interface ICharSpec {
+    id: string;
+    staticLoc: number;
+    move: IMove | null;
+    skill: ISkill | null;
+    damages: Array<IDamage>;
+}
+
+interface IStateSpec {
+    // All characters are addressable by their id
+    chars: Map<string, ICharSpec>;
 }
