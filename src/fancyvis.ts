@@ -148,7 +148,7 @@ function getGroupTransform(x: number, height: number) {
 function inactive(merged: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>) {
+    points: Array<ICharSpec>, pointLookup: Map<string, ICharSpec>) {
 
     // UPDATE - handle non-moving
     //     stop active transitions
@@ -176,7 +176,7 @@ function inactive(merged: Selection<any, any, any, any>,
 function move(merged: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>) {
+    points: Array<ICharSpec>, pointLookup: Map<string, ICharSpec>) {
 
     let textTransition = transition('textMoveTransition').ease(easeLinear);
     let circleTransition = transition('circleMoveTransition').ease(easeQuad);
@@ -244,7 +244,7 @@ function move(merged: Selection<any, any, any, any>,
 function damaged(merged: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>) {
+    points: Array<ICharSpec>, pointLookup: Map<string, ICharSpec>) {
 
     // UPDATE - display damage done
     let wasDamaged = merged.filter((d: ICharSpec) => d.damages.length > 0);
@@ -273,7 +273,7 @@ function damaged(merged: Selection<any, any, any, any>,
         // Remove the IDamage from the character at the end
         .on('end', d => {
             // Find the spec
-            let spec = points.find(other => other.id === d.id);
+            let spec = pointLookup.get(d.id);
             if (!spec) throw Error('cannot find parent to remove IDamage from');
             // Remove d
             spec.damages = spec.damages.filter(other => other !== d);
@@ -284,7 +284,7 @@ function damaged(merged: Selection<any, any, any, any>,
 function skillUse(merged: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>) {
+    points: Array<ICharSpec>, pointLookup: Map<string, ICharSpec>) {
 
     // UPDATE - show skill relation
     let skillUsed = merged.filter((d: ICharSpec) => d.skill !== null);
@@ -303,9 +303,10 @@ function skillUse(merged: Selection<any, any, any, any>,
             if (this === null) throw Error('null this in skillUse datum')
 
             // ISSUE: how to get the position of the elements :|
-            let start: [number, number] = [];
-            let mid: [number, number] = [];
-            let end: [number, number] = [];
+            let distance = xScale(50);
+            let start: [number, number] = [0, 0];
+            let mid: [number, number] = [distance / 2, 40];
+            let end: [number, number] = [distance, 0];
 
             return [start, mid, end];
         })
@@ -318,7 +319,7 @@ function skillUse(merged: Selection<any, any, any, any>,
 function graph(root: Selection<any, any, any, any>,
     width: number, height: number,
     xScale: ScaleLinear<number, number>,
-    points: Array<ICharSpec>) {
+    points: Array<ICharSpec>, pointLookup: Map<string, ICharSpec>) {
 
     // Consider our margins
     [width, height] = graphMargins(width, height);
@@ -398,10 +399,10 @@ function graph(root: Selection<any, any, any, any>,
     // 
     //       ie, a move is handled in only move
     //           and filtered out everywhere else.
-    inactive(merged, width, height, xScale, points);
-    move(merged, width, height, xScale, points);
-    damaged(merged, width, height, xScale, points);
-    skillUse(merged, width, height, xScale, points);
+    inactive(merged, width, height, xScale, points, pointLookup);
+    move(merged, width, height, xScale, points, pointLookup);
+    damaged(merged, width, height, xScale, points, pointLookup);
+    skillUse(merged, width, height, xScale, points, pointLookup);
 
     // EXIT
     groups.exit().remove();
@@ -427,7 +428,8 @@ export function visualize() {
         }
 
         .${skillLineClass} {
-            fill: orange;
+            stroke: orange;
+            stroke-width: 3px;
         }
 
         .enter {
@@ -522,8 +524,11 @@ export function visualize() {
             damages: [],
         },
     ];
+    // Generate constant time point lookup by id
+    let pointLookup: Map<string, ICharSpec> = new Map();
+    points.forEach(p => pointLookup.set(p.id, p));
     // Draw initial points
-    graph(groot, width, height, xScale, points);
+    graph(groot, width, height, xScale, points, pointLookup);
 
     console.log(points);
 
