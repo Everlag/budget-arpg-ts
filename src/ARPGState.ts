@@ -1,7 +1,7 @@
 import { RecordFlavor } from './Records';
 import * as PriorityQueue from 'js-priority-queue';
 
-export const TicksPerSecond: number = 100;
+export { TicksPerSecond} from './Globals';
 
 /*
     Maximum number of events we allow the State to retire every second.
