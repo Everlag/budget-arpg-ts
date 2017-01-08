@@ -676,10 +676,18 @@ export function update(config: IGraphConf, state: StateSerial) {
                 break;
 
             default:
-                // code...
+                // For anything we can't visualize, just print it
+                console.log('d3vis unknown event:',
+                    ImplictRecordToString(e));
                 break;
         }
-    })
+    });
+
+    let { base: groot, width, height, xScale } = config;
+    let { chars: pointLookup } = globalSpec;
+    let points = Array.from(pointLookup.values());
+
+    graph(groot, width, height, xScale, points, pointLookup);    
 
 }
 
