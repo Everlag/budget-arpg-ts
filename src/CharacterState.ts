@@ -4,7 +4,10 @@ import {
 } from './CharacterMachine';
 import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
-import { recordMovement, recordSkillApply, recordDeath } from './Recording';
+import {
+    recordMovementStart, recordMovementEnd,
+    recordSkillApply, recordDeath
+} from './Recording';
 import { RecordFlavor } from './Records';
 import { Character } from './Character';
 import { Stats } from './StatMods';
@@ -317,7 +320,7 @@ export class CharacterState extends CharacterMachine {
         // Record this
         let deltaPos = (duration * moveCoeff * this.context.stats.movespeed);
         let endPos = this.Position.loc + deltaPos;
-        recordMovement(this, target, duration, moveCoeff, endPos);
+        recordMovementStart(this, target, duration, moveCoeff, endPos);
 
         this.state.addEvent(e);
     }
@@ -336,6 +339,7 @@ export class CharacterState extends CharacterMachine {
         let prev = this.context.position;
         // Set new position to resolved position
         this.context.position = this.interpolatePosition();
+        recordMovementEnd(this, this.Position.loc);
         let delta = prev.distanceTo(this.context.position);
         console.log(`${this.EntityCode} moved distance is`, delta);
     }

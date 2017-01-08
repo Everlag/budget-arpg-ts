@@ -11,7 +11,8 @@ export enum RecordFlavor {
     EMovement,
     EStatusEffect,
     IDamage,
-    IMovement,
+    IMoveStart,
+    IMoveEnd,
     ISkillApply,
     IDeath,
 }
@@ -30,7 +31,8 @@ export interface IDamageRecord extends IRecord {
     isCrit: Boolean;
 }
 
-export interface IMovementRecord extends IRecord {
+/** The start of a movement */
+export interface IMoveStartRecord extends IRecord {
     source: string;
     /** The Character that prompted this movement */
     target: string;
@@ -39,6 +41,13 @@ export interface IMovementRecord extends IRecord {
     /** Coefficient determing absolute movement, in {0, 1} */
     moveCoeff: number;
     /** Where the move will place the Character */
+    endPos: number;
+}
+
+/** The end of a movement */
+export interface IMoveEndRecord extends IRecord {
+    source: string;
+    /** Where the move places the Character */
     endPos: number;
 }
 
@@ -59,14 +68,17 @@ export function ImplictRecordToString(record: IRecord) {
         case RecordFlavor.IDamage:
             let damage = <IDamageRecord>record;
             return `${damage.source} damages ${damage.target} for ${Math.floor(damage.sum)}`;
-        case RecordFlavor.IMovement:
-            let move = <IMovementRecord>record;
-            return `${move.source} moves ${move.moveCoeff} for ${Math.floor(move.duration)}`;
+        case RecordFlavor.IMoveStart:
+            let moveStart = <IMoveStartRecord>record;
+            return `${moveStart.source} moves ${moveStart.moveCoeff} for ${Math.floor(moveStart.duration)}`;
+        case RecordFlavor.IMoveEnd:
+            let moveEnd = <IMoveEndRecord>record;
+            return `${moveEnd.source} moed to ${moveEnd.endPos}`;
         case RecordFlavor.ISkillApply:
             let apply = <ISkillApply>record;
             return `${apply.source} uses ${apply.skillName} on ${apply.target}`;
         case RecordFlavor.IDeath:
-            let death = <IMovementRecord>record;
+            let death = <IDeathRecord>record;
             return `${death.source} dies`;
         default:
             throw Error('fell through record flavor switch');

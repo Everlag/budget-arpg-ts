@@ -2,7 +2,9 @@ import { State, Event, TicksPerSecond } from './ARPGState';
 import { CharacterState } from './CharacterState';
 import {
     RecordFlavor, IRecord,
-    IDamageRecord, IMovementRecord, ISkillApply, IDeathRecord,
+    IDamageRecord,
+    IMoveStartRecord, IMoveEndRecord,
+    ISkillApply, IDeathRecord,
 } from './Records';
 
 /** Record a DamageRecord */
@@ -19,14 +21,27 @@ export function recordDamage(target: CharacterState, source: CharacterState,
     record.pushImplicitEvent(event);
 }
 
-export function recordMovement(source: CharacterState, target: CharacterState,
+export function recordMovementStart(source: CharacterState,
+    target: CharacterState,
     duration: number, moveCoeff: number, endPos: number) {
 
-    let event: IMovementRecord = {
-        flavor: RecordFlavor.IMovement,
+    let event: IMoveStartRecord = {
+        flavor: RecordFlavor.IMoveStart,
         when: record.now,
         source: source.EntityCode, target: target.EntityCode,
         duration, moveCoeff, endPos,
+    };
+
+    record.pushImplicitEvent(event);
+}
+
+export function recordMovementEnd(source: CharacterState, endPos: number) {
+
+    let event: IMoveEndRecord = {
+        flavor: RecordFlavor.IMoveEnd,
+        when: record.now,
+        source: source.EntityCode,
+        endPos,
     };
 
     record.pushImplicitEvent(event);
