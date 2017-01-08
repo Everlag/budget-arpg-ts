@@ -3,20 +3,18 @@ import { select, Selection } from 'd3-selection';
 // into the selection api.
 import 'd3-transition';
 import { transition } from 'd3-transition';
-import { interval, Timer, now } from 'd3-timer';
 import { axisBottom } from 'd3-axis';
 import { line, curveCatmullRom } from 'd3-shape';
 import { scaleLinear, ScaleLinear } from 'd3-scale';
 import { easeQuad, easeLinear } from 'd3-ease';
 
-import { intfromInterval } from './random';
 import { TicksPerSecond } from './Globals';
 import {
-    IRecord, ImplictRecordToString,
+    ImplictRecordToString,
     RecordFlavor,
-    IMovementRecord, IDamageRecord, IDeathRecord
+    IMoveStartRecord, IMoveEndRecord, IDamageRecord, IDeathRecord,
 } from './Records';
-import { StateSerial, PackSerial, CharacterStateSerial } from './Serial';
+import { StateSerial, CharacterStateSerial } from './Serial';
 
 /** Convert a given number of simulation ticks to realtime milliseconds */
 function ticksToMillis(ticks: number): number {
@@ -55,6 +53,7 @@ const circleGroupIDPrefix = 'group';
 const circleGroupClass = 'group';
 
 const circleMiscTextClass = 'circleMiscText';
+const circleIDTextClass = 'circleIdText';
 const intentArrowClass = 'intentArrow';
 const intentRight = 'intentRight';
 const intentLeft = 'intentLeft';
@@ -177,7 +176,7 @@ function move(merged: Selection<any, any, any, any>,
         .transition(textTransition)
         .duration(d => {
             if (!d.move) throw Error('move required but not present');
-            return d.move.duration;
+            return d.move.duration.toFixed(1);
         })
         .tween('text', function(d: ICharSpec) {
             // Capture 'this' and make available in closure
@@ -305,17 +304,17 @@ function skillUse(merged: Selection<any, any, any, any>,
                 x: 0,
                 y: 0,
                 charRef: d,
-            }
+            };
             let mid = {
                 x: deltaPos / 2,
                 y: 40,
                 charRef: d,
-            }
+            };
             let end = {
                 x: deltaPos,
                 y: 0,
                 charRef: d,
-            }
+            };
 
             return [start, mid, end];
         })
@@ -328,8 +327,6 @@ function skillUse(merged: Selection<any, any, any, any>,
             return skill.duration;
         })
         .attr('opacity', 0);
-
-    console.log(skillUsed);
 
 }
 
@@ -366,6 +363,7 @@ function graph(root: Selection<any, any, any, any>,
     // ENTER - Add identifiers to newGroups
     newGroups.append('text')
         .text(d => d.id)
+        .classed(circleIDTextClass, true)
         .attr('x', -circleRadius)
         .attr('y', -(circleRadius * 1.5));
 
@@ -425,127 +423,6 @@ function graph(root: Selection<any, any, any, any>,
     groups.exit().remove();
 }
 
-export function visualize() {
-
-    (<any>window).select = select;
-
-    let { base: groot, width, height, xScale } = prep();
-
-    let i = 0;
-    let points: Array<ICharSpec> = [
-        {
-            id: `${++i}`,
-            staticLoc: 0,
-            move: null,
-            skill: null,
-            damages: [],
-        },
-        {
-            id: `${++i}`,
-            staticLoc: 30,
-            move: null,
-            skill: null,
-            damages: [],
-        },
-        {
-            id: `${++i}`,
-            staticLoc: -70,
-            move: null,
-            skill: {
-                // Just target the previous elment
-                target: `${i - 1}`,
-                duration: 650,
-            },
-            damages: [],
-        },
-        {
-            id: `${++i}`,
-            staticLoc: -20,
-            move: null,
-            skill: null,
-            damages: [
-                {
-                    id: `${i}`,
-                    isCrit: false,
-                    sum: 20,
-                    when: 0,
-                },
-            ],
-        },
-        {
-            id: `${++i}`,
-            staticLoc: 80,
-            move: {
-                newPos: 0,
-                coeff: -1,
-                duration: 2000,
-            },
-            skill: null,
-            damages: [],
-        },
-    ];
-    // Generate constant time point lookup by id
-    let pointLookup: Map<string, ICharSpec> = new Map();
-    points.forEach(p => pointLookup.set(p.id, p));
-    // Draw initial points
-    graph(groot, width, height, xScale, points, pointLookup);
-
-    console.log(points);
-
-    let waiter: Timer;
-
-    // Define update function that runs infinitely
-    let update = (elapsed: number) => {
-        // waiter.stop();
-
-        // // Mess with the data to move them
-        // points.forEach(p => {
-        //     // Roll to see if it moves this tick
-        //     let doesMove = intfromInterval(0, 1);
-
-        //     if (doesMove) {
-        //         let oldPos = p.staticLoc;
-        //         let newPos = intfromInterval(-100, 100);
-        //         let deltaPos = newPos - oldPos;
-        //         p.move = {
-        //             duration: intfromInterval(500, 3000),
-        //             newPos,
-        //             coeff: deltaPos / Math.abs(deltaPos),
-        //         };
-        //     } else {
-        //         // If we were previously moving, arrive.
-        //         // NOTE: this can cause flickering to the new position
-        //         //       if the movement is interrupted!
-        //         if (p.move) {
-        //             p.staticLoc = p.move.newPos;
-        //         }
-        //         p.move = null;
-        //     }
-
-        //     let isNotDamaged = intfromInterval(0, 5);
-        //     if (!isNotDamaged) {
-        //         p.damages.push({
-        //             id: p.id,
-        //             isCrit: false,
-        //             when: 0,
-        //             sum: intfromInterval(0, 10),
-        //         });
-        //     }
-        // });
-        (<any>window).now = now();
-
-        // // Update display
-        // graph(groot, width, height, xScale, points);
-
-        // // Run this again
-        // waiter = interval(update, intfromInterval(500, 2000));
-    };
-
-    // Start the infinite loop
-    waiter = interval(update, 200);
-
-}
-
 /** 
  * Prepare to render the graph and return the configuration
  */
@@ -568,6 +445,10 @@ export function prep(): IGraphConf {
         .${skillLineClass} {
             stroke: orange;
             stroke-width: 3px;
+        }
+
+        .${circleIDTextClass} {
+            font: bold 2em monospace;
         }
 
         .enter {
@@ -617,7 +498,7 @@ export function bootstrapState(config: IGraphConf, state: StateSerial) {
     // Grab all characters from all packs
     let characters = state.packs
         .reduce((prev: Array<CharacterStateSerial>, current) => {
-            return prev.concat(current.states)
+            return prev.concat(current.states);
         }, []);
     // Convert those characters into specs
     let specs = characters.map((c): ICharSpec => {
@@ -627,12 +508,14 @@ export function bootstrapState(config: IGraphConf, state: StateSerial) {
             damages: [],
             move: null,
             skill: null,
-        }
+        };
     });
 
     // Set state
     specs.forEach(s => globalSpec.chars.set(s.id, s));
 }
+
+let updates = 0;
 
 /** Update the state of graph represented by the provided config */
 export function update(config: IGraphConf, state: StateSerial) {
@@ -645,7 +528,7 @@ export function update(config: IGraphConf, state: StateSerial) {
     let ids = state.packs
         .reduce((prev: Array<string>, current) => {
             let codes = current.states.map(s => s.EntityCode);
-            return prev.concat(codes)
+            return prev.concat(codes);
         }, []);
     if (!ids.every(id => globalSpec.chars.has(id))) {
         // TODO: actually handle this...
@@ -659,20 +542,29 @@ export function update(config: IGraphConf, state: StateSerial) {
 
         // Narrow type as far as we can and extract
         // as much as we can before the switch.
-        let eRef = <IDamageRecord | IMovementRecord | IDeathRecord>e;
-        let source = globalSpec.chars.get(eRef.source);;
+        let eRef = <
+            IDamageRecord | IMoveStartRecord | IMoveEndRecord | IDeathRecord
+            >e;
+        let source = globalSpec.chars.get(eRef.source);
         if (!source) throw Error('source ICharSpec not found for event');
 
         switch (e.flavor) {
-            case RecordFlavor.IMovement:
+            case RecordFlavor.IMoveStart:
                 // Narrow type
-                let move = <IMovementRecord>e;
+                let moveStart = <IMoveStartRecord>e;
                 // Set the move for that Character.
                 source.move = {
-                    coeff: move.moveCoeff,
-                    duration: ticksToMillis(move.duration),
-                    newPos: move.endPos,
-                }
+                    coeff: moveStart.moveCoeff,
+                    duration: ticksToMillis(moveStart.duration),
+                    newPos: moveStart.endPos,
+                };
+                break;
+
+            case RecordFlavor.IMoveEnd:
+                // Narrow type
+                let moveEnd = <IMoveEndRecord>e;
+                source.move = null;
+                source.staticLoc = moveEnd.endPos;
                 break;
 
             default:
@@ -687,7 +579,9 @@ export function update(config: IGraphConf, state: StateSerial) {
     let { chars: pointLookup } = globalSpec;
     let points = Array.from(pointLookup.values());
 
-    graph(groot, width, height, xScale, points, pointLookup);    
+    updates++;
+    (<any>window).updates = updates;
+    graph(groot, width, height, xScale, points, pointLookup);
 
 }
 

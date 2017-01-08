@@ -7,14 +7,17 @@ import { CharacterState } from './CharacterState';
 import { Elements } from './Damage';
 import { Pack, PackInit } from './Pack';
 import { Position } from './Movement';
+import { StateSerial } from './Serial';
 import { snapshot } from './Snapshot';
 import { renderVue } from './visualize';
-import { visualize } from './fancyvis';
+import { prep, bootstrapState, update } from './fancyvis';
 import * as DamageMods from './DamageModRegistry';
 import * as SeedRandom from 'seedrandom';
 import * as StatMods from './StatMods';
 import * as Skills from './Skill';
 import * as Behaviors from './BehaviorRegistry';
+
+import { interval } from 'd3-timer';
 
 let start = performance.now();
 
@@ -95,9 +98,9 @@ let xInit = [
 ];
 let yInit = [
     new PackInit(baseTrash,
-        new Position(100), new Behaviors.StrafingRanged()),
+        new Position(75), new Behaviors.StrafingRanged()),
     new PackInit(baseTrash,
-        new Position(100), new Behaviors.AgressiveNaiveMelee()),
+        new Position(90), new Behaviors.AgressiveNaiveMelee()),
     new PackInit(coldBaseTrash,
         new Position(100), new Behaviors.AgressiveNaiveMelee()),
 ];
@@ -120,50 +123,92 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 100;
+let speedup = 5;
 
 /** Register all actie Packs */
 let packs = [x, y];
 
-visualize();
+// record.runForDuration(TicksPerSecond * 0.5);
+let events = record.popImplicitEventsTill(record.now);
+let snap = snapshot(record.now, events, packs);
+
+let lossy = JSON.parse(snap);
+console.log('lossy', lossy);
+
+let graphConf = prep();
+bootstrapState(graphConf, lossy);
+update(graphConf, lossy);
 
 // let mount = renderVue();
 
-// let finish = () => {
-//     let end = performance.now();
-//     let delta = end - start;
-//     console.log(`took ${delta.toFixed(2)}ms for ${state.now} ticks`);
-//     let effSpeedup = (state.now / TicksPerSecond) / (delta / 1000);
-//     console.log(`effective speedup=${(effSpeedup).toFixed(2)} vs desired=${speedup}`);
+let finish = () => {
+    let end = performance.now();
+    let delta = end - start;
+    console.log(`took ${delta.toFixed(2)}ms for ${state.now} ticks`);
+    let effSpeedup = (state.now / TicksPerSecond) / (delta / 1000);
+    console.log(`effective speedup=${(effSpeedup).toFixed(2)} vs desired=${speedup}`);
 
-//     console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
-//     let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
-//     console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
-// };
+    console.log(x.states.map(c => c.Position.loc), y.states.map(c => c.Position.loc));
+    let healthDiff = (c: CharacterState) => c.context.baseStats.health - c.context.health;
+    console.log(x.states.map(c => healthDiff(c)), y.states.map(c => healthDiff(c)));
 
-// function runFrame() {
+    timer.stop();
+};
 
-//     // Run for a duration and get back tick-time we managed to reach
-//     let when = record.runForDuration(snapshotTime, speedup);
-//     // Pop all the implicit events we care about
-//     let events = record.popImplicitEventsTill(when);
-//     // Take a snapshot
-//     let snap = snapshot(record.now, events, packs);
+let log = console.log;
+console.log = ()=>{};
 
-//     // Update the model
-//     // 
-//     // Yes, I know we don't need to serialize then deserialize but
-//     // this is preparing for later when we will need to.
-//     mount.$data.state = JSON.parse(snap);
+let frameRunning = false;
 
-//     // If a pack is dead, we're done
-//     if (packs.some(p => p.isDead)) {
-//         finish();
-//         return;
-//     }
+function runFrame() {
 
-//     // Run the next frame
-//     requestAnimationFrame(runFrame);
-// }
+    if(frameRunning) {
+        log('frame already in progress on call to runFrame');
+        return;
+    }
+    frameRunning = true;
+
+    let start = performance.now();
+
+    // Run for a duration and get back tick-time we managed to reach
+    let when = record.runForDuration(snapshotTime, speedup);
+    // Pop all the implicit events we care about
+    let events = record.popImplicitEventsTill(when);
+    // Take a snapshot
+    let snap = snapshot(record.now, events, packs);
+
+    // Update the model
+    // 
+    // Yes, I know we don't need to serialize then deserialize but
+    // this is preparing for later when we will need to.
+    // mount.$data.state = JSON.parse(snap);
+
+    // Update the d3 visualization only if there are events to display
+    // 
+    // At some point, this will be handled by vue...
+    let parsed:StateSerial = JSON.parse(snap);
+    if(parsed.events.length !== 0) {
+        console.log('handling event count=', parsed.events.length);
+        update(graphConf, parsed);
+        // If a pack is dead, we're done
+        if (packs.some(p => p.isDead)) {
+            finish();
+            return;
+        }
+    }
+
+    let end = performance.now();
+    let delta = end - start;
+    if(delta > 10) {
+        log('all updates took', delta);
+    }
+
+    frameRunning = false;
+
+    // Run the next frame
+    // requestAnimationFrame(runFrame);
+}
 
 // runFrame();
+
+let timer = interval(runFrame, 16);
