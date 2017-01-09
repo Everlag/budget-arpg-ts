@@ -123,23 +123,22 @@ let tickTimes: Array<Number> = [];
 /** 16ms between snapshots ~ 1 frame at 60fps */
 let snapshotTime = 16 / 1000;
 /** Work faster than realtime */
-let speedup = 5;
+let speedup = 2;
 
-/** Register all actie Packs */
+/** Register all active Packs */
 let packs = [x, y];
 
-// record.runForDuration(TicksPerSecond * 0.5);
-let events = record.popImplicitEventsTill(record.now);
-let snap = snapshot(record.now, events, packs);
+// Create initial, lossy state to initialize the d3vis state
+let seedEvents = record.popImplicitEventsTill(record.now);
+let seedSnap = snapshot(record.now, seedEvents, packs);
+let lossy = JSON.parse(seedSnap);
 
-let lossy = JSON.parse(snap);
-console.log('lossy', lossy);
-
+// Prepare our d3 visualization
 let graphConf = prep();
 bootstrapState(graphConf, lossy);
-update(graphConf, lossy);
 
-// let mount = renderVue();
+// Mount our vue componenets
+let mount = renderVue();
 
 let finish = () => {
     let end = performance.now();
@@ -155,20 +154,9 @@ let finish = () => {
     timer.stop();
 };
 
-let log = console.log;
-console.log = ()=>{};
-
-let frameRunning = false;
-
 function runFrame() {
 
-    if(frameRunning) {
-        log('frame already in progress on call to runFrame');
-        return;
-    }
-    frameRunning = true;
-
-    let start = performance.now();
+    let frameStart = performance.now();
 
     // Run for a duration and get back tick-time we managed to reach
     let when = record.runForDuration(snapshotTime, speedup);
@@ -177,18 +165,20 @@ function runFrame() {
     // Take a snapshot
     let snap = snapshot(record.now, events, packs);
 
-    // Update the model
+    // Deserialize the snapshot
     // 
-    // Yes, I know we don't need to serialize then deserialize but
-    // this is preparing for later when we will need to.
-    // mount.$data.state = JSON.parse(snap);
+    // Yes, this is a waste of time right now; in the future,
+    // this will be required so we might as well
+    // always eat the performance impact.
+    let parsed: StateSerial = JSON.parse(snap);
+
+    // Update the model
+    mount.$data.state = parsed;
 
     // Update the d3 visualization only if there are events to display
     // 
     // At some point, this will be handled by vue...
-    let parsed:StateSerial = JSON.parse(snap);
-    if(parsed.events.length !== 0) {
-        console.log('handling event count=', parsed.events.length);
+    if (parsed.events.length !== 0) {
         update(graphConf, parsed);
         // If a pack is dead, we're done
         if (packs.some(p => p.isDead)) {
@@ -197,18 +187,10 @@ function runFrame() {
         }
     }
 
-    let end = performance.now();
-    let delta = end - start;
-    if(delta > 10) {
-        log('all updates took', delta);
-    }
-
-    frameRunning = false;
-
-    // Run the next frame
-    // requestAnimationFrame(runFrame);
+    // Report if we took way too long to render
+    let frameEnd = performance.now();
+    let delta = frameEnd - frameStart;
+    if (delta > 30) console.warn(`runFrame dropped frame, delta=${delta}`);
 }
-
-// runFrame();
 
 let timer = interval(runFrame, 16);

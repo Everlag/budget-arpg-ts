@@ -142,7 +142,7 @@ class EventLog extends Vue {
             <pack :pack="pack"></character>
         </template>
         <event-log
-            :history-duration="100"
+            :history-duration="0"
             :when=when
             :events=events></event-log>
     </div>`,
