@@ -12,7 +12,8 @@ import { TicksPerSecond } from './Globals';
 import {
     ImplictRecordToString,
     RecordFlavor,
-    IMoveStartRecord, IMoveEndRecord, IDamageRecord, IDeathRecord,
+    IMoveStartRecord, IMoveEndRecord,
+    ISkillStart, ISkillApply, IDamageRecord, IDeathRecord,
 } from './Records';
 import { StateSerial, CharacterStateSerial } from './Serial';
 
@@ -544,6 +545,7 @@ export function update(config: IGraphConf, state: StateSerial) {
         // as much as we can before the switch.
         let eRef = <
             IDamageRecord | IMoveStartRecord | IMoveEndRecord | IDeathRecord
+            | ISkillStart | ISkillApply
             >e;
         let source = globalSpec.chars.get(eRef.source);
         if (!source) throw Error('source ICharSpec not found for event');
@@ -565,6 +567,19 @@ export function update(config: IGraphConf, state: StateSerial) {
                 let moveEnd = <IMoveEndRecord>e;
                 source.move = null;
                 source.staticLoc = moveEnd.endPos;
+                break;
+
+            case RecordFlavor.ISkillStart:
+                let skillStart = <ISkillStart>e;
+                source.skill = {
+                    duration: ticksToMillis(skillStart.duration),
+                    target: skillStart.target,
+                }
+                break;
+
+            case RecordFlavor.ISkillApply:
+                let skillApply = <ISkillApply>e;
+                source.skill = null;
                 break;
 
             default:
