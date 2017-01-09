@@ -4,7 +4,7 @@ import {
     RecordFlavor, IRecord,
     IDamageRecord,
     IMoveStartRecord, IMoveEndRecord,
-    ISkillApply, IDeathRecord,
+    ISkillStart, ISkillApply, IDeathRecord,
 } from './Records';
 
 /** Record a DamageRecord */
@@ -42,6 +42,19 @@ export function recordMovementEnd(source: CharacterState, endPos: number) {
         when: record.now,
         source: source.EntityCode,
         endPos,
+    };
+
+    record.pushImplicitEvent(event);
+}
+
+export function recordSkillStart(source: CharacterState, target: CharacterState,
+    duration: number, skillName: string) {
+
+    let event: ISkillStart = {
+        flavor: RecordFlavor.ISkillStart,
+        when: record.now,
+        source: source.EntityCode, target: target.EntityCode,
+        duration, skillName,
     };
 
     record.pushImplicitEvent(event);

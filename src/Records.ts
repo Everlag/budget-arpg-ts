@@ -13,6 +13,7 @@ export enum RecordFlavor {
     IDamage,
     IMoveStart,
     IMoveEnd,
+    ISkillStart,
     ISkillApply,
     IDeath,
 }
@@ -49,6 +50,13 @@ export interface IMoveEndRecord extends IRecord {
     source: string;
     /** Where the move places the Character */
     endPos: number;
+}
+
+export interface ISkillStart extends IRecord {
+    source: string;
+    target: string;
+    duration: number;
+    skillName: string;
 }
 
 export interface ISkillApply extends IRecord {

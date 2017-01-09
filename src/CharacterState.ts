@@ -6,7 +6,7 @@ import { DamageModGroup, DamageModDirection } from './DamageMods';
 import { Event, State, TicksPerSecond } from './ARPGState';
 import {
     recordMovementStart, recordMovementEnd,
-    recordSkillApply, recordDeath
+    recordSkillStart, recordSkillApply, recordDeath,
 } from './Recording';
 import { RecordFlavor } from './Records';
 import { Character } from './Character';
@@ -262,6 +262,10 @@ export class CharacterState extends CharacterMachine {
         this.scratch.skill = this.context.skill;
 
         this.state.addEvent(e);
+
+        // Record this...
+        recordSkillStart(this, target, waitTime,
+            this.context.skill.name);
     }
 
     /**
